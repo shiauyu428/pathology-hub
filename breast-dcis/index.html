@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breast DCIS — Pathology Report Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6f8;--bg2:#ffffff;--bg3:#eef0f4;--bg4:#e4e7ed;
+  --border:#d0d5de;--border2:#b8bfcc;
+  --accent:#3b6fd4;--accent2:#6b48c8;--accent3:#1a8a6e;
+  --green:#2e8a3e;--red:#c0392b;--yellow:#a06000;
+  --text:#1a1d26;--text2:#2d3244;--text3:#6b7280;--text4:#9ca3af;
+  --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── Header ── */
+.header{background:var(--bg2);border-bottom:2px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;box-shadow:var(--shadow);}
+.header-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.04em;}
+.header-sub{font-family:var(--mono);font-size:11px;color:var(--text3);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.header-badge{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-family:var(--mono);font-size:11px;color:var(--accent3);font-weight:500;}
+.hdr-btn{background:transparent;border:1px solid var(--border);border-radius:4px;padding:4px 12px;font-family:var(--mono);font-size:11px;color:var(--text3);cursor:pointer;transition:all .15s;}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent);}
+.hdr-btn.danger:hover{border-color:var(--red);color:var(--red);}
+
+/* ── Split layout ── */
+.main{display:flex;flex:1;overflow:hidden;}
+.form-panel{width:56%;background:var(--bg);border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;}
+.form-scroll{flex:1;overflow-y:auto;}
+.form-scroll::-webkit-scrollbar{width:6px;}
+.form-scroll::-webkit-scrollbar-track{background:var(--bg);}
+.form-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.report-panel{width:44%;background:var(--bg2);display:flex;flex-direction:column;overflow:hidden;box-shadow:-2px 0 6px rgba(0,0,0,.04);}
+.report-panel-hd{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.report-panel-title{font-family:var(--mono);font-size:11px;color:var(--accent3);font-weight:600;letter-spacing:.08em;}
+.copy-btn{margin-left:auto;background:var(--accent);border:none;border-radius:4px;padding:5px 14px;font-family:var(--mono);font-size:11px;color:#fff;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:#2a56b0;}
+.copy-btn.copied{background:var(--green);}
+#reportOutput{flex:1;overflow-y:auto;padding:18px;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--text2);white-space:pre-wrap;word-break:break-word;}
+#reportOutput::-webkit-scrollbar{width:6px;}
+#reportOutput::-webkit-scrollbar-track{background:var(--bg2);}
+#reportOutput::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ── Sections ── */
+.section-group{border-bottom:1px solid var(--border);}
+.sg-title{background:var(--bg3);padding:9px 18px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent2);letter-spacing:.09em;cursor:pointer;display:flex;align-items:center;border-bottom:1px solid var(--border);user-select:none;}
+.sg-title:hover{background:var(--bg4);}
+.sg-toggle{margin-left:auto;color:var(--text3);font-size:10px;}
+.section-body{padding:16px 18px;display:flex;flex-direction:column;gap:13px;background:var(--bg2);}
+.section-body.collapsed{display:none;}
+
+/* ── Form elements ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+label{font-size:11.5px;color:var(--text3);font-family:var(--mono);font-weight:500;display:block;letter-spacing:.02em;}
+input[type=text],input[type=number],textarea,select{
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-family:var(--mono);font-size:13px;padding:5px 9px;
+  outline:none;transition:border-color .15s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+textarea{resize:vertical;min-height:60px;line-height:1.5;}
+select{cursor:pointer;}
+
+/* ── Pill-style radio / checkbox ── */
+.rg{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px;}
+.rg label{
+  font-size:12.5px;color:var(--text2);font-family:var(--mono);font-weight:400;
+  display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  padding:4px 10px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;transition:all .12s;user-select:none;line-height:1.3;
+}
+.rg label:hover{border-color:var(--accent);background:#eef3fc;}
+.rg label:has(input:checked){border-color:var(--accent);background:#dde8f8;color:var(--accent);font-weight:600;}
+.rg input[type=radio],.rg input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+.rg-m{display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  padding:4px 10px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;font-size:12.5px;font-family:var(--mono);color:var(--text2);
+  transition:all .12s;user-select:none;line-height:1.3;
+}
+.rg-m:hover{border-color:var(--accent);background:#eef3fc;}
+.rg-m:has(input:checked){border-color:var(--accent);background:#dde8f8;color:var(--accent);font-weight:600;}
+.rg-m input[type=radio],.rg-m input[type=checkbox]{width:auto;margin:0;accent-color:var(--accent);}
+.sr{display:inline-flex;align-items:center;gap:4px;}
+.sr input{width:68px;flex:none;text-align:center;}
+.sr span{font-size:12px;color:var(--text3);flex:none;font-family:var(--mono);}
+.sub-label{font-size:11px;font-weight:600;color:var(--accent2);font-family:var(--mono);
+  margin:4px 0 0;padding:10px 0 0;border-top:1px solid var(--border);letter-spacing:.06em;text-transform:uppercase;}
+.hint{font-size:11px;color:var(--text4);font-family:var(--mono);margin-top:3px;}
+.divider{height:1px;background:var(--border);margin:2px 0;}
+.auto-tag{font-size:10px;color:var(--accent3);font-family:var(--mono);padding:1px 6px;
+  background:#e6f5f0;border:1px solid #a8d9cb;border-radius:3px;font-weight:500;margin-left:5px;vertical-align:middle;}
+
+/* margin grid */
+.mg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px;}
+.mg-row .sr input{width:68px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">BREAST DCIS REPORT GENERATOR</div>
+    <div class="header-sub">CAP Protocol 4.4.0.0 · AJCC 8th Edition · pTis</div>
+  </div>
+  <div class="header-right">
+    <div class="header-badge">DCIS Specimen</div>
+    <button class="hdr-btn danger" onclick="clearAll()">Clear</button>
+  </div>
+</div>
+
+<div class="main">
+<div class="form-panel">
+<div class="form-scroll">
+
+<!-- ── PATHOLOGIC DIAGNOSIS ── -->
+<div class="section-group">
+  <div class="sg-title">Pathologic Diagnosis <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="grid">
+      <div class="fg">
+        <label>Laterality</label>
+        <div class="rg">
+          <label><input type="radio" name="laterality" value="right"> Right</label>
+          <label><input type="radio" name="laterality" value="left"> Left</label>
+          <label><input type="radio" name="laterality" value="bilateral"> Bilateral</label>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Procedure / Specimen type</label>
+        <select id="procedure">
+          <option value="">— select —</option>
+          <option value="needle localization excisional biopsy">Needle localization excisional biopsy</option>
+          <option value="excision">Excision</option>
+          <option value="partial mastectomy">Partial mastectomy</option>
+          <option value="total mastectomy">Total mastectomy</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>DCIS Histologic type (Diagnosis line)</label>
+      <div class="rg">
+        <label><input type="radio" name="dcisType" value="Ductal carcinoma in situ"> DCIS</label>
+        <label><input type="radio" name="dcisType" value="Paget disease"> Paget disease</label>
+        <label><input type="radio" name="dcisType" value="Encapsulated papillary carcinoma without invasive carcinoma"> EPC</label>
+        <label><input type="radio" name="dcisType" value="Solid papillary carcinoma without invasive carcinoma"> Solid papillary CA</label>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Nuclear grade (Diagnosis line)</label>
+      <div class="rg">
+        <label><input type="radio" name="diagGrade" value="low grade"> Low grade</label>
+        <label><input type="radio" name="diagGrade" value="intermediate grade"> Intermediate grade</label>
+        <label><input type="radio" name="diagGrade" value="high grade"> High grade</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── GROSS DESCRIPTION ── -->
+<div class="section-group">
+  <div class="sg-title">Gross Description <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+
+    <div class="fg">
+      <label>Specimen category</label>
+      <div class="rg">
+        <label><input type="radio" name="specimenSize" value="small" onchange="updateSpecimenSize()" checked> 小件 (Small)</label>
+        <label><input type="radio" name="specimenSize" value="large" onchange="updateSpecimenSize()"> 大件 (Large / Mastectomy)</label>
+      </div>
+    </div>
+
+    <!-- Focality — shared by both small and large -->
+    <div class="fg">
+      <label>Tumor focality <span class="auto-tag">選填</span></label>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <label class="rg-m"><input type="radio" name="focality" value="" checked> Single focus</label>
+        <label class="rg-m"><input type="radio" name="focality" value="multiple"> Multiple foci of DCIS</label>
+        <label class="rg-m" style="gap:6px">
+          <input type="radio" name="focality" value="specify">
+          <input type="number" id="focality_n" placeholder="n" min="2" step="1" style="width:52px;display:inline;margin:0" onclick="document.querySelector('input[name=focality][value=specify]').checked=true">
+          <span style="font-size:12px;color:var(--text2)">foci of DCIS</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ═══ SMALL GROSS ═══ -->
+    <div id="smallGrossFields">
+      <div class="grid">
+        <div class="fg">
+          <label>Number of pieces</label>
+          <input type="number" id="pieceCount" min="1" value="1">
+        </div>
+        <div class="fg">
+          <label>Aggregate modifier (if &gt;1 piece)</label>
+          <div class="rg">
+            <label><input type="radio" name="aggMod" value="up to"> up to</label>
+            <label><input type="radio" name="aggMod" value="in aggregates"> in aggregates</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Specimen size (cm)</label>
+        <div class="sr">
+          <input type="number" id="sz1" min="0" step="0.1" placeholder="—">
+          <span>x</span>
+          <input type="number" id="sz2" min="0" step="0.1" placeholder="—">
+          <span>x</span>
+          <input type="number" id="sz3" min="0" step="0.1" placeholder="—">
+          <span>cm</span>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Skin <span class="auto-tag">optional — 有填才輸出</span></label>
+        <div class="sr">
+          <input type="number" id="skinSz1" min="0" step="0.1" placeholder="—">
+          <span>x</span>
+          <input type="number" id="skinSz2" min="0" step="0.1" placeholder="—">
+          <span>cm</span>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Total cassettes submitted</label>
+        <input type="number" id="cassettes" min="1" placeholder="e.g. 4" style="max-width:120px">
+      </div>
+    </div><!-- /smallGrossFields -->
+
+    <!-- ═══ LARGE GROSS (BC style) ═══ -->
+    <div id="largeGrossFields" style="display:none">
+      <div class="grid">
+        <div class="fg">
+          <label>Specimen type</label>
+          <select id="lgSpecType">
+            <option value="Partial mastectomy">Partial mastectomy</option>
+            <option value="Simple mastectomy">Simple mastectomy</option>
+            <option value="Total mastectomy">Total mastectomy</option>
+            <option value="Modified radical mastectomy">Modified radical mastectomy</option>
+            <option value="Mastectomy">Mastectomy</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>LN sampling</label>
+          <select id="lgLNSampling">
+            <option value="No lymph node sampling">No lymph node sampling</option>
+            <option value="Sentinel lymph nodes only">Sentinel lymph nodes only</option>
+            <option value="Sentinel and non-sentinel lymph nodes">Sentinel and non-sentinel lymph nodes</option>
+            <option value="Sentinel lymph node with axillary dissection">Sentinel lymph node with axillary dissection</option>
+            <option value="Axillary dissection">Axillary dissection</option>
+            <option value="Axillary dissection, including frozen section">Axillary dissection, including frozen section</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Size of the breast removed (cm)</label>
+        <div class="sr">
+          <input type="number" id="lgSz1" min="0" step="0.1" placeholder="—">
+          <span>x</span>
+          <input type="number" id="lgSz2" min="0" step="0.1" placeholder="—">
+          <span>x</span>
+          <input type="number" id="lgSz3" min="0" step="0.1" placeholder="—">
+          <span>cm</span>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Orientation</label>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
+          <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer">
+            <input type="checkbox" id="or_not_present" onchange="toggleOrNotPresent()"> Not present
+          </label>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;margin-top:2px">
+            <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="or_12" checked> 12 o'clock:
+            </label>
+            <select id="or_12_stitch" style="font-size:12px">
+              <option>One long and one short stitches</option>
+              <option>Two short stitches</option>
+              <option>Two long stitches</option>
+              <option>No stitch</option>
+              <option>One stitch</option>
+            </select>
+            <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="or_3" checked> 3 o'clock:
+            </label>
+            <select id="or_3_stitch" style="font-size:12px">
+              <option>One long and one short stitches</option>
+              <option selected>Two short stitches</option>
+              <option>Two long stitches</option>
+              <option>No stitch</option>
+              <option>One stitch</option>
+            </select>
+            <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="or_6" checked> 6 o'clock:
+            </label>
+            <select id="or_6_stitch" style="font-size:12px">
+              <option>One long and one short stitches</option>
+              <option>Two short stitches</option>
+              <option>Two long stitches</option>
+              <option selected>No stitch</option>
+              <option>One stitch</option>
+            </select>
+            <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="or_9" checked> 9 o'clock:
+            </label>
+            <select id="or_9_stitch" style="font-size:12px">
+              <option>One long and one short stitches</option>
+              <option>Two short stitches</option>
+              <option selected>Two long stitches</option>
+              <option>No stitch</option>
+              <option>One stitch</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+            <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="or_custom"> Custom:
+            </label>
+            <input type="text" id="or_custom_text" placeholder="e.g. Superior: long stitch" style="flex:1">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="fg">
+          <label>Skin size (cm)</label>
+          <div class="sr">
+            <input type="number" id="lgSkinSz1" min="0" step="0.1" placeholder="—">
+            <span>x</span>
+            <input type="number" id="lgSkinSz2" min="0" step="0.1" placeholder="—">
+          </div>
+          <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;margin-top:4px">
+            <input type="checkbox" id="skin_with_nipple" checked style="width:auto;margin:0"> With nipple
+          </label>
+        </div>
+        <div class="fg">
+          <label>Axillary soft tissue</label>
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px">
+            <input type="number" id="ax_pieces" placeholder="pcs" style="width:56px;flex:none">
+            <span style="font-size:11px;color:var(--text3);flex:none">pcs,</span>
+            <input type="number" id="ax1" placeholder="—" min="0" step="any" style="width:44px;flex:none">
+            <span style="font-size:11px;color:var(--text3);flex:none">x</span>
+            <input type="number" id="ax2" placeholder="—" min="0" step="any" style="width:44px;flex:none">
+            <span style="font-size:11px;color:var(--text3);flex:none">x</span>
+            <input type="number" id="ax3" placeholder="—" min="0" step="any" style="width:44px;flex:none">
+            <span style="font-size:11px;color:var(--text3);flex:none">cm agg.</span>
+          </div>
+          <label style="font-size:12px;font-weight:400;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;margin-top:4px">
+            <input type="checkbox" id="ax_separate" style="width:auto;margin:0"> submitted separately
+          </label>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="fg">
+          <label>Tumor location</label>
+          <select id="tumor_loc" onchange="toggleTumorLocCustom()">
+            <option value="Upper outer quadrant">Upper outer quadrant</option>
+            <option value="Lower outer quadrant">Lower outer quadrant</option>
+            <option value="Upper inner quadrant">Upper inner quadrant</option>
+            <option value="Lower inner quadrant">Lower inner quadrant</option>
+            <option value="Subareolar">Subareolar</option>
+            <option value="custom">Custom o'clock / cm to nipple</option>
+          </select>
+          <div id="tumor_loc_custom" style="display:none;margin-top:4px">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+              <input type="number" id="tloc_clock" placeholder="o'clock" min="1" max="12" step="1" style="width:68px;flex:none">
+              <span style="font-size:11px;color:var(--text3);flex:none">o'clock,</span>
+              <input type="number" id="tloc_cm" placeholder="cm" min="0" step="any" style="width:60px;flex:none">
+              <span style="font-size:11px;color:var(--text3);flex:none">cm to nipple</span>
+            </div>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Tumor size — gross (cm)</label>
+          <div class="sr">
+            <input type="number" id="lgTumorSz1" min="0" step="0.1" placeholder="—">
+            <span>x</span>
+            <input type="number" id="lgTumorSz2" min="0" step="0.1" placeholder="—">
+            <span>x</span>
+            <input type="number" id="lgTumorSz3" min="0" step="0.1" placeholder="—">
+            <span>cm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Texture of tumor</label>
+        <input type="text" id="tumor_texture" value="Gray to white and firm">
+      </div>
+
+      <p class="sub-label">Gross Margin — DCIS (cm, 留空略過)</p>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+        <div class="fg">
+          <label style="margin-bottom:2px">Basal</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_basal" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_basal" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_basal" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">3 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_3" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_3" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_3" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">6 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_6" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_6" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_6" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">9 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_9" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_9" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_9" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">12 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_12" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_12" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_12" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">Anterior (Superficial)</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_ant" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_ant" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_ant" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">Nearest peripheral</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="gm_near" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="syncMarginsFromGross()"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="gmr_near" value="lt01" onchange="onGMSelect()"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="gmr_near" value="involved" onchange="onGMSelect()"> Involved</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Additional findings <span class="auto-tag">optional</span></label>
+        <textarea id="gross_addl" rows="2" placeholder="e.g. Biopsy site changes, fibrocystic changes"></textarea>
+      </div>
+
+      <div class="fg">
+        <label>Total cassettes submitted</label>
+        <input type="number" id="lgCassettes" min="1" placeholder="e.g. 24" style="max-width:120px">
+      </div>
+    </div><!-- /largeGrossFields -->
+
+  </div>
+</div>
+
+<!-- ── REPRESENTATIVE SECTIONS ── -->
+<div class="section-group">
+  <div class="sg-title">Representative Sections <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="fg">
+      <label>Representative sections (free text)</label>
+      <textarea id="repSections" rows="3" placeholder="e.g. A1-A3: tumor with margin; A4: nipple..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ── MICROSCOPIC DESCRIPTION ── -->
+<div class="section-group">
+  <div class="sg-title">Microscopic Description <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+
+    <div class="fg">
+      <label>Histologic type</label>
+      <div class="rg">
+        <label><input type="radio" name="microHisto" value="Ductal carcinoma in situ"> DCIS</label>
+        <label><input type="radio" name="microHisto" value="Paget disease"> Paget disease</label>
+        <label><input type="radio" name="microHisto" value="Encapsulated papillary carcinoma without invasive carcinoma"> EPC</label>
+        <label><input type="radio" name="microHisto" value="Solid papillary carcinoma without invasive carcinoma"> Solid papillary CA</label>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Tumor size (mm) — measured on slide</label>
+      <div class="sr">
+        <input type="number" id="tumorSizeMm" min="0" step="0.1" placeholder="—" style="width:80px">
+        <span>mm</span>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Nuclear grade</label>
+      <div class="rg">
+        <label><input type="radio" name="nucGrade" value="Grade I (low)"> Grade I (low)</label>
+        <label><input type="radio" name="nucGrade" value="Grade II (intermediate)"> Grade II (intermediate)</label>
+        <label><input type="radio" name="nucGrade" value="Grade III (high)"> Grade III (high)</label>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Architectural pattern</label>
+      <div class="rg" id="archPattern">
+        <label><input type="checkbox" value="cribriform"> Cribriform</label>
+        <label><input type="checkbox" value="micropapillary"> Micropapillary</label>
+        <label><input type="checkbox" value="papillary"> Papillary</label>
+        <label><input type="checkbox" value="solid"> Solid</label>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Necrosis</label>
+      <div class="rg">
+        <label><input type="radio" name="necrosis" value="Not identified"> Not identified</label>
+        <label><input type="radio" name="necrosis" value="Present, focal (small foci or single cell necrosis)"> Present, focal</label>
+        <label><input type="radio" name="necrosis" value="Present, central (expansive comedo necrosis)"> Present, central (comedo)</label>
+      </div>
+    </div>
+
+    <p class="sub-label">Extent of tumor</p>
+
+    <div class="grid">
+      <div class="fg">
+        <label>Skin involvement</label>
+        <div class="rg">
+          <label><input type="radio" name="skinInvolve" value="Free"> Free</label>
+          <label><input type="radio" name="skinInvolve" value="Not assessed"> Not assessed</label>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Chest wall invasion</label>
+        <div class="rg">
+          <label><input type="radio" name="chestWall" value="Not assessed"> Not assessed</label>
+          <label><input type="radio" name="chestWall" value="Free"> Free</label>
+          <label><input type="radio" name="chestWall" value="Present"> Present</label>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Nipple</label>
+        <div class="rg">
+          <label><input type="radio" name="nipple" value="Not assessed"> Not assessed</label>
+          <label><input type="radio" name="nipple" value="Free"> Free</label>
+          <label><input type="radio" name="nipple" value="Paget disease"> Paget disease</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="fg">
+        <label>Peritumoral LVI</label>
+        <div class="rg">
+          <label><input type="radio" name="lvi" value="Absent" checked> Absent</label>
+          <label><input type="radio" name="lvi" value="Present"> Present</label>
+          <label><input type="radio" name="lvi" value="Indeterminate"> Indeterminate</label>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Perineural invasion</label>
+        <div class="rg">
+          <label><input type="radio" name="pni" value="Absent" checked> Absent</label>
+          <label><input type="radio" name="pni" value="Present"> Present</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Microcalcification</label>
+      <div class="rg">
+        <label><input type="radio" name="calcification" value="Absent"> Absent</label>
+        <label><input type="radio" name="calcification" value="Present, inside the DCIS"> Inside DCIS</label>
+        <label><input type="radio" name="calcification" value="Present, inside the DCIS and non-tumor mammary acini"> DCIS + acini</label>
+        <label><input type="radio" name="calcification" value="Present, in non-tumor mammary acini"> Acini only</label>
+      </div>
+    </div>
+
+    <p class="sub-label">Surgical Margin</p>
+
+    <!-- Small specimen margin -->
+    <div id="smallMarginFields">
+      <div class="fg">
+        <div class="rg">
+          <label><input type="radio" name="margin" value="free" onchange="toggleMarginDist(true)"> Free</label>
+          <label><input type="radio" name="margin" value="close" onchange="toggleMarginDist(false)"> &lt;1 mm</label>
+          <label><input type="radio" name="margin" value="involved" onchange="toggleMarginDist(false)"> Involved by DCIS</label>
+        </div>
+      </div>
+      <div id="marginDistField" style="display:none;margin-top:6px">
+        <label>Closest margin distance (mm)</label>
+        <div class="sr" style="margin-top:4px">
+          <input type="number" id="marginDist" min="0" step="0.1" placeholder="—" style="width:80px">
+          <span>mm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Large specimen margin (DCIS, clock-face) -->
+    <div id="largeMarginFields" style="display:none">
+      <div class="hint" style="margin-bottom:8px">Distances are for DCIS only (no invasive component). Leave blank to omit.</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="fg">
+          <label style="margin-bottom:2px">Basal</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_basal" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('basal')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_basal" value="lt01" onchange="markSMManual('basal')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_basal" value="involved" onchange="markSMManual('basal')"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">3 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_3" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('3')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_3" value="lt01" onchange="markSMManual('3')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_3" value="involved" onchange="markSMManual('3')"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">6 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_6" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('6')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_6" value="lt01" onchange="markSMManual('6')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_6" value="involved" onchange="markSMManual('6')"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">9 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_9" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('9')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_9" value="lt01" onchange="markSMManual('9')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_9" value="involved" onchange="markSMManual('9')"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">12 o'clock</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_12" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('12')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_12" value="lt01" onchange="markSMManual('12')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_12" value="involved" onchange="markSMManual('12')"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">Anterior (Superficial)</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_ant" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('ant')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_ant" value="lt01" onchange="markSMManual('ant')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_ant" value="involved" onchange="markSMManual('ant')"> Involved</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label style="margin-bottom:2px">Nearest peripheral</label>
+          <div class="mg-row">
+            <div class="sr"><input type="number" id="sm_near" placeholder="cm" min="0" step="0.01" style="width:68px" oninput="markSMManual('near')"><span>cm</span></div>
+            <label class="rg-m"><input type="radio" name="smr_near" value="lt01" onchange="markSMManual('near')"> &lt;0.1 cm</label>
+            <label class="rg-m"><input type="radio" name="smr_near" value="involved" onchange="markSMManual('near')"> Involved</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── LYMPH NODES ── -->
+<div class="section-group">
+  <div class="sg-title">Lymph Nodes <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="fg">
+      <label>LN sampling</label>
+      <div class="rg">
+        <label><input type="radio" name="lnSampling" value="none" onchange="updateLNUI()"> Not assessed</label>
+        <label><input type="radio" name="lnSampling" value="sentinel" onchange="updateLNUI()"> Sentinel only</label>
+        <label><input type="radio" name="lnSampling" value="axillary" onchange="updateLNUI()"> Axillary only</label>
+        <label><input type="radio" name="lnSampling" value="both" onchange="updateLNUI()"> Sentinel + Axillary</label>
+      </div>
+    </div>
+
+    <div id="lnDetails" style="display:none">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+
+        <div id="sentinelBlock" style="display:none">
+          <div style="font-size:11px;color:var(--accent2);margin-bottom:5px;font-weight:600;font-family:var(--mono)">Sentinel LN</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div class="fg" style="flex:none">
+              <label style="font-size:10px">Positive</label>
+              <input type="number" id="sentPos" min="0" value="0" style="width:72px;text-align:center">
+            </div>
+            <span style="color:var(--text3);align-self:flex-end;padding-bottom:4px">/</span>
+            <div class="fg" style="flex:none">
+              <label style="font-size:10px">Total</label>
+              <input type="number" id="sentTotal" min="0" value="0" style="width:72px;text-align:center">
+            </div>
+          </div>
+          <div style="margin-top:6px">
+            <label>Non-sentinel LN examined (for (sn) modifier)</label>
+            <input type="number" id="nonSentTotal" min="0" value="0" placeholder="0" style="width:72px;margin-top:3px">
+            <div class="hint">Sentinel + non-sentinel &lt;6 → adds (sn) to pN</div>
+          </div>
+          <div style="margin-top:6px">
+            <label>FS reference (optional)</label>
+            <input type="text" id="sentFS" placeholder="e.g. FS2024-001" style="margin-top:3px">
+          </div>
+        </div>
+
+        <div id="axillaryBlock" style="display:none">
+          <div style="font-size:11px;color:var(--accent2);margin-bottom:5px;font-weight:600;font-family:var(--mono)">Axillary LN</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div class="fg" style="flex:none">
+              <label style="font-size:10px">Positive</label>
+              <input type="number" id="axPos" min="0" value="0" style="width:72px;text-align:center">
+            </div>
+            <span style="color:var(--text3);align-self:flex-end;padding-bottom:4px">/</span>
+            <div class="fg" style="flex:none">
+              <label style="font-size:10px">Total</label>
+              <input type="number" id="axTotal" min="0" value="0" style="width:72px;text-align:center">
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="fg">
+          <label>Extranodal extension</label>
+          <div class="rg">
+            <label><input type="radio" name="ene" value="Present"> Present</label>
+            <label><input type="radio" name="ene" value="Absent"> Absent</label>
+            <label><input type="radio" name="ene" value="Not applicable"> Not applicable</label>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Metastatic deposit size</label>
+          <div class="rg">
+            <label><input type="radio" name="metSize" value="&lt;0.2 mm (isolated tumor cells)"> &lt;0.2 mm (ITC)</label>
+            <label><input type="radio" name="metSize" value="0.2 mm–2 mm (micrometastasis)"> 0.2–2 mm (micro)</label>
+            <label><input type="radio" name="metSize" value="&gt;2 mm (macrometastasis)"> &gt;2 mm (macro)</label>
+            <label><input type="radio" name="metSize" value="Not applicable"> Not applicable</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TREATMENT EFFECT ── -->
+<div class="section-group">
+  <div class="sg-title">Treatment Effect <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="fg">
+      <label>Neoadjuvant therapy</label>
+      <div class="rg">
+        <label><input type="radio" name="neoAdj" value="none" onchange="updateNeoAdj()" checked> None</label>
+        <label><input type="radio" name="neoAdj" value="yes" onchange="updateNeoAdj()"> Yes</label>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Treatment effect</label>
+      <select id="treatEffect">
+        <option value="Not applicable">Not applicable</option>
+        <option value="No known presurgical therapy" selected>No known presurgical therapy</option>
+        <option value="No residual tumor (complete response)">No residual tumor (complete response)</option>
+        <option value="Minimal response">Minimal response</option>
+        <option value="Partial response">Partial response</option>
+        <option value="No response">No response</option>
+      </select>
+    </div>
+    <div class="hint">If neoadjuvant = None → auto-selects "No known presurgical therapy"</div>
+  </div>
+</div>
+
+<!-- ── IHC ── -->
+<div class="section-group">
+  <div class="sg-title">Immunohistochemistry <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+
+    <div class="fg">
+      <label>IHC source</label>
+      <div class="rg">
+        <label><input type="radio" name="ihcSource" value="section" onchange="updateIHCSource()"> This section</label>
+        <label><input type="radio" name="ihcSource" value="previous" onchange="updateIHCSource()"> Previous specimen</label>
+        <label><input type="radio" name="ihcSource" value="pending" onchange="updateIHCSource()"> Pending</label>
+        <label><input type="radio" name="ihcSource" value="none" onchange="updateIHCSource()" checked> Not performed</label>
+      </div>
+    </div>
+
+    <div id="ihcSectionRef" style="display:none">
+      <label>Section label</label>
+      <input type="text" id="ihcSectionLabel" placeholder="e.g. A3" style="margin-top:3px">
+    </div>
+
+    <div id="ihcPrevRef" style="display:none">
+      <label>Previous specimen ID</label>
+      <input type="text" id="ihcPrevLabel" placeholder="e.g. S2024-001" style="margin-top:3px">
+    </div>
+
+    <div id="ihcPanel" style="display:none">
+      <div class="divider"></div>
+
+      <div class="fg">
+        <label>SMMHC (myoepithelial)</label>
+        <div class="rg">
+          <label><input type="radio" name="smmhc" value="highlights"> Highlights myoepithelial cells</label>
+          <label><input type="radio" name="smmhc" value="absent"> Absent/disrupted</label>
+          <label><input type="radio" name="smmhc" value="na"> Not applicable</label>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Estrogen receptor (ER)</label>
+        <div class="rg" style="margin-bottom:5px">
+          <label><input type="radio" name="erStatus" value="Positive" onchange="toggleERDetail(true)"> Positive</label>
+          <label><input type="radio" name="erStatus" value="Negative" onchange="toggleERDetail(false)"> Negative</label>
+        </div>
+        <div id="erDetail" style="display:none">
+          <div class="grid" style="grid-template-columns:80px 1fr;gap:8px;margin-top:4px">
+            <div class="fg">
+              <label>% staining</label>
+              <input type="number" id="erPct" min="0" max="100" placeholder="%">
+            </div>
+            <div class="fg">
+              <label>Intensity</label>
+              <div class="rg">
+                <label><input type="radio" name="erIntensity" value="weak"> Weak</label>
+                <label><input type="radio" name="erIntensity" value="moderate"> Moderate</label>
+                <label><input type="radio" name="erIntensity" value="strong"> Strong</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Progesterone receptor (PR)</label>
+        <div class="rg" style="margin-bottom:5px">
+          <label><input type="radio" name="prStatus" value="Positive" onchange="togglePRDetail(true)"> Positive</label>
+          <label><input type="radio" name="prStatus" value="Negative" onchange="togglePRDetail(false)"> Negative</label>
+        </div>
+        <div id="prDetail" style="display:none">
+          <div class="grid" style="grid-template-columns:80px 1fr;gap:8px;margin-top:4px">
+            <div class="fg">
+              <label>% staining</label>
+              <input type="number" id="prPct" min="0" max="100" placeholder="%">
+            </div>
+            <div class="fg">
+              <label>Intensity</label>
+              <div class="rg">
+                <label><input type="radio" name="prIntensity" value="weak"> Weak</label>
+                <label><input type="radio" name="prIntensity" value="moderate"> Moderate</label>
+                <label><input type="radio" name="prIntensity" value="strong"> Strong</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>CK5/6</label>
+        <div class="rg">
+          <label><input type="radio" name="ck56" value="Intact"> Intact</label>
+          <label><input type="radio" name="ck56" value="Loss"> Loss</label>
+          <label><input type="radio" name="ck56" value="na"> N/A</label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── REVIEWER ── -->
+<div class="section-group">
+  <div class="sg-title">Reviewer Note <span class="sg-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="fg">
+      <div class="rg">
+        <label><input type="radio" name="reviewer" value="yes"> Yes — reviewed by two pathologists</label>
+        <label><input type="radio" name="reviewer" value="no" checked> No</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /form-scroll -->
+
+<div style="padding:12px 16px;border-top:2px solid var(--border);background:var(--bg2);flex-shrink:0">
+  <button style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mono);letter-spacing:.04em" onmouseenter="this.style.background='#2a56b0'" onmouseleave="this.style.background='var(--accent)'" onclick="generateReport()">Generate Report ↗</button>
+</div>
+</div><!-- /form-panel -->
+
+<!-- ── REPORT PANEL ── -->
+<div class="report-panel">
+  <div class="report-panel-hd">
+    <span class="report-panel-title">PATHOLOGY REPORT — BREAST DCIS</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyReport()">Copy</button>
+  </div>
+  <pre id="reportOutput">Fill in the form and click Generate Report…</pre>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ─── helpers ────────────────────────────────────────────────────────────────
+function v(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+function r(name){ const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:''; }
+function checks(groupId){ return [...document.querySelectorAll('#'+groupId+' input[type="checkbox"]:checked')].map(c=>c.value); }
+function fmtSize(ids){ return ids.map(id=>v(id)).filter(x=>x!=='').join(' x '); }
+function parsePart(id){ const n=parseInt(document.getElementById(id)?.value,10); return isNaN(n)||n<0?0:n; }
+
+// ─── Collapsible sections ────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.sg-title').forEach(h=>{
+    h.addEventListener('click',function(){
+      const body=this.nextElementSibling;
+      const arrow=this.querySelector('.sg-toggle');
+      if(!body) return;
+      const collapsed=body.classList.toggle('collapsed');
+      if(arrow) arrow.textContent=collapsed?'▸':'▾';
+    });
+  });
+});
+
+// ─── UI toggles ─────────────────────────────────────────────────────────────
+function updateSpecimenSize(){
+  const isLarge=r('specimenSize')==='large';
+  document.getElementById('smallGrossFields').style.display=isLarge?'none':'';
+  document.getElementById('largeGrossFields').style.display=isLarge?'':'none';
+  document.getElementById('smallMarginFields').style.display=isLarge?'none':'';
+  document.getElementById('largeMarginFields').style.display=isLarge?'':'none';
+}
+
+function toggleMarginDist(show){
+  document.getElementById('marginDistField').style.display=show?'':'none';
+}
+
+function toggleERDetail(show){ document.getElementById('erDetail').style.display=show?'':'none'; }
+function togglePRDetail(show){ document.getElementById('prDetail').style.display=show?'':'none'; }
+
+function updateNeoAdj(){
+  const v2=r('neoAdj');
+  document.getElementById('treatEffect').value=v2==='none'?'No known presurgical therapy':'Not applicable';
+}
+
+function updateLNUI(){
+  const s=r('lnSampling');
+  document.getElementById('lnDetails').style.display=(s==='none'||s==='')?'none':'';
+  document.getElementById('sentinelBlock').style.display=(s==='sentinel'||s==='both')?'':'none';
+  document.getElementById('axillaryBlock').style.display=(s==='axillary'||s==='both')?'':'none';
+}
+
+function updateIHCSource(){
+  const s=r('ihcSource');
+  document.getElementById('ihcSectionRef').style.display=s==='section'?'':'none';
+  document.getElementById('ihcPrevRef').style.display=s==='previous'?'':'none';
+  document.getElementById('ihcPanel').style.display=(s==='section'||s==='previous')?'':'none';
+}
+
+function toggleOrNotPresent(){
+  const np=document.getElementById('or_not_present');
+  if(np&&np.checked){
+    ['or_12','or_3','or_6','or_9','or_custom'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.checked=false;
+    });
+  }
+}
+
+function toggleTumorLocCustom(){
+  const isC=document.getElementById('tumor_loc')?.value==='custom';
+  const box=document.getElementById('tumor_loc_custom');
+  if(box) box.style.display=isC?'block':'none';
+}
+
+function onGMSelect(){ syncMarginsFromGross(); }
+
+// Sync gross margins → micro margins; micro fields remain editable for manual override
+function syncMarginsFromGross(){
+  const keys=['basal','3','6','9','12','ant','near'];
+  keys.forEach(k=>{
+    const gmNum=document.getElementById('gm_'+k);
+    const smNum=document.getElementById('sm_'+k);
+    if(gmNum&&smNum&&!smNum._manualOverride) smNum.value=gmNum.value;
+    const gmRad=document.querySelector('input[name="gmr_'+k+'"]:checked');
+    const smNumEl=document.getElementById('sm_'+k);
+    if(!smNumEl||smNumEl._manualOverride) return;
+    // sync radio: clear then re-check matching
+    document.querySelectorAll('input[name="smr_'+k+'"]').forEach(el=>el.checked=false);
+    if(gmRad){
+      const target=document.querySelector('input[name="smr_'+k+'"][value="'+gmRad.value+'"]');
+      if(target) target.checked=true;
+    }
+  });
+}
+
+// Mark a micro margin field as manually overridden so gross sync won't overwrite it
+function markSMManual(key){
+  const el=document.getElementById('sm_'+key);
+  if(el) el._manualOverride=true;
+}
+function markSMRadManual(key){
+  const el=document.getElementById('sm_'+key);
+  if(el) el._manualOverride=true;
+}
+
+// ─── LN helpers ─────────────────────────────────────────────────────────────
+function getLNTotals(){
+  const s=r('lnSampling');
+  let pos=0,total=0;
+  if(s==='sentinel'||s==='both'){ pos+=parsePart('sentPos'); total+=parsePart('sentTotal'); }
+  if(s==='axillary'||s==='both'){ pos+=parsePart('axPos'); total+=parsePart('axTotal'); }
+  return {pos,total};
+}
+
+function calcpN(){
+  const s=r('lnSampling');
+  if(!s||s==='none') return {str:'pN not assigned (no nodes submitted or found)',sn:false};
+  const {pos,total}=getLNTotals();
+  if(total===0) return {str:'pN not assigned (no nodes submitted or found)',sn:false};
+  const usedSentinel=(s==='sentinel'||s==='both');
+  const sentTotal=parsePart('sentTotal');
+  const nonSentTotal=parsePart('nonSentTotal');
+  const axTotal=(s==='axillary'||s==='both')?parsePart('axTotal'):0;
+  const addSN=usedSentinel&&(sentTotal+nonSentTotal+axTotal)<6;
+  const snSuffix=addSN?'(sn)':'';
+  if(pos===0) return {str:'pN0'+snSuffix,sn:addSN};
+  const metSize=r('metSize');
+  let pnStr='';
+  if(metSize==='<0.2 mm (isolated tumor cells)') pnStr='pN0(i+)'+snSuffix;
+  else if(metSize==='0.2 mm–2 mm (micrometastasis)') pnStr='pN1mi'+snSuffix;
+  else{
+    const axPos=(s==='axillary'||s==='both')?parsePart('axPos'):0;
+    if(axPos>=10) pnStr='pN3a'+snSuffix;
+    else if(axPos>=4) pnStr='pN2a'+snSuffix;
+    else pnStr='pN1a'+snSuffix;
+  }
+  return {str:pnStr,sn:addSN};
+}
+
+// ─── Gross margin helpers (large specimen) ──────────────────────────────────
+function getGMVal(key){
+  const rad=document.querySelector('input[name="gmr_'+key+'"]:checked');
+  if(rad&&rad.value==='lt01') return 'lt01';
+  if(rad&&rad.value==='involved') return 'involved';
+  const n=document.getElementById('gm_'+key);
+  const nv=n?n.value.trim():'';
+  return nv?parseFloat(nv)+'':'';
+}
+function getSMVal(key){
+  const rad=document.querySelector('input[name="smr_'+key+'"]:checked');
+  if(rad&&rad.value==='lt01') return 'lt01';
+  if(rad&&rad.value==='involved') return 'involved';
+  const n=document.getElementById('sm_'+key);
+  const nv=n?n.value.trim():'';
+  return nv?parseFloat(nv)+'':'';
+}
+function gmGrossText(val){
+  if(!val) return '';
+  if(val==='involved') return 'Involved';
+  if(val==='lt01') return '<0.1 cm';
+  const n=parseFloat(val); if(isNaN(n)) return '';
+  return n<0.1?'<0.1 cm':n+' cm';
+}
+function gmMicroText(val){
+  if(!val) return '';
+  if(val==='involved') return 'Involved by DCIS';
+  if(val==='lt01') return '<0.1 cm from DCIS';
+  const n=parseFloat(val); if(isNaN(n)) return '';
+  return n<0.1?'<0.1 cm from DCIS':'Free, '+n+' cm from DCIS';
+}
+
+function buildGrossMargin(){
+  const keys=[['basal','Basal'],['3',"3 o'clock direction"],['6',"6 o'clock direction"],
+    ['9',"9 o'clock direction"],['12',"12 o'clock direction"],
+    ['ant','Anterior (Superficial)'],['near','Nearest peripheral']];
+  const lines=[];
+  keys.forEach(([k,label])=>{
+    const val=getGMVal(k);
+    if(!val) return;
+    lines.push('- '+label+': '+gmGrossText(val)+';');
+  });
+  if(!lines.length) return '';
+  return 'Gross margin (DCIS):\n'+lines.join('\n');
+}
+
+function buildMicroMarginLarge(){
+  const keys=[['basal','Basal'],['3',"3 o'clock direction"],['6',"6 o'clock direction"],
+    ['9',"9 o'clock direction"],['12',"12 o'clock direction"],
+    ['ant','Anterior (Superficial)'],['near','Nearest peripheral']];
+  const lines=[];
+  keys.forEach(([k,label])=>{
+    const val=getSMVal(k);
+    if(!val) return;
+    lines.push('- '+label+': '+gmMicroText(val)+';');
+  });
+  return lines.join('\n');
+}
+
+// ─── GENERATE ────────────────────────────────────────────────────────────────
+function generateReport(){
+  const lines=[];
+  const laterality=r('laterality');
+  const procedure=v('procedure');
+  const dcisType=r('dcisType');
+  const diagGrade=r('diagGrade');
+  const neoAdj=r('neoAdj');
+  const isLarge=r('specimenSize')==='large';
+  const lnSampling=r('lnSampling');
+  const {pos:lnPos,total:lnTotal}=getLNTotals();
+  const pnResult=calcpN();
+  const side=laterality||'';
+  const sideLabel=side?side.charAt(0).toUpperCase()+side.slice(1)+' breast':'Breast';
+
+  // ── PATHOLOGIC DIAGNOSIS ──
+  lines.push('PATHOLOGIC DIAGNOSIS:');
+  {
+    const proc=procedure||'_';
+    const typeStr=dcisType||'_';
+    const gradeStr=diagGrade?', '+diagGrade:'';
+    lines.push(sideLabel+', '+proc+', '+typeStr+' (pTis)'+gradeStr+'.');
+  }
+
+  // LN diagnosis line
+  if(isLarge){
+    const lnMethod=v('lgLNSampling')||'_';
+    if(lnSampling&&lnSampling!=='none'&&lnTotal>0){
+      const pnCode=pnResult.str.startsWith('pN not')?'':''+pnResult.str;
+      const lnStatusText=lnPos===0
+        ?'Free of metastasis'+(pnCode?' ['+lnPos+'/'+lnTotal+', '+pnCode+']':'')
+        :'Carcinoma, metastatic ('+lnPos+'/'+lnTotal+(pnCode?', '+pnCode:'')+')';
+      lines.push('Lymph nodes, axillary, '+side+', '+lnMethod+' --- '+lnStatusText+'.');
+    }
+  } else {
+    if(lnSampling&&lnSampling!=='none'){
+      lines.push('Lymph nodes: '+lnPos+'/'+lnTotal+'.');
+    }
+  }
+
+  lines.push('');
+
+  // ── GROSS ──
+  lines.push('GROSS DESCRIPTION:');
+
+  // Focality (shared)
+  const foc=r('focality');
+  const focN=v('focality_n');
+  const isMultifocal=foc==='multiple'||(foc==='specify'&&focN);
+  let focalityLine='';
+  if(foc==='multiple') focalityLine='Tumor focality: Multiple foci of DCIS';
+  else if(foc==='specify'&&focN) focalityLine='Tumor focality: '+focN+' foci of DCIS';
+
+  if(!isLarge){
+    // Small specimen gross
+    const n=parseInt(v('pieceCount'))||1;
+    const s1=v('sz1'),s2=v('sz2'),s3=v('sz3');
+    const sizeStr=(s1&&s2&&s3)?s1+' x '+s2+' x '+s3+' cm':'_ x _ x _ cm';
+    let pieceStr;
+    if(n===1){ pieceStr='1 piece of tissue measuring '+sizeStr; }
+    else{
+      const agg=r('aggMod')||'up to';
+      pieceStr=n+' pieces of tissue measuring '+(agg==='in aggregates'?sizeStr+' in aggregates':'up to '+sizeStr);
+    }
+    const sk1=v('skinSz1'),sk2=v('skinSz2');
+    const skinPart=(sk1&&sk2)?', with overlying skin measuring '+sk1+' x '+sk2+' cm':'';
+    lines.push('Received '+(n===1?'is':'are')+' '+pieceStr+skinPart+'.');
+    if(focalityLine) lines.push(focalityLine);
+    lines.push('');
+    const cass=v('cassettes');
+    lines.push('All tissue is submitted in '+(cass||'_')+' cassette'+(parseInt(cass)===1?'':'s')+'.');
+
+  } else {
+    // Large specimen gross (BC style)
+    const specType=v('lgSpecType')||'_';
+    const lgLNSampling=v('lgLNSampling')||'No lymph node sampling';
+    const breastSize=fmtSize(['lgSz1','lgSz2','lgSz3']);
+    const skinSize=fmtSize(['lgSkinSz1','lgSkinSz2']);
+    const withNip=document.getElementById('skin_with_nipple')?.checked!==false;
+    const texture=v('tumor_texture')||'Gray to white and firm';
+
+    // Tumor location
+    const tlocSel=document.getElementById('tumor_loc')?.value||'Upper outer quadrant';
+    let tumorLocText;
+    if(tlocSel==='custom'){
+      const clk=v('tloc_clock'),cm=v('tloc_cm');
+      tumorLocText=(clk?clk+" o'clock":'')+((clk&&cm)?', ':'' )+(cm?cm+' cm to the nipple':'');
+    } else { tumorLocText=tlocSel; }
+
+    // Tumor size (gross)
+    const tumorSizeGross=fmtSize(['lgTumorSz1','lgTumorSz2','lgTumorSz3']);
+
+    // Axillary soft tissue
+    const axPcs=v('ax_pieces'), axDims=fmtSize(['ax1','ax2','ax3']);
+    let axSizeText='';
+    if(axPcs||axDims){
+      const isOne=(axPcs.trim()==='1'||axPcs.trim().toLowerCase()==='one');
+      axSizeText=isOne?'1 piece'+(axDims?', '+axDims+' cm':''):((axPcs?axPcs+' pieces':'')+(axPcs&&axDims?', ':'')+(axDims?axDims+' cm in aggregate.':''));
+      if(document.getElementById('ax_separate')?.checked) axSizeText+=' (submitted in a separate container)';
+    }
+
+    // Orientation
+    const orientLines=[];
+    if(!document.getElementById('or_not_present')?.checked){
+      const dirs=[['or_12',"12 o'clock"],['or_3',"3 o'clock"],['or_6',"6 o'clock"],['or_9',"9 o'clock"]];
+      dirs.forEach(([cbId,label])=>{
+        const cb=document.getElementById(cbId);
+        const sel=document.getElementById(cbId+'_stitch');
+        if(cb?.checked&&sel) orientLines.push('- '+label+' direction: '+sel.value);
+      });
+      if(document.getElementById('or_custom')?.checked&&v('or_custom_text')) orientLines.push('- '+v('or_custom_text'));
+    }
+
+    lines.push('Specimen: '+specType);
+    lines.push('Lymph Node: '+lgLNSampling);
+    lines.push('Size of the breast removed: '+(breastSize?breastSize+' cm':'_'));
+    lines.push('Orientation: '+(orientLines.length?'Present':'Not present'));
+    if(orientLines.length) orientLines.forEach(l=>lines.push(l));
+    if(skinSize){
+      lines.push('Size of the covering skin ('+(withNip?'including':'without')+' nipple): '+skinSize+' cm');
+    } else {
+      lines.push('without skin');
+    }
+    if(axSizeText) lines.push('Size of the axillary soft tissue: '+axSizeText);
+    lines.push('Tumor location: '+tumorLocText+' (according to clinical information)');
+    lines.push('Tissue defect: Not present');
+    if(focalityLine) lines.push(focalityLine);
+    if(tumorSizeGross) lines.push('Size of tumor: '+(isMultifocal?'up to ':'')+tumorSizeGross+' cm');
+    lines.push('Tumor configuration: Well-delineated with focal infiltrative margin');
+    lines.push('Texture of the tumor: '+texture);
+    const grossMarginText=buildGrossMargin();
+    if(grossMarginText){ lines.push(''); lines.push(grossMarginText); }
+    const addlFindings=v('gross_addl');
+    if(addlFindings){ lines.push(''); lines.push('Additional findings: '+addlFindings); }
+    lines.push('');
+    const cass=v('lgCassettes');
+    lines.push('All tissue is submitted in '+(cass||'_')+' cassette'+(parseInt(cass)===1?'':'s')+'.');
+  }
+
+  lines.push('');
+
+  // ── REPRESENTATIVE SECTIONS ──
+  const repSec=v('repSections');
+  lines.push('Representative sections are taken and labeled as follows:');
+  lines.push(repSec||'_');
+  lines.push('');
+
+  // ── MICROSCOPIC ──
+  lines.push('MICROSCOPIC DESCRIPTION:');
+  const microHisto=r('microHisto');
+  lines.push('Histologic type: '+(microHisto||'_'));
+  const tumorMm=v('tumorSizeMm');
+  lines.push('Tumor size (mm): '+(tumorMm?(isMultifocal?'up to ':'')+tumorMm+' mm':'_')+', measured on the histologic slide');
+  const nucGrade=r('nucGrade');
+  lines.push('Nuclear grade: '+(nucGrade||'_'));
+  const archPatterns=checks('archPattern');
+  lines.push('Architectural pattern: '+(archPatterns.length>0?archPatterns.join(', '):'_'));
+  const necrosis=r('necrosis');
+  lines.push('Necrosis: '+(necrosis||'_'));
+  lines.push('Extent of tumor:');
+  lines.push('- Skin involvement: '+(r('skinInvolve')||'_'));
+  lines.push('- Chest wall invasion deeper than pectoralis muscle: '+(r('chestWall')||'Not assessed'));
+  lines.push('- Nipple: '+(r('nipple')||'_'));
+  lines.push('Peritumoral lymphovascular invasion: '+(r('lvi')||'Absent'));
+  lines.push('Perineural invasion: '+(r('pni')||'Absent'));
+  lines.push('Microcalcification: '+(r('calcification')||'_'));
+
+  // Margin
+  if(!isLarge){
+    const marginSel=r('margin');
+    let marginStr='_';
+    if(marginSel==='free'){ const dist=v('marginDist'); marginStr='Free, '+(dist?dist+' mm':'_')+' in closest distance'; }
+    else if(marginSel==='close') marginStr='<1 mm';
+    else if(marginSel==='involved') marginStr='Involved by DCIS';
+    lines.push('Surgical margin: '+marginStr);
+  } else {
+    const microMargin=buildMicroMarginLarge();
+    lines.push('Surgical margin (DCIS):');
+    if(microMargin){ microMargin.split('\n').forEach(l=>lines.push(l)); }
+    else { lines.push('_'); }
+  }
+
+  // LN block (microscopic)
+  if(!lnSampling||lnSampling==='none'){
+    lines.push('Lymph nodes (Positive/Total): Not assessed');
+  } else {
+    lines.push('Lymph nodes (Positive/Total): '+lnPos+'/'+lnTotal);
+    if(lnSampling==='sentinel'||lnSampling==='both'){
+      const sentPos=parsePart('sentPos'),sentTotal=parsePart('sentTotal');
+      const fsRef=v('sentFS');
+      let sentLine='- Sentinel: '+sentPos+'/'+sentTotal;
+      if(fsRef) sentLine+=', compiled from the report of sentinel lymph node biopsy FS'+fsRef;
+      lines.push(sentLine);
+    }
+    if(lnSampling==='axillary'||lnSampling==='both'){
+      lines.push('- Axillary: '+parsePart('axPos')+'/'+parsePart('axTotal'));
+    }
+    lines.push('- Extranodal extension: '+(r('ene')||'Not applicable'));
+    lines.push('- Metastatic size: '+(r('metSize')||'Not applicable'));
+  }
+
+  lines.push('Treatment effect: '+document.getElementById('treatEffect').value||'_');
+
+  // IHC
+  const ihcSource=r('ihcSource');
+  if(!ihcSource||ihcSource==='none'){
+    lines.push('Immunohistochemical study: Not performed');
+  } else if(ihcSource==='pending'){
+    lines.push('Immunohistochemical study: Pending');
+  } else {
+    let ihcHeader='Immunohistochemical study:';
+    if(ihcSource==='section'){ const lbl=v('ihcSectionLabel'); if(lbl) ihcHeader+=' (Performed on section '+lbl+')'; }
+    else if(ihcSource==='previous'){ const lbl=v('ihcPrevLabel'); if(lbl) ihcHeader+=' (Results in previous specimen '+lbl+')'; }
+    lines.push(ihcHeader);
+    const smmhc=r('smmhc');
+    if(smmhc==='highlights') lines.push('- SMMHC highlights the surrounding myoepithelial cells');
+    else if(smmhc==='absent') lines.push('- SMMHC: Absent/disrupted myoepithelial cells');
+    const erStatus=r('erStatus');
+    if(erStatus){
+      let erLine='- Estrogen receptor: '+erStatus;
+      if(erStatus==='Positive'){ const pct=v('erPct'),inten=r('erIntensity'); if(pct||inten) erLine+=' ('+(pct?pct+'%':'_')+', '+(inten||'_')+')'; }
+      lines.push(erLine);
+    }
+    const prStatus=r('prStatus');
+    if(prStatus){
+      let prLine='- Progesterone receptor: '+prStatus;
+      if(prStatus==='Positive'){ const pct=v('prPct'),inten=r('prIntensity'); if(pct||inten) prLine+=' ('+(pct?pct+'%':'_')+', '+(inten||'_')+')'; }
+      lines.push(prLine);
+    }
+    const ck56=r('ck56');
+    if(ck56&&ck56!=='na') lines.push('- CK5/6: '+ck56);
+  }
+
+  // pTNM
+  const yPrefix=neoAdj==='yes'?'y':'';
+  const pnStr=pnResult.str;
+  let pTstr=yPrefix+'pTis';
+  if(r('microHisto')==='Paget disease') pTstr=yPrefix+'pTis(Paget)';
+  const pNfull=pnStr.startsWith('pN not')?pnStr:yPrefix+pnStr;
+  lines.push('pTNM: '+pTstr+' '+pNfull+' (AJCC cancer staging system, 8th edition)');
+  const descriptors=[];
+  if(neoAdj==='yes') descriptors.push('y (posttreatment)');
+  lines.push('TNM descriptors: '+(descriptors.length?descriptors.join(', '):'Not applicable'));
+  lines.push('');
+  if(r('reviewer')==='yes') lines.push('(This case has been reviewed by two pathologists.)');
+
+  document.getElementById('reportOutput').textContent=lines.join('\n');
+}
+
+function copyReport(){
+  const el=document.getElementById('reportOutput');
+  const text=el?el.textContent:'';
+  if(!text||text.startsWith('Fill in')) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='Copied!'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); },2000);
+  });
+}
+
+function clearAll(){
+  if(!confirm('Clear all fields?')) return;
+  document.querySelectorAll('input[type="text"],input[type="number"],textarea').forEach(el=>el.value='');
+  document.querySelectorAll('input[type="radio"],input[type="checkbox"]').forEach(el=>el.checked=false);
+  document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+  document.getElementById('treatEffect').value='No known presurgical therapy';
+  document.getElementById('tumor_texture').value='Gray to white and firm';
+  document.getElementById('lnDetails').style.display='none';
+  document.getElementById('ihcPanel').style.display='none';
+  document.getElementById('ihcSectionRef').style.display='none';
+  document.getElementById('ihcPrevRef').style.display='none';
+  document.getElementById('erDetail').style.display='none';
+  document.getElementById('prDetail').style.display='none';
+  document.getElementById('marginDistField').style.display='none';
+  document.querySelector('input[name="specimenSize"][value="small"]').checked=true;
+  document.querySelector('input[name="neoAdj"][value="none"]').checked=true;
+  document.querySelector('input[name="lvi"][value="Absent"]').checked=true;
+  document.querySelector('input[name="pni"][value="Absent"]').checked=true;
+  document.querySelector('input[name="reviewer"][value="no"]').checked=true;
+  document.querySelector('input[name="ihcSource"][value="none"]').checked=true;
+  document.getElementById('pieceCount').value='1';
+  document.getElementById('or_12').checked=true;
+  document.getElementById('or_3').checked=true;
+  document.getElementById('or_6').checked=true;
+  document.getElementById('or_9').checked=true;
+  document.getElementById('skin_with_nipple').checked=true;
+  // reset manual override flags on micro margins
+  ['basal','3','6','9','12','ant','near'].forEach(k=>{
+    const el=document.getElementById('sm_'+k);
+    if(el) el._manualOverride=false;
+  });
+  updateSpecimenSize();
+  document.getElementById('reportOutput').textContent='Fill in the form and click Generate Report…';
+}
+
+// ─── auto-generate on any change ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelector('.form-scroll').addEventListener('change',generateReport);
+  document.querySelector('.form-scroll').addEventListener('input',generateReport);
+});
+</script>
+</body>
+</html>

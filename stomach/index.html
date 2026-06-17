@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stomach Carcinoma Report Generator — CAP 4.4.0.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#f5f6f8;
+  --bg2:#ffffff;
+  --bg3:#eef0f4;
+  --bg4:#e4e7ed;
+  --border:#d0d5de;
+  --border2:#b8bfcc;
+  --accent:#3b6fd4;
+  --accent2:#6b48c8;
+  --accent3:#1a8a6e;
+  --green:#2e8a3e;
+  --red:#c0392b;
+  --yellow:#a06000;
+  --text:#1a1d26;
+  --text2:#2d3244;
+  --text3:#6b7280;
+  --text4:#9ca3af;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Inter',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+.header{background:var(--bg2);border-bottom:2px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;box-shadow:var(--shadow);}
+.header-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.04em;}
+.header-sub{font-family:var(--mono);font-size:11px;color:var(--text3);}
+.header-badge{margin-left:auto;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-family:var(--mono);font-size:11px;color:var(--accent3);font-weight:500;}
+.main{display:flex;flex:1;overflow:hidden;}
+.form-panel{width:52%;background:var(--bg);border-right:1px solid var(--border);overflow-y:auto;}
+.form-panel::-webkit-scrollbar{width:6px;}
+.form-panel::-webkit-scrollbar-track{background:var(--bg);}
+.form-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.report-panel{width:48%;background:var(--bg2);display:flex;flex-direction:column;overflow:hidden;box-shadow:-2px 0 6px rgba(0,0,0,.04);}
+.report-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.report-header-title{font-family:var(--mono);font-size:11px;color:var(--accent3);font-weight:600;letter-spacing:.08em;}
+.copy-btn{margin-left:auto;background:var(--accent);border:none;border-radius:4px;padding:5px 14px;font-family:var(--mono);font-size:11px;color:#fff;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:#2a56b0;}
+.report-output{flex:1;overflow-y:auto;padding:18px;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--text2);white-space:pre-wrap;word-break:break-word;}
+.report-output::-webkit-scrollbar{width:6px;}
+.report-output::-webkit-scrollbar-track{background:var(--bg2);}
+.report-output::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.section{border-bottom:1px solid var(--border);}
+.section-header{background:var(--bg3);padding:8px 16px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent2);letter-spacing:.09em;cursor:pointer;display:flex;align-items:center;user-select:none;border-bottom:1px solid var(--border);}
+.section-header:hover{background:var(--bg4);}
+.section-toggle{color:var(--text3);font-size:10px;margin-left:auto;}
+.section-body{padding:12px 16px;display:flex;flex-direction:column;gap:9px;background:var(--bg2);}
+.section-body.collapsed{display:none;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field-row{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+.field-label{font-size:12px;color:var(--text3);font-family:var(--mono);min-width:148px;padding-top:4px;flex-shrink:0;}
+.field-note{font-size:11px;color:var(--yellow);font-family:var(--mono);font-style:italic;padding:3px 8px;background:#fef9ec;border-radius:3px;border-left:3px solid var(--yellow);line-height:1.4;}
+input[type=text],input[type=number],select,textarea{background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:5px 9px;outline:none;transition:border-color .15s;}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff;}
+input[type=number]{width:70px;}
+input[type=text].sm{width:82px;}input[type=text].md{width:155px;}
+input[type=text].lg{width:225px;}input[type=text].xl{width:100%;}
+select{padding:5px 7px;cursor:pointer;}
+textarea{width:100%;resize:vertical;min-height:62px;line-height:1.5;}
+.size-group{display:flex;align-items:center;gap:4px;}
+.size-sep{color:var(--text3);font-family:var(--mono);font-size:13px;}
+.radio-group,.check-group{display:flex;flex-wrap:wrap;gap:5px;}
+.radio-group label,.check-group label{display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;font-size:13px;color:var(--text2);transition:all .12s;user-select:none;}
+.radio-group label:hover,.check-group label:hover{border-color:var(--accent);background:#eef3fc;}
+.radio-group input[type=radio],.check-group input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;}
+.radio-group label:has(input:checked),.check-group label:has(input:checked){border-color:var(--accent);background:#dde8f8;color:var(--accent);font-weight:500;}
+.ln-table{width:100%;border-collapse:collapse;}
+.ln-table th{font-family:var(--mono);font-size:11px;color:var(--text3);padding:5px 7px;text-align:left;border-bottom:2px solid var(--border);background:var(--bg3);}
+.ln-table td{padding:4px 4px;vertical-align:middle;border-bottom:1px solid var(--border);}
+.ln-table tr:last-child td{border-bottom:none;}
+.add-btn,.del-btn{border-radius:5px;padding:4px 10px;font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .12s;border:1px solid;}
+.add-btn{background:#edf7f0;border-color:#a8d5b5;color:var(--green);}
+.add-btn:hover{background:var(--green);color:#fff;border-color:var(--green);}
+.del-btn{background:#fdf0ef;border-color:#f0b8b4;color:var(--red);padding:3px 8px;}
+.del-btn:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.divider{height:1px;background:var(--border);margin:4px 0;}
+.flex-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.flex-col{display:flex;flex-direction:column;gap:4px;}
+.hidden{display:none!important;}
+.indent{margin-left:16px;}
+.indent2{margin-left:30px;}
+.auto-tag{font-size:10px;color:var(--accent3);font-family:var(--mono);padding:1px 6px;background:#e6f5f0;border:1px solid #a8d9cb;border-radius:3px;font-weight:500;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">STOMACH CARCINOMA REPORT GENERATOR</div>
+    <div class="header-sub">CAP Protocol 4.4.0.0 · AJCC 8th Edition</div>
+  </div>
+  <div class="header-badge">Resection Specimen</div>
+</div>
+
+<div class="main">
+<div class="form-panel">
+
+<!-- CLINICAL INFO -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)"><span>CLINICAL INFO</span><span class="section-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Procedure</span>
+        <select id="procedure" onchange="syncProcedure()">
+          <option value="">-- Select --</option>
+          <option value="Endoscopic resection">Endoscopic resection</option>
+          <option value="Partial gastrectomy">Partial gastrectomy</option>
+          <option value="Partial gastrectomy, proximal">Partial gastrectomy, proximal</option>
+          <option value="Partial gastrectomy, distal">Partial gastrectomy, distal</option>
+          <option value="Subtotal gastrectomy">Subtotal gastrectomy</option>
+          <option value="Total gastrectomy">Total gastrectomy</option>
+          <option value="Other">Other (specify)</option>
+        </select>
+        <input type="text" class="md hidden" id="procedureOther" placeholder="specify…" oninput="updateReport()">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Radical</span>
+        <label class="check-group"><input type="checkbox" id="isRadical" onchange="updateReport()"> Radical resection</label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Neoadjuvant therapy</span>
+        <div class="radio-group">
+          <label><input type="radio" name="neoAdj" value="no" checked onchange="syncNeoAdj()"> None</label>
+          <label><input type="radio" name="neoAdj" value="yes" onchange="syncNeoAdj()"> Present</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIAGNOSIS -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)"><span>DIAGNOSIS</span><span class="section-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Tumor site</span>
+        <span class="auto-tag">Auto from Gross</span>
+        <span id="dxSiteDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text2);padding-top:3px;">Stomach</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Histologic Dx</span>
+        <span class="auto-tag">Auto from Micro</span>
+        <span id="dxHistoDisplay" style="font-family:var(--mono);font-size:13px;color:var(--text2);padding-top:3px;">Adenocarcinoma, intestinal type</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">pT (Dx line)</span>
+        <span class="auto-tag">Auto from Extent</span>
+        <select id="dxpT" onchange="updateReport()">
+          <option value="">__</option>
+          <option value="is">Tis</option>
+          <option value="1a">T1a</option><option value="1b">T1b</option><option value="1">T1</option>
+          <option value="2">T2</option><option value="3">T3</option>
+          <option value="4a">T4a</option><option value="4b">T4b</option>
+        </select>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Omentum</span>
+        <div class="radio-group">
+          <label><input type="radio" name="dxOmentum" value="free" checked onchange="updateReport()"> Free of carcinoma</label>
+          <label><input type="radio" name="dxOmentum" value="meta" onchange="updateReport()"> Carcinoma, metastatic</label>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">LN (Dx)</span>
+        <span class="auto-tag">Auto</span>
+        <span style="font-size:12px;color:var(--text3);font-family:var(--mono);">Calculated from Microscopic LN</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROSS -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)"><span>GROSS DESCRIPTION</span><span class="section-toggle">▾</span></div>
+  <div class="section-body">
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Lesser curvature</span>
+        <div class="size-group"><input type="number" id="grossLC" min="0" step="0.1" oninput="updateReport()" onkeydown="tabTo(event,'grossGC')"> <span class="size-sep">cm</span></div>
+        <span class="field-label" style="min-width:auto;margin-left:8px;">Greater curvature</span>
+        <div class="size-group"><input type="number" id="grossGC" min="0" step="0.1" oninput="updateReport()" onkeydown="tabTo(event,'grossEsoLen')"> <span class="size-sep">cm</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Esophagus length</span>
+        <div class="size-group"><input type="number" id="grossEsoLen" min="0" step="0.1" oninput="syncEsoDuoVisibility()" onkeydown="tabTo(event,'grossDuoLen')"> <span class="size-sep">cm</span></div>
+        <span class="field-label" style="min-width:auto;margin-left:8px;">Duodenum length</span>
+        <div class="size-group"><input type="number" id="grossDuoLen" min="0" step="0.1" oninput="syncEsoDuoVisibility()" onkeydown="tabTo(event,'grossOm1')"> <span class="size-sep">cm</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Omentum size</span>
+        <div class="size-group">
+          <input type="number" id="grossOm1" min="0" step="0.1" oninput="updateReport()" onkeydown="tabTo(event,'grossOm2')">
+          <span class="size-sep">x</span>
+          <input type="number" id="grossOm2" min="0" step="0.1" oninput="updateReport()" onkeydown="tabTo(event,'grossOm3')">
+          <span class="size-sep">x</span>
+          <input type="number" id="grossOm3" min="0" step="0.1" oninput="updateReport()">
+          <span class="size-sep">cm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Number of lesions</span>
+        <input type="number" id="lesionNum" min="1" value="1" style="width:62px;" oninput="syncLesionNum()" onchange="syncLesionNum()">
+        <div id="lesionAggDiv" class="hidden radio-group">
+          <label><input type="radio" name="lesionAgg" value="in aggregates" checked onchange="updateReport()"> in aggregates</label>
+          <label><input type="radio" name="lesionAgg" value="up to" onchange="updateReport()"> up to</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Tumor location</div>
+      <div class="check-group indent">
+        <label><input type="checkbox" id="locCardia" onchange="syncTumorSite()"> Cardia</label>
+        <label><input type="checkbox" id="locFundus" onchange="toggleSubLoc('fundusWall',this);syncTumorSite()"> Fundus</label>
+        <label><input type="checkbox" id="locBody" onchange="toggleSubLoc('bodyWall',this);syncTumorSite()"> Body</label>
+        <label><input type="checkbox" id="locAntrum" onchange="toggleSubLoc('antrumWall',this);syncTumorSite()"> Antrum</label>
+        <label><input type="checkbox" id="locPylorus" onchange="syncTumorSite()"> Pylorus</label>
+      </div>
+      <div id="fundusWall" class="check-group indent2 hidden" style="margin-top:3px;">
+        <label><input type="checkbox" id="locFundusAnt" onchange="syncTumorSite()"> Anterior wall</label>
+        <label><input type="checkbox" id="locFundusPost" onchange="syncTumorSite()"> Posterior wall</label>
+      </div>
+      <div id="bodyWall" class="check-group indent2 hidden" style="margin-top:3px;">
+        <label><input type="checkbox" id="locBodyAnt" onchange="syncTumorSite()"> Anterior wall</label>
+        <label><input type="checkbox" id="locBodyPost" onchange="syncTumorSite()"> Posterior wall</label>
+        <label><input type="checkbox" id="locBodyLC" onchange="syncTumorSite()"> Lesser curvature</label>
+        <label><input type="checkbox" id="locBodyGC" onchange="syncTumorSite()"> Greater curvature</label>
+      </div>
+      <div id="antrumWall" class="check-group indent2 hidden" style="margin-top:3px;">
+        <label><input type="checkbox" id="locAntrumAnt" onchange="syncTumorSite()"> Anterior wall</label>
+        <label><input type="checkbox" id="locAntrumPost" onchange="syncTumorSite()"> Posterior wall</label>
+        <label><input type="checkbox" id="locAntrumLC" onchange="syncTumorSite()"> Lesser curvature</label>
+        <label><input type="checkbox" id="locAntrumGC" onchange="syncTumorSite()"> Greater curvature</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Tumor dimension</span>
+        <div class="size-group">
+          <input type="number" id="tumorD1" min="0" step="0.1" oninput="updateReport()" onkeydown="tabTo(event,'tumorD2')">
+          <span class="size-sep">x</span>
+          <input type="number" id="tumorD2" min="0" step="0.1" oninput="updateReport()" onkeydown="tabTo(event,'tumorD3')">
+          <span class="size-sep">x</span>
+          <input type="number" id="tumorD3" min="0" step="0.1" oninput="updateReport()">
+          <span class="size-sep">cm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Configuration</div>
+      <div class="radio-group indent">
+        <label><input type="radio" name="configType" value="early" checked onchange="syncConfig()"> Early cancer</label>
+        <label><input type="radio" name="configType" value="advanced" onchange="syncConfig()"> Advanced (Borrmann)</label>
+      </div>
+      <div id="earlyConfig" class="radio-group indent2" style="margin-top:5px;">
+        <label><input type="radio" name="earlyType" value="Type I protruded" onchange="updateReport()"> Type I protruded</label>
+        <label><input type="radio" name="earlyType" value="Type IIa elevated" onchange="updateReport()"> Type IIa elevated</label>
+        <label><input type="radio" name="earlyType" value="Type IIb flat" onchange="updateReport()"> Type IIb flat</label>
+        <label><input type="radio" name="earlyType" value="Type IIc depressed" onchange="updateReport()"> Type IIc depressed</label>
+        <label><input type="radio" name="earlyType" value="Type III excavated" onchange="updateReport()"> Type III excavated</label>
+      </div>
+      <div id="advConfig" class="radio-group indent2 hidden" style="margin-top:5px;">
+        <label><input type="radio" name="advType" value="Type I polypoid" onchange="updateReport()"> Type I polypoid</label>
+        <label><input type="radio" name="advType" value="Type II ulcerated" onchange="updateReport()"> Type II ulcerated</label>
+        <label><input type="radio" name="advType" value="Type III ulcerated and infiltrating" onchange="updateReport()"> Type III ulcerated and infiltrating</label>
+        <label><input type="radio" name="advType" value="Type IV diffusely infiltrating" onchange="updateReport()"> Type IV diffusely infiltrating</label>
+      </div>
+    </div>
+
+    <!-- MARGINS -->
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Distance from margin</div>
+      <div class="flex-col indent" style="gap:6px;">
+        <!-- Proximal -->
+        <div class="flex-row">
+          <span style="font-size:12px;color:var(--text3);font-family:var(--mono);min-width:80px;">Proximal</span>
+          <div class="radio-group">
+            <label><input type="radio" name="grossProx" value="Uninvolved" checked onchange="syncMargins()"> Uninvolved</label>
+            <label><input type="radio" name="grossProx" value="close" onchange="syncMargins()"> &lt;1 mm</label>
+            <label><input type="radio" name="grossProx" value="Involved" onchange="syncMargins()"> Involved</label>
+          </div>
+          <div id="proxDistDiv" class="size-group">
+            <input type="number" id="proxDist" min="0" step="0.1" style="width:62px;" placeholder="cm" oninput="syncMargins()" onkeydown="tabTo(event,'distDist')">
+            <span class="size-sep">cm</span>
+          </div>
+        </div>
+        <!-- Distal -->
+        <div class="flex-row">
+          <span style="font-size:12px;color:var(--text3);font-family:var(--mono);min-width:80px;">Distal</span>
+          <div class="radio-group">
+            <label><input type="radio" name="grossDist" value="Uninvolved" checked onchange="syncMargins()"> Uninvolved</label>
+            <label><input type="radio" name="grossDist" value="close" onchange="syncMargins()"> &lt;1 mm</label>
+            <label><input type="radio" name="grossDist" value="Involved" onchange="syncMargins()"> Involved</label>
+          </div>
+          <div id="distDistDiv" class="size-group">
+            <input type="number" id="distDist" min="0" step="0.1" style="width:62px;" placeholder="cm" oninput="syncMargins()">
+            <span class="size-sep">cm</span>
+          </div>
+        </div>
+        <!-- Omental (radial) -->
+        <div class="flex-row">
+          <span style="font-size:12px;color:var(--text3);font-family:var(--mono);min-width:80px;">Omental (radial)</span>
+          <div class="radio-group">
+            <label><input type="radio" name="grossRad" value="Uninvolved" checked onchange="syncMargins()"> Uninvolved</label>
+            <label><input type="radio" name="grossRad" value="close" onchange="syncMargins()"> &lt;1 mm</label>
+            <label><input type="radio" name="grossRad" value="Involved" onchange="syncMargins()"> Involved</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="grossEsoInvField">
+      <div class="field-row">
+        <span class="field-label">Esophagus (gross)</span>
+        <div class="radio-group">
+          <label><input type="radio" name="grossEsoInv" value="Free of tumor" checked onchange="updateReport()"> Free of tumor</label>
+          <label><input type="radio" name="grossEsoInv" value="Involved by tumor" onchange="updateReport()"> Involved by tumor</label>
+        </div>
+      </div>
+    </div>
+    <div class="field hidden" id="grossDuoInvField">
+      <div class="field-row">
+        <span class="field-label">Duodenum (gross)</span>
+        <div class="radio-group">
+          <label><input type="radio" name="grossDuoInv" value="Free of tumor" checked onchange="updateReport()"> Free of tumor</label>
+          <label><input type="radio" name="grossDuoInv" value="Involved by tumor" onchange="updateReport()"> Involved by tumor</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROSS LN STATIONS -->
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:6px;">Lymph node stations</div>
+      <table class="ln-table">
+        <thead><tr><th>Station</th><th>Fragments</th><th>Size (cm)</th><th></th></tr></thead>
+        <tbody id="grossLnBody"></tbody>
+      </table>
+      <button class="add-btn" style="margin-top:7px;" id="addGrossLnBtn">+ Add Station</button>
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Representative sections</div>
+      <textarea id="repSections" placeholder="Paste representative section description here…" oninput="updateReport()"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- MICROSCOPIC -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)"><span>MICROSCOPIC DESCRIPTION</span><span class="section-toggle">▾</span></div>
+  <div class="section-body">
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Histologic type</div>
+      <div class="radio-group indent">
+        <label><input type="radio" name="histoType" value="intestinal" checked onchange="syncHistoType()"> Adenocarcinoma, intestinal type</label>
+        <label><input type="radio" name="histoType" value="diffuse" onchange="syncHistoType()"> Adenocarcinoma, diffuse type</label>
+        <label><input type="radio" name="histoType" value="mixed" onchange="syncHistoType()"> Adenocarcinoma, mixed type</label>
+        <label><input type="radio" name="histoType" value="mucinous" onchange="syncHistoType()"> Mucinous adenocarcinoma (&gt;50%)</label>
+        <label><input type="radio" name="histoType" value="other" onchange="syncHistoType()"> Other</label>
+      </div>
+      <input type="text" class="xl hidden" id="histoTypeOther" placeholder="specify histologic type…" oninput="syncHistoType()" style="margin-top:4px;">
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Histologic grade</span>
+        <div class="radio-group">
+          <label><input type="radio" name="grade" value="G1 (well differentiated)" onchange="updateReport()"> G1</label>
+          <label><input type="radio" name="grade" value="G2 (moderately differentiated)" onchange="updateReport()"> G2</label>
+          <label><input type="radio" name="grade" value="G3 (poorly differentiated)" onchange="updateReport()"> G3</label>
+          <label><input type="radio" name="grade" value="Not applicable" onchange="updateReport()"> N/A</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Extent of invasion</div>
+      <div class="field-note">📌 CAP Note: Intramural extension to duodenum or esophagus is NOT invasion of adjacent structure; classify using depth of greatest invasion in any of these sites. [Not in report output]</div>
+      <div class="flex-col indent" style="margin-top:6px;gap:3px;">
+        <label class="radio-group"><input type="radio" name="invasion" value="Carcinoma in situ (intraepithelial tumor without invasion of the lamina propria, high-grade dysplasia)" onchange="syncExtent()"> Carcinoma in situ (intraepithelial, high-grade dysplasia)</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="Invades lamina propria" onchange="syncExtent()"> Invades lamina propria</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="Invades muscularis mucosae" onchange="syncExtent()"> Invades muscularis mucosae</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="Invades submucosa" onchange="syncExtent()"> Invades submucosa</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="Invades muscularis propria" onchange="syncExtent()"> Invades muscularis propria</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="Penetrates subserosal connective tissue without invasion of visceral peritoneum or adjacent structures" onchange="syncExtent()"> Penetrates subserosal connective tissue (without visceral peritoneum invasion)</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="Invades serosa (visceral peritoneum)" onchange="syncExtent()"> Invades serosa (visceral peritoneum)</label>
+        <label class="radio-group"><input type="radio" name="invasion" value="adjacent" onchange="syncExtent()"> Directly invades adjacent structure(s)</label>
+      </div>
+      <div id="adjacentStructures" class="check-group indent2 hidden" style="margin-top:4px;">
+        <label><input type="checkbox" class="adjChk" value="Spleen" onchange="updateReport()"> Spleen</label>
+        <label><input type="checkbox" class="adjChk" value="Transverse colon" onchange="updateReport()"> Transverse colon</label>
+        <label><input type="checkbox" class="adjChk" value="Liver" onchange="updateReport()"> Liver</label>
+        <label><input type="checkbox" class="adjChk" value="Diaphragm" onchange="updateReport()"> Diaphragm</label>
+        <label><input type="checkbox" class="adjChk" value="Pancreas" onchange="updateReport()"> Pancreas</label>
+        <label><input type="checkbox" class="adjChk" value="Abdominal wall" onchange="updateReport()"> Abdominal wall</label>
+        <label><input type="checkbox" class="adjChk" value="Adrenal gland" onchange="updateReport()"> Adrenal gland</label>
+        <label><input type="checkbox" class="adjChk" value="Kidney" onchange="updateReport()"> Kidney</label>
+        <label><input type="checkbox" class="adjChk" value="Small intestine" onchange="updateReport()"> Small intestine</label>
+        <label><input type="checkbox" class="adjChk" value="Retroperitoneum" onchange="updateReport()"> Retroperitoneum</label>
+        <input type="text" class="md" id="adjOther" placeholder="Other…" oninput="updateReport()">
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Lymphovascular invasion</span>
+        <div class="radio-group">
+          <label><input type="radio" name="lvi" value="Not identified" checked onchange="updateReport()"> Absent</label>
+          <label><input type="radio" name="lvi" value="Present" onchange="updateReport()"> Present</label>
+          <label><input type="radio" name="lvi" value="Cannot be determined" onchange="updateReport()"> Cannot be determined</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Perineural invasion</span>
+        <div class="radio-group">
+          <label><input type="radio" name="pni" value="Absent" checked onchange="syncPNI()"> Absent</label>
+          <label><input type="radio" name="pni" value="present" onchange="syncPNI()"> Present</label>
+          <label><input type="radio" name="pni" value="Cannot be determined" onchange="syncPNI()"> Cannot be determined</label>
+        </div>
+      </div>
+      <div id="pniDetail" class="check-group indent2 hidden" style="margin-top:4px;">
+        <label><input type="checkbox" id="pniIntra" onchange="updateReport()"> Intratumoral</label>
+        <label><input type="checkbox" id="pniExtra" onchange="updateReport()"> Extratumoral</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Stomach elsewhere</span>
+        <div class="radio-group">
+          <label><input type="radio" name="stomachElse" value="Unremarkable" checked onchange="updateReport()"> Unremarkable</label>
+          <label><input type="radio" name="stomachElse" value="Intestinal metaplasia" onchange="updateReport()"> Intestinal metaplasia</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="microEsoField">
+      <div class="field-row">
+        <span class="field-label">Esophagus (micro)</span>
+        <div class="radio-group">
+          <label><input type="radio" name="microEso" value="Free of tumor" checked onchange="updateReport()"> Free of tumor</label>
+          <label><input type="radio" name="microEso" value="Involved by tumor" onchange="updateReport()"> Involved by tumor</label>
+        </div>
+      </div>
+    </div>
+    <div class="field hidden" id="microDuoField">
+      <div class="field-row">
+        <span class="field-label">Duodenum (micro)</span>
+        <div class="radio-group">
+          <label><input type="radio" name="microDuo" value="Free of tumor" checked onchange="updateReport()"> Free of tumor</label>
+          <label><input type="radio" name="microDuo" value="Involved by tumor" onchange="updateReport()"> Involved by tumor</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Margin <span style="color:var(--text3);font-size:11px;">(synced from Gross)</span></div>
+      <div class="flex-col indent" style="gap:3px;font-family:var(--mono);font-size:12px;color:var(--text3);" id="microMarginDisplay">
+        <span>Proximal margin: Uninvolved</span>
+        <span>Distal margin: Uninvolved</span>
+        <span>Omental (radial) margin: Uninvolved</span>
+      </div>
+    </div>
+
+    <!-- MICRO LN -->
+    <div class="field">
+      <div class="field-row" style="align-items:center;gap:10px;">
+        <div style="font-size:13px;font-weight:500;color:var(--text2);">Lymph nodes (Positive/Total)</div>
+        <label class="check-group"><input type="checkbox" id="lnCKall" onchange="updateReport()"> Confirmed by cytokeratin</label>
+      </div>
+      <div class="flex-row" style="margin-top:6px;margin-bottom:4px;">
+        <label class="check-group"><input type="checkbox" id="lnNotAssessed" onchange="toggleLNAssess()"> Not assessed</label>
+      </div>
+      <div id="lnAssessBlock">
+        <table class="ln-table">
+          <thead><tr><th style="min-width:155px;">Station</th><th>Pos</th><th>Total</th><th></th></tr></thead>
+          <tbody id="microLnBody"></tbody>
+        </table>
+        <!-- Isolated tumor cells -->
+        <div class="field" style="margin-top:8px;">
+          <div class="field-row">
+            <span class="field-label" style="min-width:auto;font-size:12px;">Isolated tumor cells</span>
+            <div class="radio-group">
+              <label><input type="radio" name="itcMode" value="none" checked onchange="syncITC()"> None</label>
+              <label><input type="radio" name="itcMode" value="num" onchange="syncITC()"> Specify no.</label>
+            </div>
+            <div id="itcNumDiv" class="size-group hidden">
+              <input type="number" id="itcNum" min="0" style="width:60px;" oninput="updateReport()">
+              <span class="size-sep" style="font-size:12px;">lymph node(s)</span>
+            </div>
+          </div>
+        </div>
+        <!-- Extranodal extension -->
+        <div style="margin-top:6px;" class="field">
+          <div class="field-row">
+            <span class="field-label">Extranodal extension</span>
+            <div class="radio-group">
+              <label><input type="radio" name="extranodal" value="Present" onchange="updateReport()"> Present</label>
+              <label><input type="radio" name="extranodal" value="Absent" onchange="updateReport()"> Absent</label>
+              <label><input type="radio" name="extranodal" value="Not applicable" checked onchange="updateReport()"> Not applicable</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Omentum (micro)</span>
+        <div class="radio-group">
+          <label><input type="radio" name="microOmentum" value="Free of tumor" checked onchange="updateReport()"> Free of tumor</label>
+          <label><input type="radio" name="microOmentum" value="Involved by tumor" onchange="updateReport()"> Involved by tumor</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">Distant metastasis (pM)</span>
+        <div class="radio-group">
+          <label><input type="radio" name="pM" value="na" checked onchange="syncPM()"> Not applicable</label>
+          <label><input type="radio" name="pM" value="pM1" onchange="syncPM()"> pM1</label>
+        </div>
+      </div>
+      <input type="text" class="lg hidden" id="pMSite" placeholder="Site of distant metastasis…" oninput="updateReport()" style="margin-top:4px;">
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">HER2/neu (optional)</div>
+      <div class="radio-group indent">
+        <label><input type="radio" name="her2" value="none" checked onchange="syncHER2()"> Not reported</label>
+        <label><input type="radio" name="her2" value="prev" onchange="syncHER2()"> Previous specimen</label>
+        <label><input type="radio" name="her2" value="neg" onchange="syncHER2()"> Negative (0, 1+)</label>
+        <label><input type="radio" name="her2" value="equivocal" onchange="syncHER2()"> Equivocal (2+)</label>
+        <label><input type="radio" name="her2" value="pos" onchange="syncHER2()"> Positive (3+)</label>
+      </div>
+      <input type="text" class="md hidden" id="her2PrevSpec" placeholder="Spec no. S______" oninput="updateReport()" style="margin-top:4px;">
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">pTNM (AJCC 8th edition)</div>
+      <div class="flex-row indent" style="gap:12px;flex-wrap:wrap;">
+        <div class="flex-col">
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">pT</span>
+          <select id="pT" onchange="updateReport()">
+            <option value="">__</option>
+            <option value="0">pT0</option>
+            <option value="is">pTis</option>
+            <option value="1a">pT1a</option><option value="1b">pT1b</option><option value="1">pT1</option>
+            <option value="2">pT2</option><option value="3">pT3</option>
+            <option value="4a">pT4a</option><option value="4b">pT4b</option>
+          </select>
+        </div>
+        <div class="flex-col">
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">pN <span class="auto-tag">Auto</span></span>
+          <select id="pN" onchange="updateReport()">
+            <option value="">__</option>
+            <option value="0">pN0</option><option value="1">pN1</option><option value="2">pN2</option>
+            <option value="3a">pN3a</option><option value="3b">pN3b</option><option value="3">pN3</option>
+          </select>
+        </div>
+        <div class="flex-col">
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">pM</span>
+          <select id="pMstage" onchange="updateReport()">
+            <option value="na">Not applicable</option>
+            <option value="1">pM1</option>
+          </select>
+        </div>
+        <div class="flex-col">
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">T suffix</span>
+          <select id="tSuffix" onchange="updateReport()">
+            <option value="">None</option>
+            <option value="m">(m) multiple primary</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-row">
+        <span class="field-label">TNM descriptors</span>
+        <div class="check-group">
+          <label><input type="checkbox" id="descY" onchange="updateReport()"> y (posttreatment)</label>
+          <label><input type="checkbox" id="descR" onchange="updateReport()"> r (recurrent)</label>
+          <label><input type="checkbox" id="descM2" onchange="updateReport()"> m (multiple primary)</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label" style="min-width:auto;margin-bottom:4px;">Additional pathologic findings</div>
+      <textarea id="addFindings" placeholder="e.g., Intestinal metaplasia, Helicobacter pylori, chronic gastritis…" oninput="updateReport()"></textarea>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /form-panel -->
+
+<div class="report-panel">
+  <div class="report-header">
+    <span class="report-header-title">REPORT OUTPUT</span>
+    <button class="copy-btn" onclick="copyReport()">Copy</button>
+  </div>
+  <div class="report-output" id="reportOutput"></div>
+</div>
+</div><!-- /main -->
+
+<script>
+function gv(id){ var e=document.getElementById(id); return e?e.value:''; }
+function gc(id){ var e=document.getElementById(id); return e?e.checked:false; }
+function gr(name){ var e=document.querySelector('input[name="'+name+'"]:checked'); return e?e.value:''; }
+function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
+function el(id){ return document.getElementById(id); }
+
+function toggleSection(hdr){
+  var body=hdr.nextElementSibling;
+  var tog=hdr.querySelector('.section-toggle');
+  body.classList.toggle('collapsed');
+  tog.textContent=body.classList.contains('collapsed')?'▸':'▾';
+}
+function tabTo(e,nid){ if(e.key==='Tab'){ var n=el(nid); if(n){e.preventDefault();n.focus();} } }
+function tabInRow(e,inp){
+  if(e.key==='Tab'){
+    var arr=Array.from(inp.closest('tr').querySelectorAll('input[type="number"],input[type="text"]'));
+    var i=arr.indexOf(inp); if(i<arr.length-1){e.preventDefault();arr[i+1].focus();}
+  }
+}
+
+// ===== PROCEDURE LABEL (with radical prefix) =====
+function getProcLabel(){
+  var p=gv('procedure')==='Other'?gv('procedureOther'):gv('procedure');
+  if(!p) return '__';
+  return gc('isRadical')?'radical '+p.toLowerCase():p.toLowerCase();
+}
+// Capitalised for Specimen type line in Gross
+function getProcLabelCap(){
+  var p=gv('procedure')==='Other'?gv('procedureOther'):gv('procedure');
+  if(!p) return '__';
+  return gc('isRadical')?'Radical '+p:p;
+}
+
+function syncProcedure(){
+  el('procedureOther').classList.toggle('hidden', gv('procedure')!=='Other');
+  updateReport();
+}
+
+// ===== HISTOLOGIC TYPE =====
+var histoTypeMap={
+  intestinal:'Adenocarcinoma, intestinal type',
+  diffuse:'Adenocarcinoma, diffuse type',
+  mixed:'Adenocarcinoma, mixed type',
+  mucinous:'Mucinous adenocarcinoma (>50% mucinous)',
+  other:''
+};
+function getHistoLabel(){
+  var t=gr('histoType');
+  if(t==='other') return gv('histoTypeOther')||'__';
+  return histoTypeMap[t]||'Adenocarcinoma, intestinal type';
+}
+function syncHistoType(){
+  el('histoTypeOther').classList.toggle('hidden', gr('histoType')!=='other');
+  el('dxHistoDisplay').textContent=getHistoLabel();
+  updateReport();
+}
+
+// ===== TUMOR SITE from GROSS =====
+function getTumorSiteLabel(){
+  var parts=[];
+  if(gc('locCardia')) parts.push('cardia');
+  if(gc('locFundus')){
+    var s=[]; if(gc('locFundusAnt')) s.push('anterior wall'); if(gc('locFundusPost')) s.push('posterior wall');
+    parts.push('fundus'+(s.length?' ('+s.join(', ')+')':''));
+  }
+  if(gc('locBody')){
+    var s2=[]; if(gc('locBodyAnt')) s2.push('anterior wall'); if(gc('locBodyPost')) s2.push('posterior wall');
+    if(gc('locBodyLC')) s2.push('lesser curvature'); if(gc('locBodyGC')) s2.push('greater curvature');
+    parts.push('body'+(s2.length?' ('+s2.join(', ')+')':''));
+  }
+  if(gc('locAntrum')){
+    var s3=[]; if(gc('locAntrumAnt')) s3.push('anterior wall'); if(gc('locAntrumPost')) s3.push('posterior wall');
+    if(gc('locAntrumLC')) s3.push('lesser curvature'); if(gc('locAntrumGC')) s3.push('greater curvature');
+    parts.push('antrum'+(s3.length?' ('+s3.join(', ')+')':''));
+  }
+  if(gc('locPylorus')) parts.push('pylorus');
+  return parts.length?parts.join(', '):'stomach';
+}
+function getDxSiteStr(){
+  var s=getTumorSiteLabel();
+  return s==='stomach'?'Stomach':'Stomach, '+s;
+}
+function syncTumorSite(){
+  el('dxSiteDisplay').textContent=getDxSiteStr();
+  updateReport();
+}
+
+// ===== ESO / DUO VISIBILITY =====
+function syncEsoDuoVisibility(){
+  var hasEso=!!gv('grossEsoLen'), hasDuo=!!gv('grossDuoLen');
+  el('grossEsoInvField').classList.toggle('hidden',!hasEso);
+  el('grossDuoInvField').classList.toggle('hidden',!hasDuo);
+  el('microEsoField').classList.toggle('hidden',!hasEso);
+  el('microDuoField').classList.toggle('hidden',!hasDuo);
+  updateReport();
+}
+
+// ===== pN AUTO =====
+function calcAutoPN(pos){
+  if(pos===0) return '0';
+  if(pos<=2) return '1';
+  if(pos<=6) return '2';
+  if(pos<=15) return '3a';
+  return '3b';
+}
+function autoPN(){
+  var pos=0;
+  document.querySelectorAll('.lnPos').forEach(function(e){pos+=parseInt(e.value)||0;});
+  el('pN').value=calcAutoPN(pos);
+  if(pos===0){ var na=document.querySelector('input[name="extranodal"][value="Not applicable"]'); if(na) na.checked=true; }
+}
+
+// ===== SYNC =====
+function syncNeoAdj(){
+  var yes=gr('neoAdj')==='yes';
+  if(!yes) el('treatEffect').value='No known presurgical therapy';
+  el('descY').checked=yes;
+  updateReport();
+}
+function syncConfig(){
+  var adv=gr('configType')==='advanced';
+  el('advConfig').classList.toggle('hidden',!adv);
+  el('earlyConfig').classList.toggle('hidden',adv);
+  updateReport();
+}
+var invasionPTmap={
+  'Carcinoma in situ (intraepithelial tumor without invasion of the lamina propria, high-grade dysplasia)':'is',
+  'Invades lamina propria':'1a','Invades muscularis mucosae':'1a','Invades submucosa':'1b',
+  'Invades muscularis propria':'2',
+  'Penetrates subserosal connective tissue without invasion of visceral peritoneum or adjacent structures':'3',
+  'Invades serosa (visceral peritoneum)':'4a','adjacent':'4b'
+};
+function syncExtent(){
+  var val=gr('invasion');
+  el('adjacentStructures').classList.toggle('hidden', val!=='adjacent');
+  var t=invasionPTmap[val];
+  if(t){ el('pT').value=t; el('dxpT').value=t; }
+  updateReport();
+}
+function syncPNI(){ el('pniDetail').classList.toggle('hidden', gr('pni')!=='present'); updateReport(); }
+function syncPM(){
+  el('pMSite').classList.toggle('hidden', gr('pM')!=='pM1');
+  el('pMstage').value=gr('pM')==='pM1'?'1':'na';
+  updateReport();
+}
+function syncHER2(){ el('her2PrevSpec').classList.toggle('hidden', gr('her2')!=='prev'); updateReport(); }
+function syncITC(){ el('itcNumDiv').classList.toggle('hidden', gr('itcMode')!=='num'); updateReport(); }
+function toggleSubLoc(divId,cb){ el(divId).classList.toggle('hidden',!cb.checked); }
+function syncLesionNum(){
+  var n=parseInt(gv('lesionNum'))||1;
+  el('lesionAggDiv').classList.toggle('hidden', n<=1);
+  updateReport();
+}
+function toggleLNAssess(){ el('lnAssessBlock').classList.toggle('hidden', gc('lnNotAssessed')); updateReport(); }
+
+function fmtMout(radioName, distId){
+  var v=gr(radioName);
+  if(v==='close') return '<1 mm';
+  if(v==='Involved') return 'Involved';
+  var d=distId?gv(distId):'';
+  return 'Uninvolved'+(d?', '+d+' cm in distance':'');
+}
+
+function syncMargins(){
+  var pv=gr('grossProx'), dv=gr('grossDist');
+  el('proxDistDiv').style.visibility=(pv==='Uninvolved')?'visible':'hidden';
+  el('distDistDiv').style.visibility=(dv==='Uninvolved')?'visible':'hidden';
+  var mP=fmtMout('grossProx','proxDist');
+  var mD=fmtMout('grossDist','distDist');
+  var mR=fmtMout('grossRad',null);
+  el('microMarginDisplay').innerHTML=
+    '<span>Proximal margin: '+mP+'</span>'+
+    '<span>Distal margin: '+mD+'</span>'+
+    '<span>Omental (radial) margin: '+mR+'</span>';
+  updateReport();
+}
+
+// ===== GROSS LN =====
+var gLnCounter=0;
+function addGrossLn(){
+  gLnCounter++;
+  var rowId='gln'+gLnCounter;
+  var tr=document.createElement('tr'); tr.id=rowId;
+
+  // Station
+  var td1=document.createElement('td');
+  var stIn=document.createElement('input'); stIn.type='text'; stIn.className='sm'; stIn.placeholder='e.g. 3';
+  stIn.addEventListener('input', function(){ syncMicroLnLabel(rowId,stIn.value); updateReport(); });
+  stIn.addEventListener('keydown',function(e){tabInRow(e,this);});
+  td1.appendChild(stIn);
+
+  // Fragments (number or Multiple)
+  var td2=document.createElement('td');
+  var fragWrap=document.createElement('div'); fragWrap.style.cssText='display:flex;align-items:center;gap:5px;';
+  var fragModeNum=document.createElement('input'); fragModeNum.type='radio'; fragModeNum.name='fragMode_'+rowId; fragModeNum.value='num'; fragModeNum.checked=true; fragModeNum.style.cssText='accent-color:var(--accent);width:12px;height:12px;';
+  var fragNumIn=document.createElement('input'); fragNumIn.type='number'; fragNumIn.min='1'; fragNumIn.style.width='52px';
+  fragNumIn.addEventListener('input',updateReport); fragNumIn.addEventListener('keydown',function(e){tabInRow(e,this);});
+  var fragModeMulti=document.createElement('input'); fragModeMulti.type='radio'; fragModeMulti.name='fragMode_'+rowId; fragModeMulti.value='multiple'; fragModeMulti.style.cssText='accent-color:var(--accent);width:12px;height:12px;';
+  var fragMultiLabel=document.createElement('span'); fragMultiLabel.textContent='Multiple'; fragMultiLabel.style.cssText='font-size:12px;color:var(--text3);font-family:var(--mono);';
+  function onFragModeChange(){ var isNum=(fragModeNum.checked); fragNumIn.style.visibility=isNum?'visible':'hidden'; updateReport(); }
+  fragModeNum.addEventListener('change',onFragModeChange);
+  fragModeMulti.addEventListener('change',onFragModeChange);
+  fragWrap.appendChild(fragModeNum); fragWrap.appendChild(fragNumIn);
+  fragWrap.appendChild(fragModeMulti); fragWrap.appendChild(fragMultiLabel);
+  td2.appendChild(fragWrap);
+
+  // Size
+  var td3=document.createElement('td');
+  var sg=document.createElement('div'); sg.className='size-group';
+  function mkN(){ var i=document.createElement('input'); i.type='number'; i.min='0'; i.step='0.1'; i.style.width='44px'; i.addEventListener('input',updateReport); i.addEventListener('keydown',function(e){tabInRow(e,this);}); return i; }
+  function mkS(t){ var s=document.createElement('span'); s.className='size-sep'; s.textContent=t; return s; }
+  sg.appendChild(mkN()); sg.appendChild(mkS('x')); sg.appendChild(mkN()); sg.appendChild(mkS('x')); sg.appendChild(mkN()); sg.appendChild(mkS('cm'));
+  td3.appendChild(sg);
+
+  // Delete
+  var td4=document.createElement('td');
+  var db=document.createElement('button'); db.className='del-btn'; db.textContent='×';
+  db.addEventListener('click',function(){
+    var gr=el(rowId); if(gr) gr.remove();
+    var mr=el('m_'+rowId); if(mr) mr.remove();
+    autoPN(); updateReport();
+  });
+  td4.appendChild(db);
+
+  tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+  el('grossLnBody').appendChild(tr);
+  addSyncedMicroRow(rowId,'');
+  updateReport();
+}
+
+function getGrossRowFragStr(row){
+  // Determine if Multiple or number
+  var radios=row.querySelectorAll('input[type="radio"]');
+  var numInput=row.querySelectorAll('input[type="number"]')[0];
+  var isMulti=false;
+  radios.forEach(function(r){ if(r.value==='multiple'&&r.checked) isMulti=true; });
+  if(isMulti) return 'Multiple fragments';
+  var n=parseInt((numInput&&numInput.value))||0;
+  return n===1?(n+' fragment'):(n+' fragments');
+}
+
+// ===== MICRO LN =====
+function buildFixedMicroRows(){
+  var tbody=el('microLnBody');
+  ['Lesser curvature side','Greater curvature side'].forEach(function(lbl){
+    var tr=document.createElement('tr'); tr.className='microLnRow';
+    tr.appendChild(makeMicroCells(lbl,false));
+    tbody.appendChild(tr);
+  });
+}
+function makeMicroCells(lbl,fromGross){
+  var frag=document.createDocumentFragment();
+  var td1=document.createElement('td');
+  var sp=document.createElement('span');
+  sp.style.cssText='font-family:var(--mono);font-size:13px;color:var(--text2);';
+  if(fromGross) sp.className='micro-ln-label';
+  sp.textContent=lbl;
+  td1.appendChild(sp);
+
+  var td2=document.createElement('td');
+  var pi=document.createElement('input'); pi.type='number'; pi.className='lnPos'; pi.min='0'; pi.style.width='52px';
+  pi.addEventListener('input',function(){autoPN();updateReport();}); pi.addEventListener('keydown',function(e){tabInRow(e,this);});
+  td2.appendChild(pi);
+
+  var td3=document.createElement('td');
+  var ti=document.createElement('input'); ti.type='number'; ti.className='lnTot'; ti.min='0'; ti.style.width='52px';
+  ti.addEventListener('input',updateReport); ti.addEventListener('keydown',function(e){tabInRow(e,this);});
+  td3.appendChild(ti);
+
+  var td4=document.createElement('td');
+  if(fromGross){ td4.style.cssText='font-size:11px;color:var(--text3);font-family:var(--mono);padding-left:4px;'; td4.textContent='↑ Gross'; }
+  frag.appendChild(td1); frag.appendChild(td2); frag.appendChild(td3); frag.appendChild(td4);
+  return frag;
+}
+function addSyncedMicroRow(grossRowId,label){
+  var tr=document.createElement('tr'); tr.id='m_'+grossRowId; tr.className='microLnRow';
+  tr.appendChild(makeMicroCells(label||'—',true));
+  el('microLnBody').appendChild(tr);
+}
+function syncMicroLnLabel(grossRowId,val){
+  var mr=el('m_'+grossRowId); if(!mr) return;
+  var sp=mr.querySelector('.micro-ln-label'); if(sp) sp.textContent=val?('Station '+val):'—';
+}
+
+// ===== REPORT BUILDER =====
+function updateReport(){
+  var out=[];
+  var procLabel=getProcLabel();        // lowercase, with radical prefix if checked
+  var procLabelCap=getProcLabelCap();  // capitalized for Gross specimen line
+  var neoYes=gr('neoAdj')==='yes';
+  var useY=neoYes||gc('descY'), useR=gc('descR');
+  var yp=useY?'y':(useR?'r':'');
+  var hasEso=!!gv('grossEsoLen'), hasDuo=!!gv('grossDuoLen');
+
+  var dxSiteStr=getDxSiteStr();
+  var histoLabel=getHistoLabel();
+  var dxpTval=gv('dxpT');
+  var dxpTstr=dxpTval?('p'+yp+'T'+dxpTval):('p'+yp+'T__');
+
+  var lnPos=0,lnTot=0;
+  var lnNA=gc('lnNotAssessed');
+  if(!lnNA){
+    document.querySelectorAll('.lnPos').forEach(function(e){lnPos+=parseInt(e.value)||0;});
+    document.querySelectorAll('.lnTot').forEach(function(e){lnTot+=parseInt(e.value)||0;});
+  }
+  var pNval=gv('pN');
+  var pNdisp=pNval?('N'+pNval):'N__';
+
+  // === DIAGNOSIS ===
+  out.push('DIAGNOSIS:');
+  out.push(dxSiteStr+', '+procLabel+' --- '+histoLabel+' ('+dxpTstr+')');
+  out.push('Omentum, omentectomy --- '+(gr('dxOmentum')==='meta'?'Carcinoma, metastatic':'Free of carcinoma'));
+  if(lnNA){
+    out.push('Lymph nodes, regional, dissection --- Not assessed');
+  } else if(lnPos===0){
+    out.push('Lymph nodes, regional, dissection --- Free of metastasis ('+lnPos+'/'+lnTot+', '+yp+'pN0)');
+  } else {
+    out.push('Lymph nodes, regional, dissection --- Carcinoma, metastatic ('+lnPos+'/'+lnTot+', '+yp+'p'+pNdisp+')');
+  }
+  out.push('');
+
+  // === GROSS ===
+  out.push('GROSS DESCRIPTION:');
+  out.push('Specimen type and size: '+procLabelCap);
+  var mp=[];
+  if(gv('grossLC')) mp.push('Lesser curvature: '+gv('grossLC')+' cm');
+  if(gv('grossGC')) mp.push('Greater curvature: '+gv('grossGC')+' cm');
+  if(hasEso) mp.push('Esophagus: '+gv('grossEsoLen')+' cm');
+  if(hasDuo) mp.push('Duodenum: '+gv('grossDuoLen')+' cm');
+  if(gv('grossOm1')||gv('grossOm2')||gv('grossOm3'))
+    mp.push('Omentum: '+(gv('grossOm1')||'__')+' x '+(gv('grossOm2')||'__')+' x '+(gv('grossOm3')||'__')+' cm');
+  if(mp.length) out.push(mp.join('; ')+'.');
+
+  var nLes=parseInt(gv('lesionNum'))||1;
+  var aggMode=gr('lesionAgg')||'in aggregates';
+  out.push('Number of lesions: '+(nLes===1?'1':nLes+', '+aggMode));
+
+  // Location
+  var locParts=[];
+  if(gc('locCardia')) locParts.push('Cardia');
+  if(gc('locFundus')){ var fs=[]; if(gc('locFundusAnt')) fs.push('Anterior wall'); if(gc('locFundusPost')) fs.push('Posterior wall'); locParts.push('Fundus'+(fs.length?' ('+fs.join(', ')+')':'')); }
+  if(gc('locBody')){ var bs=[]; if(gc('locBodyAnt')) bs.push('Anterior wall'); if(gc('locBodyPost')) bs.push('Posterior wall'); if(gc('locBodyLC')) bs.push('Lesser curvature'); if(gc('locBodyGC')) bs.push('Greater curvature'); locParts.push('Body'+(bs.length?' ('+bs.join(', ')+')':'')); }
+  if(gc('locAntrum')){ var as=[]; if(gc('locAntrumAnt')) as.push('Anterior wall'); if(gc('locAntrumPost')) as.push('Posterior wall'); if(gc('locAntrumLC')) as.push('Lesser curvature'); if(gc('locAntrumGC')) as.push('Greater curvature'); locParts.push('Antrum'+(as.length?' ('+as.join(', ')+')':'')); }
+  if(gc('locPylorus')) locParts.push('Pylorus');
+  out.push('Tumor location: '+(locParts.length?locParts.join(', '):'Not specified'));
+
+  var d1=gv('tumorD1'),d2=gv('tumorD2'),d3=gv('tumorD3');
+  out.push('Dimension of tumor: '+(d1||'__')+' x '+(d2||'__')+' x '+(d3||'__')+' cm');
+
+  // Configuration
+  var cfgAdv=gr('configType')==='advanced';
+  var cfgVal=cfgAdv?gr('advType'):gr('earlyType');
+  if(cfgVal){
+    var cfgPfx=cfgAdv?"For advanced cancer (Borrmann's classification): ":"For early cancer: ";
+    out.push('Configuration of tumor: '+cfgPfx+cfgVal);
+  }
+
+  // Margins
+  var mP=fmtMout('grossProx','proxDist');
+  var mD=fmtMout('grossDist','distDist');
+  var mR=fmtMout('grossRad',null);
+  out.push('Distance from margin:');
+  out.push('- Proximal: '+mP);
+  out.push('- Distal: '+mD);
+  out.push('- Omental (radial): '+mR);
+
+  if(hasEso) out.push('Esophagus: '+(gr('grossEsoInv')||'Free of tumor'));
+  if(hasDuo) out.push('Duodenum: '+(gr('grossDuoInv')||'Free of tumor'));
+
+  var grossRows=document.querySelectorAll('#grossLnBody tr');
+  if(grossRows.length){
+    out.push('Lymph nodes (submitted in separate containers):');
+    grossRows.forEach(function(row){
+      var ins=row.querySelectorAll('input[type="text"]');
+      var st=(ins[0]&&ins[0].value)||'__';
+      var fragStr=getGrossRowFragStr(row);
+      var numIns=row.querySelectorAll('input[type="number"]');
+      var sz1=(numIns[1]&&numIns[1].value)||''; var sz2=(numIns[2]&&numIns[2].value)||''; var sz3=(numIns[3]&&numIns[3].value)||'';
+      var szP=''; if(sz1||sz2||sz3) szP=', '+(sz1||'__')+' x '+(sz2||'__')+' x '+(sz3||'__')+' cm in aggregate';
+      out.push('- Station '+st+': '+fragStr+szP+'.');
+    });
+  }
+
+  out.push('');
+  out.push('Representative sections are taken and labeled as follows:');
+  var rep=gv('repSections'); if(rep) out.push(rep);
+  out.push('');
+
+  // === MICROSCOPIC ===
+  out.push('MICROSCOPIC DESCRIPTION:');
+  out.push('Histologic type: '+histoLabel);
+
+  var grd=gr('grade'); if(grd) out.push('Histologic grade: '+grd);
+
+  var invVal=gr('invasion');
+  if(invVal==='adjacent'){
+    var adj=[]; document.querySelectorAll('.adjChk:checked').forEach(function(c){adj.push(c.value);}); if(gv('adjOther')) adj.push(gv('adjOther'));
+    out.push('Extent of invasion: Directly invades adjacent structure(s)'+(adj.length?': '+adj.join(', '):''));
+  } else if(invVal){ out.push('Extent of invasion: '+cap(invVal)); }
+
+  var lvi=gr('lvi');
+  out.push('Lymphovascular space invasion: '+(lvi==='Not identified'?'Absent':(lvi||'Absent')));
+
+  var pni=gr('pni');
+  if(pni==='present'){
+    var pts=[]; if(gc('pniIntra')) pts.push('intratumoral'); if(gc('pniExtra')) pts.push('extratumoral');
+    out.push('Perineural invasion: Present'+(pts.length?' ('+pts.join(', ')+')':''));
+  } else { out.push('Perineural invasion: '+(pni==='Cannot be determined'?'Cannot be determined':'Absent')); }
+
+  out.push('Stomach elsewhere: '+(gr('stomachElse')||'Unremarkable'));
+  if(hasEso) out.push('Esophagus: '+(gr('microEso')||'Free of tumor'));
+  if(hasDuo) out.push('Duodenum: '+(gr('microDuo')||'Free of tumor'));
+
+  out.push('Margin:');
+  out.push('- Proximal margin: '+mP);
+  out.push('- Distal margin: '+mD);
+  out.push('- Omental (radial) margin: '+mR);
+
+  // LN micro
+  var ckAll=gc('lnCKall');
+  out.push('Lymph nodes (Positive/Total)'+(ckAll?' (Confirmed by cytokeratin)':'')+':');
+  if(lnNA){
+    out.push('- Not assessed');
+  } else {
+    document.querySelectorAll('.microLnRow').forEach(function(row){
+      var sp=row.querySelector('.micro-ln-label')||row.querySelector('span');
+      var label=sp?sp.textContent:'__';
+      var pe=row.querySelector('.lnPos'), te=row.querySelector('.lnTot');
+      var pos=(pe&&pe.value!=='')?pe.value:'0';
+      var tot=(te&&te.value!=='')?te.value:'0';
+      out.push('- '+label+': '+pos+'/'+tot);
+    });
+    // Isolated tumor cells
+    if(gr('itcMode')==='num'){
+      var itcN=gv('itcNum');
+      if(itcN!=='') out.push('- No. of lymph nodes with isolated tumor cells: '+itcN);
+    }
+    out.push('- Extranodal extension: '+(gr('extranodal')||'Not applicable'));
+  }
+
+  out.push('Omentum: '+(gr('microOmentum')||'Free of tumor'));
+
+  if(gr('pM')==='pM1'){
+    out.push('Distant metastasis (pM): pM1'+(gv('pMSite')?', Site: '+gv('pMSite'):''));
+  } else { out.push('Distant metastasis (pM): Not applicable'); }
+
+  var her2=gr('her2');
+  if(her2!=='none'){
+    var hmap={
+      prev:'Immunohistochemical stain for assessment of HER-2/neu protein: Results reported in previous specimen '+(gv('her2PrevSpec')||'S____'),
+      neg:'Immunohistochemical stain for assessment of HER-2/neu protein: Negative (score: 0, 1+)',
+      equivocal:'Immunohistochemical stain for assessment of HER-2/neu protein: Equivocal (score: 2+)',
+      pos:'Immunohistochemical stain for assessment of HER-2/neu protein: Positive (score: 3+)'
+    };
+    if(hmap[her2]) out.push(hmap[her2]);
+  }
+
+  // Treatment effect before pTNM
+  out.push('Treatment effect: '+cap(gv('treatEffect')||'No known presurgical therapy'));
+
+  // pTNM: pT4aN1 (no second p, M omitted if not applicable)
+  var pTv=gv('pT'), pNv=gv('pN'), pMv=gv('pMstage'), tsuf=gv('tSuffix');
+  var tSufStr=tsuf?('('+tsuf+')'):'';
+  var pTs,pNs,pMs='';
+  if(useY){ pTs=pTv?('ypT'+pTv+tSufStr):'ypT__'; pNs=pNv?('N'+pNv):'N__'; }
+  else if(useR){ pTs=pTv?('rpT'+pTv+tSufStr):'rpT__'; pNs=pNv?('N'+pNv):'N__'; }
+  else { pTs=pTv?('pT'+pTv+tSufStr):'pT__'; pNs=pNv?('N'+pNv):'N__'; }
+  if(pMv==='1') pMs='M1';
+  out.push('pTNM: '+pTs+pNs+pMs+' (AJCC cancer staging system, 8th edition)');
+
+  var descParts=[];
+  if(useY) descParts.push('y (posttreatment)');
+  if(useR) descParts.push('r (recurrent)');
+  if(gc('descM2')) descParts.push('m (multiple primary tumors)');
+  out.push('TNM descriptors: '+(descParts.length?descParts.join(', '):'Not applicable'));
+
+  var add=gv('addFindings');
+  if(add){ out.push(''); out.push('Additional pathologic findings: '+add); }
+
+  // Final line
+  out.push('');
+  out.push('(This case has been reviewed by two pathologists.)');
+
+  el('reportOutput').textContent=out.join('\n');
+}
+
+function copyReport(){
+  navigator.clipboard.writeText(el('reportOutput').textContent).then(function(){
+    var btn=document.querySelector('.copy-btn');
+    btn.textContent='Copied!'; btn.style.background='#2e7d32';
+    setTimeout(function(){ btn.textContent='Copy'; btn.style.background=''; },1500);
+  });
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  el('addGrossLnBtn').addEventListener('click',addGrossLn);
+  buildFixedMicroRows();
+  syncMargins();
+  syncConfig();
+  syncEsoDuoVisibility();
+  syncHistoType();
+  syncTumorSite();
+  updateReport();
+});
+</script>
+</body>
+</html>

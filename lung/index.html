@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lung Pathology Report Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f4f4f2;min-height:100vh}
+.app-header{background:#fff;border-bottom:1px solid #e0e0d8;padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:16px;font-weight:600;color:#1a1a1a}
+.app-header span{font-size:12px;color:#888;background:#f0efea;padding:2px 8px;border-radius:10px}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 49px)}
+.sidebar{background:#fff;border-right:1px solid #e0e0d8;padding:8px 0;position:sticky;top:49px;height:calc(100vh - 49px);overflow-y:auto}
+.nav-item{padding:9px 16px;font-size:13px;cursor:pointer;color:#555;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:#f8f8f6;color:#1a1a1a}
+.nav-item.active{background:#f0f4ff;color:#2a5cff;border-left-color:#2a5cff;font-weight:500}
+.main{padding:24px;overflow-y:auto}
+.panel{display:none}.panel.active{display:block}
+h2{font-size:17px;font-weight:600;margin-bottom:16px;color:#1a1a1a}
+.card{background:#fff;border:1px solid #e8e8e0;border-radius:10px;padding:16px 20px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#999;margin-bottom:12px}
+.field{margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.field label.fl{font-size:12px;color:#666;min-width:155px;line-height:32px;flex-shrink:0}
+input[type=text],input[type=number],select,textarea{font-size:13px;padding:5px 9px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;outline:none;transition:border .15s}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{border-color:#2a5cff}
+input[type=number]{width:72px}
+select{min-width:180px}
+textarea{width:100%;min-height:56px;resize:vertical}
+.radio-group,.check-group{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:5px 0}
+.radio-item,.check-item{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer}
+.radio-item input,.check-item input{width:15px;height:15px;cursor:pointer}
+.size-row{display:flex;align-items:center;gap:5px}
+.size-row input{width:68px}
+.size-sep{color:#bbb;font-size:13px;user-select:none}
+.stn-block{background:#f9f9f7;border:1px solid #e8e8e0;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+.stn-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stn-header input{width:68px;font-size:13px;padding:4px 7px;border:1px solid #ddd;border-radius:6px}
+.stn-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stn-row label{font-size:12px;color:#777}
+.stn-row input{font-size:13px;padding:4px 7px;border:1px solid #ddd;border-radius:6px;width:65px}
+.stn-row select{font-size:12px;padding:3px 6px;border:1px solid #ddd;border-radius:6px;min-width:120px}
+.rm-btn{margin-left:auto;font-size:12px;color:#d44;background:none;border:none;cursor:pointer;padding:2px 6px}
+.add-btn{font-size:12px;color:#2a5cff;background:#f0f4ff;border:1px dashed #b0c0ff;border-radius:6px;padding:5px 12px;cursor:pointer;margin-top:6px}
+.add-btn:hover{background:#e0e8ff}
+.pct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:6px 0}
+.pct-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#666}
+.pct-item input{width:58px}
+.pct-sum{font-size:12px;font-weight:600;margin-top:4px;padding:4px 10px;border-radius:6px;display:inline-block}
+.pct-ok{background:#e6f9ee;color:#1a7a3a}.pct-warn{background:#fff8e0;color:#a06000}.pct-err{background:#fde8e8;color:#c42}
+.ln-summary{font-size:13px;color:#444;background:#f5f5f0;border-radius:6px;padding:8px 12px;margin-top:8px}
+.no-ln-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:10px}
+.generate-btn{background:#1a3cff;color:#fff;border:none;border-radius:8px;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px}
+.generate-btn:hover{background:#0028e0}
+.copy-btn{background:#fff;color:#1a3cff;border:1px solid #2a5cff;border-radius:6px;padding:6px 16px;font-size:12px;cursor:pointer;margin-left:10px}
+.copy-btn:hover{background:#f0f4ff}
+.report-box{background:#fff;border:1px solid #e8e8e0;border-radius:10px;padding:20px;margin-top:14px;font-family:'Courier New',monospace;font-size:12.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word;display:none;color:#1a1a1a}
+.hint{font-size:11px;color:#aaa;margin-top:4px}
+.sep{border:none;border-top:1px solid #eee;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <h1>Lung Pathology Report Generator</h1>
+  <span>AJCC Version 9 · CAP Protocol 5.0</span>
+</div>
+<div class="layout">
+<div class="sidebar">
+  <div class="nav-item active" onclick="nav('dx',this)">① Pathologic Diagnosis</div>
+  <div class="nav-item" onclick="nav('gross',this)">② Gross Description</div>
+  <div class="nav-item" onclick="nav('micro',this)">③ Microscopic</div>
+  <div class="nav-item" onclick="nav('report',this)">④ Generate Report</div>
+</div>
+<div class="main">
+
+<!-- DIAGNOSIS -->
+<div id="panel-dx" class="panel active">
+<h2>Pathologic Diagnosis</h2>
+
+<div class="card">
+  <div class="card-title">Specimen &amp; Procedure</div>
+  <div class="field">
+    <label class="fl">Lobe(s)</label>
+    <div class="check-group">
+      <label class="check-item"><input type="checkbox" name="lobe" value="RUL" onchange="syncAll()"> RUL</label>
+      <label class="check-item"><input type="checkbox" name="lobe" value="RML" onchange="syncAll()"> RML</label>
+      <label class="check-item"><input type="checkbox" name="lobe" value="RLL" onchange="syncAll()"> RLL</label>
+      <label class="check-item"><input type="checkbox" name="lobe" value="LUL" onchange="syncAll()"> LUL</label>
+      <label class="check-item"><input type="checkbox" name="lobe" value="LLL" onchange="syncAll()"> LLL</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Procedure</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="procedure" value="wedge resection" onchange="syncAll()"> Wedge resection</label>
+      <label class="radio-item"><input type="radio" name="procedure" value="segmentectomy" onchange="syncAll()"> Segmentectomy</label>
+      <label class="radio-item"><input type="radio" name="procedure" value="lobectomy" onchange="syncAll()"> Lobectomy</label>
+      <label class="radio-item"><input type="radio" name="procedure" value="bilobectomy" onchange="syncAll()"> Bilobectomy</label>
+      <label class="radio-item"><input type="radio" name="procedure" value="pneumonectomy" onchange="syncAll()"> Pneumonectomy</label>
+      <label class="check-item" style="margin-left:10px;border-left:1px solid #ddd;padding-left:14px"><input type="checkbox" id="vats" onchange="syncAll()"> VATS</label>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Tumor Type</div>
+  <div class="field">
+    <label class="fl">Histologic type</label>
+    <select id="dx_type" onchange="onTypeChange()">
+      <option value="">-- Select --</option>
+      <optgroup label="Adenocarcinoma">
+        <option value="Adenocarcinoma in situ (AIS), non-mucinous">AIS, non-mucinous</option>
+        <option value="Adenocarcinoma in situ (AIS), mucinous">AIS, mucinous</option>
+        <option value="Minimally invasive adenocarcinoma, non-mucinous">MIA, non-mucinous</option>
+        <option value="Minimally invasive adenocarcinoma, mucinous">MIA, mucinous</option>
+        <option value="Invasive lepidic adenocarcinoma">Invasive lepidic adenocarcinoma</option>
+        <option value="Invasive acinar adenocarcinoma">Invasive acinar adenocarcinoma</option>
+        <option value="Invasive papillary adenocarcinoma">Invasive papillary adenocarcinoma</option>
+        <option value="Invasive micropapillary adenocarcinoma">Invasive micropapillary adenocarcinoma</option>
+        <option value="Invasive solid adenocarcinoma">Invasive solid adenocarcinoma</option>
+        <option value="Invasive mucinous adenocarcinoma">Invasive mucinous adenocarcinoma</option>
+        <option value="Mixed invasive mucinous and non-mucinous adenocarcinoma">Mixed invasive mucinous and non-mucinous adenocarcinoma</option>
+        <option value="Colloid adenocarcinoma">Colloid adenocarcinoma</option>
+        <option value="Fetal adenocarcinoma">Fetal adenocarcinoma</option>
+        <option value="Enteric-type adenocarcinoma">Enteric-type adenocarcinoma</option>
+      </optgroup>
+      <optgroup label="Squamous Cell Carcinoma">
+        <option value="Squamous cell carcinoma in situ (SCIS)">Squamous cell carcinoma in situ (SCIS)</option>
+        <option value="Invasive squamous cell carcinoma, keratinizing">SCC, keratinizing</option>
+        <option value="Invasive squamous cell carcinoma, non-keratinizing">SCC, non-keratinizing</option>
+        <option value="Invasive squamous cell carcinoma, basaloid">SCC, basaloid</option>
+        <option value="Lymphoepithelial carcinoma">Lymphoepithelial carcinoma</option>
+      </optgroup>
+      <optgroup label="Other">
+        <option value="Large cell carcinoma">Large cell carcinoma</option>
+        <option value="Adenosquamous carcinoma">Adenosquamous carcinoma</option>
+        <option value="Pleomorphic carcinoma">Pleomorphic carcinoma</option>
+        <option value="Small cell carcinoma">Small cell carcinoma</option>
+        <option value="Large cell neuroendocrine carcinoma">Large cell neuroendocrine carcinoma</option>
+        <option value="Typical carcinoid / Neuroendocrine tumor, grade 1">Typical carcinoid (NET G1)</option>
+        <option value="Atypical carcinoid / Neuroendocrine tumor, grade 2">Atypical carcinoid (NET G2)</option>
+      </optgroup>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">pTNM Staging (AJCC Version 9)</div>
+  <div class="field">
+    <label class="fl">pT Category</label>
+    <select id="pt_select" onchange="syncAll()">
+      <option value="pT not assigned">pT not assigned — Cannot be determined based on available pathological information</option>
+      <option value="pT0">pT0 — No evidence of primary tumor</option>
+      <option value="pTis">pTis — Carcinoma in situ (SCIS); or Adenocarcinoma in situ (AIS)</option>
+      <option value="pT1mi">pT1mi — Minimally invasive adenocarcinoma (≤3 cm, lepidic-predominant, ≤5 mm invasion)</option>
+      <option value="pT1a">pT1a — Tumor ≤1 cm; or tumor of any size with invasive component in lung only and ≤5 mm</option>
+      <option value="pT1b">pT1b — Tumor >1 cm and ≤2 cm</option>
+      <option value="pT1c">pT1c — Tumor >2 cm and ≤3 cm</option>
+      <option value="pT1 (subgroup cannot be determined)">pT1 (subgroup cannot be determined)</option>
+      <option value="pT2a">pT2a — Tumor >3 cm and ≤4 cm; or ≤4 cm + visceral pleural invasion/main bronchus/atelectasis</option>
+      <option value="pT2b">pT2b — Tumor >4 cm and ≤5 cm</option>
+      <option value="pT2 (subgroup cannot be determined)">pT2 (subgroup cannot be determined)</option>
+      <option value="pT3">pT3 — Tumor >5 cm and ≤7 cm; or parietal pleura/chest wall/pericardium/phrenic nerve/T1-T2 roots/stellate ganglion; or separate nodule same lobe</option>
+      <option value="pT4">pT4 — Tumor >7 cm; or mediastinum/trachea/carina/esophagus/diaphragm/heart/great vessels/vertebral body; or separate nodule different ipsilateral lobe</option>
+    </select>
+  </div>
+  <div class="field">
+    <label class="fl">pN Category</label>
+    <select id="pn_select" onchange="syncAll()">
+      <option value="pN not assigned (no nodes submitted or found)">pN not assigned — No nodes submitted or found</option>
+      <option value="pN not assigned (cannot be determined)">pN not assigned — Cannot be determined based on available pathological information</option>
+      <option value="pN0">pN0 — No tumor involvement of regional lymph node(s)</option>
+      <option value="pN1">pN1 — Ipsilateral peribronchial / hilar / intrapulmonary nodes</option>
+      <option value="pN2a">pN2a — Single ipsilateral mediastinal nodal station or subcarinal nodal station</option>
+      <option value="pN2b">pN2b — Multiple ipsilateral mediastinal nodal stations</option>
+      <option value="pN2 (subgroup cannot be determined)">pN2 (subgroup cannot be determined)</option>
+      <option value="pN3">pN3 — Contralateral mediastinal/hilar; ipsilateral/contralateral scalene/supraclavicular</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Lymph Nodes (Diagnosis Summary — auto-calculated)</div>
+  <div class="no-ln-row">
+    <input type="checkbox" id="no_ln" onchange="toggleNoLN()">
+    <label for="no_ln">No lymph nodes submitted / found (pN not assigned)</label>
+  </div>
+  <div id="ln_summary_box" class="ln-summary">Add stations in Gross tab to auto-calculate.</div>
+</div>
+</div>
+
+<!-- GROSS -->
+<div id="panel-gross" class="panel">
+<h2>Gross Description</h2>
+
+<div class="card">
+  <div class="card-title">Dimensions</div>
+  <div class="field">
+    <label class="fl">Specimen size (cm)</label>
+    <div class="size-row">
+      <input type="number" id="sp1" step="0.1" min="0" placeholder="0.0" onkeydown="nt(event,'sp2')">
+      <span class="size-sep">x</span>
+      <input type="number" id="sp2" step="0.1" min="0" placeholder="0.0" onkeydown="nt(event,'sp3')">
+      <span class="size-sep">x</span>
+      <input type="number" id="sp3" step="0.1" min="0" placeholder="0.0" onkeydown="nt(event,'spwt')">
+      <span class="size-sep">cm</span>
+      <label style="font-size:12px;color:#777;margin-left:10px">Weight (g)</label>
+      <input type="number" id="spwt" min="0" placeholder="0">
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Tumor size (cm)</label>
+    <div class="size-row">
+      <input type="number" id="td1" step="0.1" min="0" placeholder="0.0" onkeydown="nt(event,'td2')">
+      <span class="size-sep">x</span>
+      <input type="number" id="td2" step="0.1" min="0" placeholder="0.0" onkeydown="nt(event,'td3')">
+      <span class="size-sep">x</span>
+      <input type="number" id="td3" step="0.1" min="0" placeholder="0.0">
+      <span class="size-sep">cm</span>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Distance to bronchial margin (cm)</label>
+    <input type="number" id="dist_br" step="0.1" min="0" placeholder="0.0">
+  </div>
+  <div class="field">
+    <label class="fl">Distance to stapled margin (cm)</label>
+    <input type="number" id="dist_stapled" step="0.1" min="0" placeholder="0.0">
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Tumor Features</div>
+  <div class="field">
+    <label class="fl">Tumor site</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="tsite" value="Peribronchial"> Peribronchial</label>
+      <label class="radio-item"><input type="radio" name="tsite" value="Periphery"> Periphery</label>
+      <label class="radio-item"><input type="radio" name="tsite" value="Endobronchial" onchange="showEndoExt(true)"> Endobronchial</label>
+    </div>
+  </div>
+  <div class="field" id="endo_ext" style="display:none">
+    <label class="fl">Endobronchial extends to</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="endo_ext" value="with extension to peribronchial tissue or lung"> With extension</label>
+      <label class="radio-item"><input type="radio" name="endo_ext" value="without extension"> Without extension</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Visceral pleura</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="vpleura" value="Free"> Free</label>
+      <label class="radio-item"><input type="radio" name="vpleura" value="Free but close to tumor"> Free but close to tumor</label>
+      <label class="radio-item"><input type="radio" name="vpleura" value="Involved by tumor"> Involved by tumor</label>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Lymph Node Stations</div>
+  <div class="no-ln-row" style="margin-bottom:0">
+    <input type="checkbox" id="no_ln2" onchange="mirrorNoLN2()">
+    <label for="no_ln2">No lymph nodes submitted</label>
+  </div>
+  <div id="ln_gross_section">
+    <hr class="sep">
+    <div id="stn_list"></div>
+    <button class="add-btn" onclick="addStation()">+ Add lymph node station</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Representative Sections</div>
+  <textarea id="rep_sections" placeholder="e.g. A1-A5: Lung tumor&#10;A6: Bronchial margin / Stapled margin&#10;A7: Non-tumorous lung parenchyma&#10;__: Lymph nodes, station 7 (all for section)" style="min-height:100px"></textarea>
+</div>
+</div>
+
+<!-- MICRO -->
+<div id="panel-micro" class="panel">
+<h2>Microscopic Description</h2>
+
+<div class="card">
+  <div class="card-title">Tumor Type &amp; Histological Patterns</div>
+  <div class="field">
+    <label class="fl">Confirm tumor type</label>
+    <select id="micro_type" onchange="onMicroTypeChange()">
+      <option value="">-- Same as Diagnosis --</option>
+      <option value="Adenocarcinoma in situ (AIS), non-mucinous">AIS, non-mucinous</option>
+      <option value="Adenocarcinoma in situ (AIS), mucinous">AIS, mucinous</option>
+      <option value="Minimally invasive adenocarcinoma, non-mucinous">MIA, non-mucinous</option>
+      <option value="Minimally invasive adenocarcinoma, mucinous">MIA, mucinous</option>
+      <option value="Invasive lepidic adenocarcinoma">Invasive lepidic adenocarcinoma</option>
+      <option value="Invasive acinar adenocarcinoma">Invasive acinar adenocarcinoma</option>
+      <option value="Invasive papillary adenocarcinoma">Invasive papillary adenocarcinoma</option>
+      <option value="Invasive micropapillary adenocarcinoma">Invasive micropapillary adenocarcinoma</option>
+      <option value="Invasive solid adenocarcinoma">Invasive solid adenocarcinoma</option>
+      <option value="Invasive mucinous adenocarcinoma">Invasive mucinous adenocarcinoma</option>
+      <option value="Mixed invasive mucinous and non-mucinous adenocarcinoma">Mixed invasive mucinous and non-mucinous</option>
+      <option value="Colloid adenocarcinoma">Colloid adenocarcinoma</option>
+      <option value="Fetal adenocarcinoma">Fetal adenocarcinoma</option>
+      <option value="Enteric-type adenocarcinoma">Enteric-type adenocarcinoma</option>
+      <option value="Squamous cell carcinoma in situ (SCIS)">SCIS</option>
+      <option value="Invasive squamous cell carcinoma, keratinizing">SCC, keratinizing</option>
+      <option value="Invasive squamous cell carcinoma, non-keratinizing">SCC, non-keratinizing</option>
+      <option value="Invasive squamous cell carcinoma, basaloid">SCC, basaloid</option>
+      <option value="Lymphoepithelial carcinoma">Lymphoepithelial carcinoma</option>
+      <option value="Large cell carcinoma">Large cell carcinoma</option>
+      <option value="Adenosquamous carcinoma">Adenosquamous carcinoma</option>
+      <option value="Pleomorphic carcinoma">Pleomorphic carcinoma</option>
+      <option value="Small cell carcinoma">Small cell carcinoma</option>
+    </select>
+  </div>
+  <div id="adeno_patterns_section" style="display:none">
+    <hr class="sep">
+    <div class="card-title">Histological Patterns (must total 100%)</div>
+    <div class="pct-grid">
+      <div class="pct-item"><label>Lepidic</label><input type="number" id="p_lepidic" min="0" max="100" placeholder="0" onchange="updatePct()"> %</div>
+      <div class="pct-item"><label>Acinar</label><input type="number" id="p_acinar" min="0" max="100" placeholder="0" onchange="updatePct()"> %</div>
+      <div class="pct-item"><label>Solid</label><input type="number" id="p_solid" min="0" max="100" placeholder="0" onchange="updatePct()"> %</div>
+      <div class="pct-item"><label>Papillary</label><input type="number" id="p_papillary" min="0" max="100" placeholder="0" onchange="updatePct()"> %</div>
+      <div class="pct-item"><label>Micropapillary</label><input type="number" id="p_micropapillary" min="0" max="100" placeholder="0" onchange="updatePct()"> %</div>
+      <div class="pct-item"><label>Complex glands</label><input type="number" id="p_complex" min="0" max="100" placeholder="0" onchange="updatePct()"> %</div>
+    </div>
+    <div id="pct_sum" class="pct-sum" style="display:none"></div>
+  </div>
+</div>
+
+<div class="card" id="grade_card">
+  <div class="card-title">Tumor Grade</div>
+  <div id="grade_auto_display" style="display:none;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="grade_badge" style="font-size:15px;font-weight:600;padding:4px 14px;border-radius:20px;background:#e8f0ff;color:#1a3ccc"></span>
+      <span id="grade_reason" style="font-size:12px;color:#888"></span>
+    </div>
+    <div style="font-size:11px;color:#bbb;margin-top:6px">Auto-calculated from pattern percentages above. Override below if needed.</div>
+  </div>
+  <div style="margin-bottom:6px;font-size:12px;color:#999">Manual override (for non-adenocarcinoma or special cases):</div>
+  <div class="radio-group" style="flex-wrap:wrap;gap:6px 14px">
+    <label class="radio-item"><input type="radio" name="tgrade" value=""> — (use auto)</label>
+    <label class="radio-item"><input type="radio" name="tgrade" value="G1: Well differentiated"> G1</label>
+    <label class="radio-item"><input type="radio" name="tgrade" value="G2: Moderately differentiated"> G2</label>
+    <label class="radio-item"><input type="radio" name="tgrade" value="G3: Poorly differentiated"> G3</label>
+    <label class="radio-item"><input type="radio" name="tgrade" value="G4: Undifferentiated"> G4</label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Tumor Size (Microscopic)</div>
+  <div class="field">
+    <label class="fl">Invasive tumor size</label>
+    <input type="number" id="m_inv" min="0" placeholder="0"> <span style="font-size:13px;color:#666">mm</span>
+  </div>
+  <div id="lepidic_total_field" style="display:none">
+  <div class="field">
+    <label class="fl">Total size (incl. lepidic, mm)</label>
+    <input type="number" id="m_total" min="0" placeholder="0"> <span style="font-size:13px;color:#666">mm <span style="color:#aaa;font-size:11px">(only shown in report if Lepidic % &gt; 0)</span></span>
+  </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Extent of Tumor</div>
+  <div class="field">
+    <label class="fl">Pleural status (EVG stain)</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="pl" value="PL0"> PL0</label>
+      <label class="radio-item"><input type="radio" name="pl" value="PL1"> PL1</label>
+      <label class="radio-item"><input type="radio" name="pl" value="PL2"> PL2</label>
+      <label class="radio-item"><input type="radio" name="pl" value="PL3"> PL3</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">STAS</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="stas" value="Not identified"> Not identified</label>
+      <label class="radio-item"><input type="radio" name="stas" value="Present"> Present</label>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Invasion Status</div>
+  <div class="field">
+    <label class="fl">Angiolymphatic invasion</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="ali" value="Absent"> Absent</label>
+      <label class="radio-item"><input type="radio" name="ali" value="Present"> Present</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Perineural invasion</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="pni" value="Absent"> Absent</label>
+      <label class="radio-item"><input type="radio" name="pni" value="Present"> Present</label>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Surgical Margins</div>
+  <div class="field">
+    <label class="fl">Bronchus cut end</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="mb" value="Free"> Free</label>
+      <label class="radio-item"><input type="radio" name="mb" value="Involved"> Involved</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Vascular margin</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="mv" value="Free"> Free</label>
+      <label class="radio-item"><input type="radio" name="mv" value="Involved"> Involved</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Parenchymal margin</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="mp" value="Free"> Free</label>
+      <label class="radio-item"><input type="radio" name="mp" value="Involved"> Involved</label>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Treatment Effect</div>
+  <div class="radio-group" style="flex-direction:column;gap:5px">
+    <label class="radio-item"><input type="radio" name="txe" value="No known presurgical therapy"> No known presurgical therapy</label>
+    <label class="radio-item"><input type="radio" name="txe" value="Greater than 10% residual viable tumor"> Greater than 10% residual viable tumor</label>
+    <label class="radio-item"><input type="radio" name="txe" value="Less than or equal to 10% residual viable tumor"> Less than or equal to 10% residual viable tumor</label>
+    <label class="radio-item"><input type="radio" name="txe" value="Cannot be determined"> Cannot be determined</label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Lymph Nodes (Microscopic) — auto-synced from Gross</div>
+  <div class="field" style="margin-bottom:8px">
+    <label class="check-item"><input type="checkbox" id="ae1ae3"> Confirmed by AE1/AE3</label>
+  </div>
+  <div id="ln_micro_list"><p style="font-size:13px;color:#aaa;font-style:italic">Add stations in the Gross tab first.</p></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Immunohistochemistry</div>
+  <div class="field">
+    <label class="fl">TTF-1</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="ttf1" value="Positive"> Positive</label>
+      <label class="radio-item"><input type="radio" name="ttf1" value="Negative"> Negative</label>
+      <label class="radio-item"><input type="radio" name="ttf1" value="Not performed"> Not performed</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">P40</label>
+    <div class="radio-group">
+      <label class="radio-item"><input type="radio" name="p40" value="Positive"> Positive</label>
+      <label class="radio-item"><input type="radio" name="p40" value="Negative"> Negative</label>
+      <label class="radio-item"><input type="radio" name="p40" value="Not performed"> Not performed</label>
+    </div>
+  </div>
+  <div class="field">
+    <label class="fl">Additional IHC</label>
+    <input type="text" id="extra_ihc" placeholder="e.g. CK7: Positive; CK20: Negative" style="width:320px">
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">TNM Descriptors</div>
+  <div class="check-group">
+    <label class="check-item"><input type="checkbox" id="desc_y"> y (posttreatment)</label>
+    <label class="check-item"><input type="checkbox" id="desc_r"> r (recurrent)</label>
+    <label class="check-item"><input type="checkbox" id="desc_m"> m (multiple)</label>
+  </div>
+</div>
+</div>
+
+<!-- REPORT -->
+<div id="panel-report" class="panel">
+<h2>Generate Report</h2>
+<div class="card">
+  <div class="card-title">Non-tumor Parenchyma Status</div>
+  <input type="text" id="non_tumor" placeholder="e.g. Emphysematous change; Anthracotic pigment deposition" style="width:100%;font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:6px">
+</div>
+<button class="generate-btn" onclick="generate()">Generate Report Text</button>
+<button class="copy-btn" id="copy_btn" style="display:none" onclick="copyRep()">Copy to Clipboard</button>
+<div id="report_out" class="report-box"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+let stations=[];
+let stctr=0;
+
+function nav(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function nt(e,id){
+  if(e.key==='Tab'){e.preventDefault();const el=document.getElementById(id);if(el)el.focus();}
+}
+
+function radio(name){
+  const el=document.querySelector('input[name="'+name+'"]:checked');
+  return el?el.value:'';
+}
+
+function checks(name){
+  return [...document.querySelectorAll('input[name="'+name+'"]:checked')].map(e=>e.value);
+}
+
+function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+
+function showEndoExt(show){
+  document.getElementById('endo_ext').style.display=show?'flex':'none';
+}
+
+document.querySelectorAll('input[name="tsite"]').forEach(r=>{
+  r.addEventListener('change',()=>showEndoExt(r.value==='Endobronchial'));
+});
+
+function toggleNoLN(){
+  const c=document.getElementById('no_ln').checked;
+  document.getElementById('no_ln2').checked=c;
+  document.getElementById('ln_gross_section').style.opacity=c?'.4':'1';
+  document.getElementById('ln_gross_section').style.pointerEvents=c?'none':'auto';
+  updateSummary();
+  renderMicroLN();
+}
+
+function mirrorNoLN2(){
+  const c=document.getElementById('no_ln2').checked;
+  document.getElementById('no_ln').checked=c;
+  toggleNoLN();
+}
+
+function addStation(){
+  const id='s'+stctr++;
+  stations.push({id,station:'',frags:'',unit:'pieces',s1:'',s2:'',s3:'',pos:0,tot:0});
+  renderGrossLN();
+  renderMicroLN();
+  updateSummary();
+}
+
+function removeStation(id){
+  stations=stations.filter(s=>s.id!==id);
+  renderGrossLN();
+  renderMicroLN();
+  updateSummary();
+}
+
+function setField(id,field,val){
+  const s=stations.find(x=>x.id===id);
+  if(s){s[field]=val;if(field==='pos'||field==='tot')updateSummary();if(field==='station'){renderMicroLN();}}
+}
+
+function renderGrossLN(){
+  const c=document.getElementById('stn_list');
+  if(!stations.length){c.innerHTML='';return;}
+  c.innerHTML=stations.map(s=>`
+  <div class="stn-block">
+    <div class="stn-header">
+      <strong style="font-size:12px;color:#666">Station</strong>
+      <input type="text" value="${s.station}" placeholder="e.g. 7" onchange="setField('${s.id}','station',this.value)" style="width:68px">
+      <button class="rm-btn" onclick="removeStation('${s.id}')">remove</button>
+    </div>
+    <div class="stn-row">
+      <label>Count</label>
+      <input type="text" value="${s.frags}" placeholder="3 or multiple" onchange="setField('${s.id}','frags',this.value)" style="width:110px">
+      <label>Size</label>
+      <input type="number" value="${s.s1}" step="0.1" min="0" placeholder="0.0" onchange="setField('${s.id}','s1',this.value)" style="width:62px">
+      <span style="color:#bbb">x</span>
+      <input type="number" value="${s.s2}" step="0.1" min="0" placeholder="0.0" onchange="setField('${s.id}','s2',this.value)" style="width:62px">
+      <span style="color:#bbb">x</span>
+      <input type="number" value="${s.s3}" step="0.1" min="0" placeholder="0.0" onchange="setField('${s.id}','s3',this.value)" style="width:62px">
+      <span style="color:#bbb;font-size:12px">cm</span>
+    </div>
+  </div>`).join('');
+}
+
+function renderMicroLN(){
+  const noLN=document.getElementById('no_ln').checked;
+  const c=document.getElementById('ln_micro_list');
+  if(noLN){c.innerHTML='<p style="font-size:13px;color:#888;font-style:italic">Not assessed (pN not assigned)</p>';return;}
+  if(!stations.length){c.innerHTML='<p style="font-size:13px;color:#aaa;font-style:italic">Add stations in the Gross tab first.</p>';return;}
+  c.innerHTML=stations.map(s=>`
+  <div class="stn-block" id="m_${s.id}">
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#333">Station ${s.station||'?'}</div>
+    <div class="stn-row">
+      <label>Positive nodes</label>
+      <input type="number" min="0" value="${s.pos}" onchange="setField('${s.id}','pos',parseInt(this.value)||0);updateSummary()">
+      <label>/ Total examined</label>
+      <input type="number" min="0" value="${s.tot}" onchange="setField('${s.id}','tot',parseInt(this.value)||0);updateSummary()">
+    </div>
+  </div>`).join('');
+}
+
+function getPnShort(raw){
+  if(raw.startsWith('pN not assigned')) return 'pN not assigned';
+  const m=raw.match(/^(pN[^\s(]+)/);
+  return m?m[1]:raw;
+}
+
+function updateSummary(){
+  const noLN=document.getElementById('no_ln').checked;
+  const box=document.getElementById('ln_summary_box');
+  if(noLN){box.textContent='Not assessed (pN not assigned)';return;}
+  if(!stations.length){box.textContent='No stations added yet.';return;}
+  const totalPos=stations.reduce((a,s)=>a+(parseInt(s.pos)||0),0);
+  const totalExam=stations.reduce((a,s)=>a+(parseInt(s.tot)||0),0);
+  const pnRaw=document.getElementById('pn_select').value;
+  const pnShort=getPnShort(pnRaw);
+  if(totalPos===0){
+    box.textContent=`Free of metastasis (0/${totalExam} nodes examined, ${pnShort})`;
+  } else {
+    box.textContent=`Carcinoma, metastatic (${totalPos}/${totalExam}, ${pnShort})`;
+  }
+}
+
+function syncAll(){updateSummary();}
+
+function onTypeChange(){
+  const val=v('dx_type');
+  const invAdeno=['Invasive lepidic adenocarcinoma','Invasive acinar adenocarcinoma','Invasive papillary adenocarcinoma','Invasive micropapillary adenocarcinoma','Invasive solid adenocarcinoma','Invasive mucinous adenocarcinoma','Mixed invasive mucinous and non-mucinous adenocarcinoma','Colloid adenocarcinoma','Fetal adenocarcinoma','Enteric-type adenocarcinoma'];
+  const isInv=invAdeno.includes(val);
+  document.getElementById('adeno_patterns_section').style.display=isInv?'block':'none';
+  document.getElementById('lepidic_total_field').style.display=isInv?'block':'none';
+  if(!isInv){
+    document.getElementById('grade_auto_display').style.display='none';
+  }
+}
+
+function onMicroTypeChange(){
+  const val=v('micro_type');
+  if(val) document.getElementById('dx_type').value=val;
+  onTypeChange();
+}
+
+function computeAutoGrade(){
+  const lepidic=parseInt(v('p_lepidic'))||0;
+  const acinar=parseInt(v('p_acinar'))||0;
+  const papillary=parseInt(v('p_papillary'))||0;
+  const solid=parseInt(v('p_solid'))||0;
+  const micropapillary=parseInt(v('p_micropapillary'))||0;
+  const complex=parseInt(v('p_complex'))||0;
+  const total=lepidic+acinar+papillary+solid+micropapillary+complex;
+  if(total===0) return null;
+  const highGrade=solid+micropapillary+complex;
+  const highGradePct=Math.round(highGrade/total*100);
+  if(highGradePct>=20) return {grade:'G3: Poorly differentiated',reason:`High-grade patterns (solid+micropapillary+complex glands) = ${highGradePct}% ≥ 20%`};
+  const predominant=Math.max(lepidic,acinar,papillary,solid,micropapillary,complex);
+  if(lepidic===predominant) return {grade:'G1: Well differentiated',reason:`Lepidic-predominant (${lepidic}%), high-grade < 20%`};
+  if(acinar===predominant||papillary===predominant) return {grade:'G2: Moderately differentiated',reason:`${acinar>=papillary?'Acinar':'Papillary'}-predominant (${Math.max(acinar,papillary)}%), high-grade < 20%`};
+  return {grade:'G3: Poorly differentiated',reason:`High-grade pattern predominant`};
+}
+
+function updatePct(){
+  const ids=['p_lepidic','p_acinar','p_solid','p_papillary','p_micropapillary','p_complex'];
+  const sum=ids.reduce((a,id)=>a+(parseInt(v(id))||0),0);
+  const el=document.getElementById('pct_sum');
+  el.style.display='block';
+  el.textContent='Total: '+sum+'%';
+  el.className='pct-sum '+(sum===100?'pct-ok':sum<100?'pct-warn':'pct-err');
+  const result=computeAutoGrade();
+  const badge=document.getElementById('grade_badge');
+  const reason=document.getElementById('grade_reason');
+  const display=document.getElementById('grade_auto_display');
+  if(result){
+    display.style.display='block';
+    badge.textContent=result.grade;
+    reason.textContent=result.reason;
+    const colors={G1:'background:#e6f9ee;color:#1a7a3a',G2:'background:#fff8e0;color:#a06000',G3:'background:#fde8e8;color:#c42',G4:'background:#f0e8fd;color:#6a0dad'};
+    const key=result.grade.substring(0,2);
+    badge.style.cssText=`font-size:14px;font-weight:600;padding:4px 14px;border-radius:20px;${colors[key]||'background:#eee;color:#555'}`;
+  } else {
+    display.style.display='none';
+  }
+}
+
+function generate(){
+  const lobes=checks('lobe');
+  const proc=radio('procedure');
+  const noLN=document.getElementById('no_ln').checked;
+  const tumorType=v('dx_type');
+  const pt=v('pt_select')||document.getElementById('pt_select').value;
+  const pn=document.getElementById('pn_select').value;
+  const lobeStr=lobes.join('/') || '___';
+
+  const totalPos=stations.reduce((a,s)=>a+(parseInt(s.pos)||0),0);
+  const totalExam=stations.reduce((a,s)=>a+(parseInt(s.tot)||0),0);
+
+  let lnDxStr;
+  const pnRaw=document.getElementById('pn_select').value;
+  const pnShort=getPnShort(pnRaw);
+  if(noLN) lnDxStr='Not assessed (pN not assigned)';
+  else if(!stations.length) lnDxStr=`Free of metastasis (0/0, ${pnShort})`;
+  else if(totalPos===0) lnDxStr=`Free of metastasis (0/${totalExam}, ${pnShort})`;
+  else lnDxStr=`Carcinoma, metastatic (${totalPos}/${totalExam}, ${pnShort})`;
+
+  const vats=document.getElementById('vats').checked;
+  const procEffective=vats&&proc==='wedge resection'?'VATS wedge resection':proc;
+  const procTitle=procEffective?(procEffective.charAt(0).toUpperCase()+procEffective.slice(1)):'___';
+  const specSize=[v('sp1'),v('sp2'),v('sp3')].filter(Boolean).join(' x ');
+  const tumSize=[v('td1'),v('td2'),v('td3')].filter(Boolean).join(' x ');
+  const distBr=v('dist_br');
+  const distStapled=v('dist_stapled');
+
+  let specimenLine=`${procTitle} of ${lobeStr} lobe`;
+  if(specSize){specSize&&(specimenLine+=` (${specSize} cm${v('spwt')?' and '+v('spwt')+' g':''})`)}
+  if(!noLN&&stations.length>0){
+    const bottleList=stations.map(s=>'station '+s.station).join(', ');
+    specimenLine+=` and ${stations.length} bottle${stations.length>1?'s':''} containing ${bottleList} lymph nodes, respectively`;
+  }
+  specimenLine+=`, fixed in formalin.`;
+
+  const tsite=radio('tsite');
+  const endoExt=radio('endo_ext');
+  let tsiteStr=tsite;
+  if(tsite==='Endobronchial'&&endoExt) tsiteStr='Endobronchial '+endoExt;
+
+  const lnGrossLines=stations.length>0?stations.map(s=>{
+    const sz=[s.s1,s.s2,s.s3].filter(Boolean).join(' x ');
+    const isOnePiece=parseInt(s.frags)===1;
+    const szPart=isOnePiece?`${sz||'_ x _ x _'} cm`:`up to ${sz||'_ x _ x _'} cm`;
+    return `- Station ${s.station||'?'}: ${s.frags||'_'} piece${isOnePiece?'':'s'}, ${szPart}.`;
+  }).join('\n'):'';
+
+  const repSectionsInput=v('rep_sections');
+  const repSec=repSectionsInput||[
+    'A1-A5: Lung tumor',
+    'A6: Bronchial margin / Stapled margin',
+    'A7: Non-tumorous lung parenchyma',
+    ...(!noLN&&stations.length>0?['__: Lymph nodes, hilum',...stations.map(s=>`__: Lymph nodes, station ${s.station||'?'} (all for section)`)]:[] )
+  ].join('\n');
+
+  const micro_type=v('micro_type')||tumorType;
+  const invAdeno=['Invasive lepidic adenocarcinoma','Invasive acinar adenocarcinoma','Invasive papillary adenocarcinoma','Invasive micropapillary adenocarcinoma','Invasive solid adenocarcinoma','Invasive mucinous adenocarcinoma','Mixed invasive mucinous and non-mucinous adenocarcinoma','Colloid adenocarcinoma','Fetal adenocarcinoma','Enteric-type adenocarcinoma'];
+  const isInvAdeno=invAdeno.includes(micro_type);
+  const isLepidic=micro_type.toLowerCase().includes('lepidic');
+
+  let pctStr='';
+  if(isInvAdeno){
+    const parts=[
+      ['p_lepidic','Lepidic'],['p_acinar','Acinar'],['p_solid','Solid'],
+      ['p_papillary','Papillary'],['p_micropapillary','Micropapillary'],['p_complex','Complex glands']
+    ].map(([id,label])=>{const val=parseInt(v(id))||0;return val>0?label+': '+val+'%':null;}).filter(Boolean);
+    if(parts.length) pctStr='\n  - '+parts.join('\n  - ');
+  }
+
+  const mInv=v('m_inv');
+  const mTotal=v('m_total');
+  const tgradeManual=radio('tgrade');
+  let tgrade;
+  if(tgradeManual){
+    tgrade=tgradeManual;
+  } else if(isInvAdeno){
+    const autoResult=computeAutoGrade();
+    tgrade=autoResult?autoResult.grade:'___';
+  } else {
+    tgrade='___';
+  }
+  const lepPct=parseInt(v('p_lepidic'))||0;
+  const hasLepidic=isInvAdeno&&lepPct>0;
+  let sizeStr;
+  if(hasLepidic){
+    sizeStr=`\n- Total Tumor Size Inclusive of Invasive and Lepidic Components (applies only to invasive nonmucinous adenocarcinoma with a lepidic component): ${mTotal||'__'} mm in greatest diameter, measured on histological slides\n- Invasive Tumor Size (applies only to invasive nonmucinous adenocarcinoma with a lepidic component): ${mInv||'__'} mm in greatest diameter, measured on histological slides`;
+  } else {
+    sizeStr=`${mInv||'__'} mm in greatest diameter, measured on histological slides`;
+  }
+
+  const pl=radio('pl');
+  const stas=radio('stas');
+  const ali=radio('ali');
+  const pni=radio('pni');
+  const mb=radio('mb');
+  const mv=radio('mv');
+  const mp=radio('mp');
+  const txe=radio('txe');
+  const nonTumor=v('non_tumor');
+  const ttf1=radio('ttf1');
+  const p40=radio('p40');
+  const extraIhc=v('extra_ihc');
+
+  let lnMicroStr;
+  if(noLN){
+    lnMicroStr='Not assessed (pN not assigned)';
+  } else if(!stations.length){
+    lnMicroStr='Not assessed';
+  } else {
+    const parts=stations.map(s=>`- Station ${s.station||'?'}: ${parseInt(s.pos)||0}/${parseInt(s.tot)||0}`);
+    lnMicroStr=parts.join('\n');
+    if(totalPos===0) lnMicroStr+='\n- Extranodal extension: Not applicable';
+    else lnMicroStr+='\n- Extranodal extension: '+(radio('extranodal')||'Absent');
+  }
+
+  let ihcParts=[];
+  if(ttf1) ihcParts.push('TTF-1: '+ttf1);
+  if(p40) ihcParts.push('P40: '+p40);
+  if(extraIhc) ihcParts.push(extraIhc);
+
+  const descY=document.getElementById('desc_y').checked;
+  const descR=document.getElementById('desc_r').checked;
+  const descM=document.getElementById('desc_m').checked;
+  const descriptors=[descY?'y(posttreatment)':'',descR?'r(recurrent)':'',descM?'m(multiple)':''].filter(Boolean).join('; ');
+
+  const ae1ae3=document.getElementById('ae1ae3').checked;
+  const lnAe1ae3Suffix=ae1ae3?' (Confirmed by AE1/AE3)':'';
+
+  let out=`PATHOLOGIC DIAGNOSIS:
+Lung, ${lobeStr}, ${procEffective||'___'} --- ${tumorType||'(tumor type)'} (${pt}).
+Lymph nodes, mediastinal, radical dissection --- ${lnDxStr}.
+
+GROSS DESCRIPTION:
+Specimen: ${specimenLine}
+Tumor location: ${lobeStr}
+Tumor size: ${tumSize||'_ x _ x _'} cm
+Tumor site: ${tsiteStr||'___'}
+Configuration of the tumor: Ill-delineated
+Distance from bronchial surgical margin: ${distBr||'_'} cm
+Distance from stapled margin: ${distStapled||'_'} cm
+Mainstem bronchus: Free
+Visceral pleura: ${radio('vpleura')||'Free'}
+Non-neoplastic lung: Brown and spongy`;
+
+  if(!noLN&&stations.length>0){
+    out+='\nLymph nodes:\n'+lnGrossLines;
+  }
+
+  out+=`
+
+Representative sections are taken and labeled as follows:
+${repSec}
+
+MICROSCOPIC DESCRIPTION:
+Tumor type: ${micro_type||tumorType||'___'}${pctStr}
+Tumor grade: ${tgrade||'___'}
+Tumor size: ${sizeStr}
+Extent of tumor:
+- Pleural status (highlighted by elastic-Van Gieson [EVG] stain): ${pl||'PL0'}
+- Spread Through Air Spaces (STAS): ${stas||'Not identified'}
+Angiolymphatic invasion status: ${ali||'Absent'}
+Perineural invasion status: ${pni||'Absent'}
+Non-tumor parenchyma status: ${nonTumor||'Unremarkable'}
+Surgical margin:
+- Bronchus cut end status: ${mb||'Free'}
+- Vascular margin: ${mv||'Free'}
+- Parenchymal margin: ${mp||'Free'}
+Treatment effect: ${txe||'No known presurgical therapy'}
+Lymph nodes (Positive/Total)${lnAe1ae3Suffix}:
+${lnMicroStr}
+Distant metastasis (pM): Not applicable
+Immunohistochemical study: ${ihcParts.join('; ')||'___'}
+pTNM: ${pt}, ${pnShort} (AJCC cancer staging system, 9th edition)`;
+
+  if(descriptors) out+='\nTNM descriptors: '+descriptors;
+  out+='\n\n(This case has been reviewed by two pathologists.)';
+
+  const box=document.getElementById('report_out');
+  box.textContent=out;
+  box.style.display='block';
+  document.getElementById('copy_btn').style.display='inline';
+}
+
+function copyRep(){
+  navigator.clipboard.writeText(document.getElementById('report_out').textContent).then(()=>{
+    const b=document.getElementById('copy_btn');
+    b.textContent='Copied!';
+    setTimeout(()=>b.textContent='Copy to Clipboard',2000);
+  });
+}
+
+document.getElementById('pn_select').addEventListener('change',updateSummary);
+</script>
+</body>
+</html>
