@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallbladder Pathology Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f7fa;
+  --bg3: #eaecf2;
+  --border: #d0d5e0;
+  --accent: #2563eb;
+  --accent2: #059669;
+  --text: #1a202c;
+  --text2: #4a5568;
+  --text3: #9aa0ae;
+  --label: #374151;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --danger: #fc8181;
+  --warn: #f6ad55;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* HEADER */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header-title { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; flex: 1; }
+.header-sub { font-size: 12px; color: var(--text2); }
+.btn-generate {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-generate:hover { background: #3b82f6; }
+.btn-copy {
+  background: var(--bg3);
+  border: 1px solid var(--accent2);
+  color: var(--accent2);
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-copy:hover { background: #d1fae5; }
+
+/* LAYOUT */
+.main { display: flex; flex: 1; overflow: hidden; }
+.form-panel {
+  width: 52%;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 18px;
+}
+.report-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.report-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+.report-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  padding: 10px 16px 6px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.report-text {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text);
+  white-space: pre-wrap;
+  min-height: 200px;
+}
+
+/* SECTION */
+.section {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.section-head {
+  background: var(--bg3);
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+.section-body { padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+
+/* FIELD */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+label.lbl { font-size: 13px; color: var(--label); min-width: 130px; flex-shrink: 0; }
+label.lbl-sm { font-size: 13px; color: var(--label); }
+
+input[type=number], input[type=text], select, textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type=number]:focus, input[type=text]:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+input[type=number] { width: 70px; }
+select { min-width: 140px; }
+
+.size-row { display: flex; align-items: center; gap: 6px; }
+.size-sep { color: var(--text3); font-size: 13px; font-family: var(--mono); }
+input.sz { width: 60px; }
+
+/* CHECKBOX */
+.cb-row { display: flex; align-items: center; gap: 7px; }
+.cb-row input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+.cb-row label { font-size: 14px; color: var(--text); cursor: pointer; }
+
+/* INDENT */
+.indent { padding-left: 22px; display: flex; flex-direction: column; gap: 7px; }
+
+/* COLOR GRID */
+.color-grid { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 22px; }
+.color-opt {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: var(--mono);
+  cursor: pointer;
+  color: var(--text2);
+  background: var(--bg);
+  user-select: none;
+  transition: all 0.12s;
+}
+.color-opt:hover { border-color: var(--accent); color: var(--accent); }
+.color-opt.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.cond-field { display: none; }
+.cond-field.show { display: flex; flex-direction: column; gap: 7px; }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+.note { font-size: 12px; color: var(--text3); font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-title">GALLBLADDER PATHOLOGY REPORT GENERATOR</div>
+    <div class="header-sub">Cholecystitis · Cholelithiasis · Non-neoplastic</div>
+  </div>
+  <button class="btn-generate" onclick="generateReport()">Generate</button>
+  <button class="btn-copy" onclick="copyReport()">Copy</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- FORM -->
+  <div class="form-panel">
+
+    <!-- PROCEDURE -->
+    <div class="section">
+      <div class="section-head">Procedure</div>
+      <div class="section-body">
+        <div class="field">
+          <div class="cb-row">
+            <input type="checkbox" id="laparoscopic" checked onchange="updateProcedure()">
+            <label for="laparoscopic">Laparoscopic</label>
+          </div>
+          <div class="note" style="padding-left:22px;">Procedure: <span id="proc-preview" style="font-family:var(--mono);color:var(--accent);">Laparoscopic cholecystectomy</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROSS -->
+    <div class="section">
+      <div class="section-head">Gross Description</div>
+      <div class="section-body">
+
+        <!-- GB size -->
+        <div class="field">
+          <label class="lbl-sm">GB size (cm):</label>
+          <div class="size-row">
+            <input type="number" class="sz" id="gb1" min="0" step="0.1" placeholder="—">
+            <span class="size-sep">x</span>
+            <input type="number" class="sz" id="gb2" min="0" step="0.1" placeholder="—">
+            <span class="size-sep">x</span>
+            <input type="number" class="sz" id="gb3" min="0" step="0.1" placeholder="—">
+          </div>
+        </div>
+
+        <!-- Wall thickness -->
+        <div class="field">
+          <div class="field-row">
+            <label class="lbl">Wall thickness (cm):</label>
+            <input type="number" id="wall" min="0" step="0.1" placeholder="—">
+          </div>
+        </div>
+
+        <!-- Already opened -->
+        <div class="cb-row">
+          <input type="checkbox" id="opened">
+          <label for="opened">Already opened when received</label>
+        </div>
+
+        <!-- Rupture -->
+        <div class="cb-row">
+          <input type="checkbox" id="rupture">
+          <label for="rupture">Rupture</label>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Stone -->
+        <div class="cb-row">
+          <input type="checkbox" id="hasStone" onchange="toggleStone()">
+          <label for="hasStone">Stone(s)</label>
+        </div>
+
+        <div id="stoneFields" class="cond-field indent">
+          <!-- Stone count -->
+          <div class="field">
+            <div class="field-row">
+              <label class="lbl">Number of stones:</label>
+              <input type="number" id="stonePieces" min="1" step="1" value="1" style="width:70px;">
+              <div class="cb-row" style="margin-left:6px;">
+                <input type="checkbox" id="stoneMultiple" onchange="toggleMultiple()">
+                <label for="stoneMultiple" style="font-size:13px;">Multiple</label>
+              </div>
+            </div>
+          </div>
+          <!-- Stone color -->
+          <div class="field">
+            <label class="lbl-sm" style="margin-bottom:4px;">Color (multi-select):</label>
+            <div class="color-grid">
+              <span class="color-opt" data-color="dark greenish" onclick="toggleColor(this)">dark greenish</span>
+              <span class="color-opt" data-color="blackish" onclick="toggleColor(this)">blackish</span>
+              <span class="color-opt" data-color="tan" onclick="toggleColor(this)">tan</span>
+              <span class="color-opt" data-color="yellowish" onclick="toggleColor(this)">yellowish</span>
+            </div>
+          </div>
+          <!-- Stone size -->
+          <div class="field">
+            <label class="lbl-sm">Max stone size (cm):</label>
+            <div class="size-row">
+              <input type="number" class="sz" id="stone1" min="0" step="0.1" placeholder="—">
+              <span class="size-sep">x</span>
+              <input type="number" class="sz" id="stone2" min="0" step="0.1" placeholder="—">
+              <span class="size-sep">x</span>
+              <input type="number" class="sz" id="stone3" min="0" step="0.1" placeholder="—">
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Cholesterosis -->
+        <div class="cb-row">
+          <input type="checkbox" id="cholesterosis" onchange="toggleCholesterosis()">
+          <label for="cholesterosis">Cholesterosis</label>
+        </div>
+        <div id="cholesterosisFields" class="cond-field indent">
+          <div class="field-row">
+            <label class="lbl-sm">Distribution:</label>
+            <select id="cholesterosisType">
+              <option value="focal">Focal</option>
+              <option value="diffuse">Diffuse</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MICROSCOPIC -->
+    <div class="section">
+      <div class="section-head">Microscopic Findings</div>
+      <div class="section-body">
+
+        <!-- Inflammation -->
+        <div class="field">
+          <label class="lbl-sm" style="margin-bottom:4px;">Inflammation type:</label>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="cb-row">
+              <input type="radio" name="inflam" id="inflam_acute" value="acute">
+              <label for="inflam_acute">Acute</label>
+            </div>
+            <div class="cb-row">
+              <input type="radio" name="inflam" id="inflam_chronic" value="chronic" checked>
+              <label for="inflam_chronic">Chronic</label>
+            </div>
+            <div class="cb-row">
+              <input type="radio" name="inflam" id="inflam_ac" value="acute_chronic">
+              <label for="inflam_ac">Acute and chronic</label>
+            </div>
+            <div class="cb-row">
+              <input type="radio" name="inflam" id="inflam_necro" value="necrotizing">
+              <label for="inflam_necro">Necrotizing</label>
+            </div>
+            <div class="cb-row">
+              <input type="radio" name="inflam" id="inflam_follicular" value="follicular">
+              <label for="inflam_follicular">Chronic follicular</label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Additional findings -->
+        <div class="cb-row">
+          <input type="checkbox" id="adenomyoma">
+          <label for="adenomyoma">Adenomyoma</label>
+        </div>
+
+        <div class="cb-row">
+          <input type="checkbox" id="abscess">
+          <label for="abscess">Focal abscess</label>
+        </div>
+
+        <div class="cb-row">
+          <input type="checkbox" id="liverTissue">
+          <label for="liverTissue">Adhered liver tissue</label>
+        </div>
+
+        <div class="cb-row">
+          <input type="checkbox" id="lymphNode">
+          <label for="lymphNode">Lymph node</label>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /form-panel -->
+
+  <!-- REPORT -->
+  <div class="report-panel">
+    <div class="report-label">LIVE REPORT PREVIEW</div>
+    <div class="report-inner">
+      <div class="report-text" id="reportText">Click "Generate" to produce the report.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── helpers ────────────────────────────────────────────────────────────────────
+function updateProcedure() {
+  const lap = document.getElementById('laparoscopic').checked;
+  document.getElementById('proc-preview').textContent =
+    lap ? 'Laparoscopic cholecystectomy' : 'Cholecystectomy';
+}
+
+function toggleStone() {
+  const on = document.getElementById('hasStone').checked;
+  document.getElementById('stoneFields').classList.toggle('show', on);
+}
+
+function toggleCholesterosis() {
+  const on = document.getElementById('cholesterosis').checked;
+  document.getElementById('cholesterosisFields').classList.toggle('show', on);
+}
+
+function toggleMultiple() {
+  const multi = document.getElementById('stoneMultiple').checked;
+  document.getElementById('stonePieces').disabled = multi;
+  document.getElementById('stonePieces').style.opacity = multi ? '0.4' : '1';
+}
+
+function toggleColor(el) {
+  el.classList.toggle('sel');
+}
+
+function getSelectedColors() {
+  const els = document.querySelectorAll('.color-opt.sel');
+  const colors = Array.from(els).map(e => e.dataset.color);
+  if (colors.length === 0) return '';
+  if (colors.length === 1) return colors[0];
+  const last = colors.pop();
+  return colors.join(', ') + ' and ' + last;
+}
+
+function fmtSize(a, b, c) {
+  if (!a && !b && !c) return null;
+  return `${a || '?'} x ${b || '?'} x ${c || '?'} cm`;
+}
+
+// ── generate ──────────────────────────────────────────────────────────────────
+function generateReport() {
+  const lap       = document.getElementById('laparoscopic').checked;
+  const opened    = document.getElementById('opened').checked;
+  const rupture   = document.getElementById('rupture').checked;
+  const hasStone  = document.getElementById('hasStone').checked;
+  const hasCholest= document.getElementById('cholesterosis').checked;
+  const adenomyoma= document.getElementById('adenomyoma').checked;
+  const abscess   = document.getElementById('abscess').checked;
+  const liverTissue=document.getElementById('liverTissue').checked;
+  const lymphNode = document.getElementById('lymphNode').checked;
+
+  const procedure = lap ? 'Laparoscopic cholecystectomy' : 'Cholecystectomy';
+  const inflam    = document.querySelector('input[name="inflam"]:checked').value;
+
+  const gb1 = document.getElementById('gb1').value;
+  const gb2 = document.getElementById('gb2').value;
+  const gb3 = document.getElementById('gb3').value;
+  const wall= document.getElementById('wall').value;
+
+  const stoneMultiple = document.getElementById('stoneMultiple').checked;
+  const stonePieces = parseInt(document.getElementById('stonePieces').value) || 1;
+  const stone1 = document.getElementById('stone1').value;
+  const stone2 = document.getElementById('stone2').value;
+  const stone3 = document.getElementById('stone3').value;
+  const stoneColors = getSelectedColors();
+  const cholestType = document.getElementById('cholesterosisType').value;
+
+  // ── GROSS ────────────────────────────────────────────────────────────────
+  let gross = 'Gross Description:\n';
+  const gbSize = fmtSize(gb1, gb2, gb3);
+  gross += `Received is a piece of gallbladder${gbSize ? ' measuring ' + gbSize : ''}.`;
+  if (opened) gross += ' It had been opened when received.';
+  if (wall) gross += ` The wall thickness measures ${wall} cm.`;
+
+  if (hasStone) {
+    const colorStr = stoneColors ? stoneColors + ' ' : '';
+    const stoneSize = fmtSize(stone1, stone2, stone3);
+    if (stoneMultiple) {
+      gross += ` Multiple pieces of ${colorStr}stones are seen`;
+      if (stoneSize) gross += `, measuring up to ${stoneSize}`;
+      gross += '.';
+    } else if (stonePieces === 1) {
+      gross += ` One piece of ${colorStr}stone is seen`;
+      if (stoneSize) gross += `, measuring ${stoneSize}`;
+      gross += '.';
+    } else {
+      gross += ` ${stonePieces} pieces of ${colorStr}stones are seen`;
+      if (stoneSize) gross += `, measuring up to ${stoneSize}`;
+      gross += '.';
+    }
+  }
+
+  if (hasCholest) {
+    const dist = cholestType === 'focal' ? 'focal' : 'diffuse';
+    gross += ` There are ${dist} yellow, flat deposits on mucosal surface.`;
+  }
+
+  if (rupture) gross += ' A rupture is noted.';
+
+  // ── REPRESENTATIVE SECTIONS ──────────────────────────────────────────────
+  const repSec = '\nRepresentative sections are taken and submitted in one cassette.';
+
+  // ── MICROSCOPIC ──────────────────────────────────────────────────────────
+  let micro = '\nMicroscopic Description:\n';
+
+  // Base sentence
+  if (inflam === 'necrotizing') {
+    micro += 'The gallbladder shows hemorrhagic as well as liquefactive necrosis of the entire wall with intense PMN infiltration and fibrin exudation.';
+  } else if (inflam === 'follicular') {
+    micro += 'The gallbladder shows intact, chronically inflamed mucosa accompanied by formation of Rokitansky sinuses within the underlying muscular coat. Prominent lymphoid follicles with germinal centers formation are seen. Pyloric metaplasia is also noted.';
+  } else if (inflam === 'acute') {
+    micro += 'Sections reveal partial mucosal destruction and inflamed wall that is infiltrated by numerous polymorphonuclear as well as mononuclear cells in its lamina propria as well as the underlying muscular coat. The wall shows edema, hyperemia, extravasation of RBCs and myofibroblastic proliferation.';
+  } else if (inflam === 'acute_chronic') {
+    micro += 'Sections reveal partial mucosal destruction and inflamed wall that is infiltrated by numerous polymorphonuclear as well as mononuclear cells in its lamina propria as well as the underlying muscular coat. The wall shows edema, hyperemia and extravasation of RBCs. Rokitansky-Aschoff sinuses are seen.';
+  } else {
+    // chronic (default)
+    micro += 'The gallbladder shows intact, chronically inflamed mucosa accompanied by formation of Rokitansky sinuses within the underlying muscular coat.';
+  }
+
+  // Append sentences
+  if (rupture) micro += ' Focal transmural necrosis is seen consistent with rupture.';
+  if (adenomyoma) micro += ' Adenomyoma is seen, which is composed of branching and cystically dilated glands invaginating into muscular wall, accompanied by hyperplasia of smooth muscle.';
+  if (hasCholest) micro += ' Cholesterosis is seen.';
+  if (abscess)    micro += ' Focal abscess formation is seen.';
+  if (liverTissue) micro += ' Adhered liver tissue is seen.';
+  if (lymphNode)  micro += ' One lymph node with preserved nodal architecture is seen.';
+
+  // Ending sentence (follicular already contains one)
+  if (inflam !== 'follicular') {
+    micro += ' No malignancy is observed.';
+  }
+
+  // ── DIAGNOSIS ────────────────────────────────────────────────────────────
+  // Main dx string
+  let mainDx = '';
+
+  if (inflam === 'necrotizing') {
+    mainDx = 'Necrotizing cholecystitis';
+  } else if (inflam === 'follicular') {
+    mainDx = 'Chronic follicular cholecystitis';
+  } else if (inflam === 'acute') {
+    mainDx = 'Acute cholecystitis';
+  } else if (inflam === 'acute_chronic') {
+    mainDx = 'Acute and chronic cholecystitis';
+  } else {
+    mainDx = 'Chronic cholecystitis';
+  }
+
+  // Modifiers
+  const mods = [];
+  if (hasStone)   mods.push('cholelithiasis');
+  if (adenomyoma) mods.push('adenomyoma');
+  if (abscess)    mods.push('focal abscess');
+
+  if (mods.length > 0) {
+    mainDx += ' with ' + mods[0];
+    for (let i = 1; i < mods.length; i++) {
+      mainDx += ' and ' + mods[i];
+    }
+  }
+
+  if (rupture) mainDx += ', ruptured';
+
+  // Extra dx items (beside main)
+  const extraDx = [];
+  if (hasCholest) extraDx.push('Cholesterosis');
+
+  // Build dx block
+  const gbLabel = 'Gallbladder, ' + procedure.toLowerCase();
+  let dx = 'Pathological Diagnosis:\n';
+  dx += gbLabel + ' ---\n';
+  if (extraDx.length === 0) {
+    // No numbering
+    dx += mainDx;
+  } else {
+    dx += '1. ' + mainDx;
+    extraDx.forEach((item, i) => {
+      dx += '\n' + (i + 2) + '. ' + item;
+    });
+  }
+
+  // ── ASSEMBLE ─────────────────────────────────────────────────────────────
+  const report = dx + '\n\n' + gross + '\n' + repSec + '\n' + micro;
+  document.getElementById('reportText').textContent = report;
+}
+
+function copyReport() {
+  const text = document.getElementById('reportText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.background = '#d1fae5';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
+  });
+}
+
+// Tab key navigation for size fields
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input.sz').forEach((el, i, arr) => {
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        const next = arr[i + 1];
+        if (next) next.focus(); else el.blur();
+      }
+    });
+  });
+  // Auto-generate on load
+  generateReport();
+});
+</script>
+</body>
+</html>

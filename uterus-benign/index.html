@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>Uterus Benign — Path Report Generator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    background: #0f1117;
+    color: #c9d1d9;
+    min-height: 100vh;
+    font-size: 13px;
+  }
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+  .form-panel {
+    width: 50%;
+    overflow-y: auto;
+    padding: 16px;
+    border-right: 1px solid #21262d;
+    background: #0f1117;
+  }
+  .report-panel {
+    width: 50%;
+    overflow-y: auto;
+    padding: 16px;
+    background: #0d1117;
+  }
+  .sticky-header {
+    position: sticky;
+    top: 0;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+    padding: 8px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    z-index: 10;
+    margin: -16px -16px 16px -16px;
+  }
+  .sticky-header h2 { font-size: 12px; color: #58a6ff; flex: 1; letter-spacing: 0.05em; }
+  .btn {
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .btn-copy { background: #238636; color: #fff; }
+  .btn-copy:hover { background: #2ea043; }
+  .btn-clear { background: #21262d; color: #8b949e; }
+  .btn-clear:hover { background: #30363d; }
+
+  .section {
+    margin-bottom: 14px;
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .section-title {
+    background: #1c2128;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #58a6ff;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-bottom: 1px solid #21262d;
+  }
+  .section-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+  .field-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .field-label { color: #8b949e; font-size: 11px; min-width: 110px; }
+  .field-label-wide { color: #8b949e; font-size: 11px; min-width: 150px; }
+
+  select, input[type="text"], input[type="number"], textarea {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    font-family: inherit;
+    font-size: 12px;
+    border-radius: 4px;
+    padding: 4px 7px;
+    outline: none;
+  }
+  select:focus, input:focus, textarea:focus { border-color: #388bfd; }
+  select { cursor: pointer; }
+  textarea { resize: vertical; width: 100%; min-height: 60px; }
+
+  .size-group { display: flex; align-items: center; gap: 4px; }
+  .size-group input { width: 52px; text-align: center; }
+  .size-sep { color: #444d56; font-size: 12px; }
+  .unit { color: #8b949e; font-size: 11px; }
+
+  .checkbox-row { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .checkbox-row input[type="checkbox"] { cursor: pointer; accent-color: #58a6ff; }
+  .checkbox-row label { cursor: pointer; font-size: 12px; color: #c9d1d9; }
+
+  .inline-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .sub-option-block {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .report-header {
+    position: sticky;
+    top: 0;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+    padding: 8px 16px;
+    margin: -16px -16px 16px -16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .report-header h2 { font-size: 12px; color: #3fb950; flex: 1; letter-spacing: 0.05em; }
+  .report-output {
+    white-space: pre-wrap;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #e6edf3;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .divider { border: none; border-top: 1px solid #21262d; margin: 4px 0; }
+  .sub-label { font-size: 11px; color: #6e7681; padding: 2px 0; }
+  .indent { padding-left: 14px; }
+  .highlight-note { font-size: 10px; color: #6e7681; font-style: italic; }
+
+  .sub-option-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 0 3px 20px;
+    border-left: 2px solid #21262d;
+    margin-left: 4px;
+  }
+
+  .adnexa-gross-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .adnexa-gross-row.hidden { display: none; }
+
+  /* ovary dx free-type row */
+  .dx-free-row { display: none; align-items: center; gap: 6px; padding-left: 20px; }
+  .dx-free-row.visible { display: flex; }
+
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"] { -moz-appearance: textfield; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- FORM PANEL -->
+<div class="form-panel">
+  <div class="sticky-header">
+    <h2>UTERUS BENIGN — REPORT GENERATOR</h2>
+    <button class="btn btn-clear" onclick="clearAll()">Clear</button>
+  </div>
+
+  <!-- PROCEDURE -->
+  <div class="section">
+    <div class="section-title">Procedure</div>
+    <div class="section-body">
+      <div class="field-row">
+        <span class="field-label">術式</span>
+        <select id="procedure" onchange="update()">
+          <option value="">-- Select --</option>
+          <option value="LAVH">Laparoscopic assisted vaginal hysterectomy (LAVH)</option>
+          <option value="TAH">Abdominal total hysterectomy (TAH)</option>
+          <option value="CTAH">Complicated total abdominal hysterectomy (CTAH)</option>
+        </select>
+      </div>
+      <hr class="divider">
+      <div class="sub-label">Adnexal structures received:</div>
+      <div class="field-row indent">
+        <div class="checkbox-row">
+          <input type="checkbox" id="rightOvary" onchange="update()">
+          <label for="rightOvary">Right Ovary</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="leftOvary" onchange="update()">
+          <label for="leftOvary">Left Ovary</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="rightFT" onchange="update()">
+          <label for="rightFT">Right Fallopian Tube</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="leftFT" onchange="update()">
+          <label for="leftFT">Left Fallopian Tube</label>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="sub-label">Adnexal procedure:</div>
+      <div id="adnexalProcedureArea" class="indent" style="display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
+  </div>
+
+  <!-- DIAGNOSIS - UTERUS -->
+  <div class="section">
+    <div class="section-title">Diagnosis — Uterine Findings</div>
+    <div class="section-body">
+
+      <div class="sub-label">Myometrium:</div>
+      <div class="inline-group">
+        <div class="checkbox-row">
+          <input type="checkbox" id="dxLeiomyoma" checked onchange="update()">
+          <label for="dxLeiomyoma">Leiomyoma</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="dxAdenomyosis" checked onchange="update()">
+          <label for="dxAdenomyosis">Adenomyosis</label>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="sub-label">Endometrium:</div>
+      <div class="field-row indent">
+        <select id="endoPhase" onchange="update()">
+          <option value="">-- phase --</option>
+          <option value="Proliferative phase">Proliferative phase</option>
+          <option value="Secretory phase">Secretory phase</option>
+          <option value="Inactive phase">Inactive phase</option>
+        </select>
+      </div>
+      <div class="field-row indent">
+        <div class="checkbox-row">
+          <input type="checkbox" id="dxPolyp" onchange="polypChange()">
+          <label for="dxPolyp">Endometrial polyp</label>
+        </div>
+      </div>
+      <div id="polypBlock" class="sub-option-block indent" style="display:none;">
+        <div class="field-row">
+          <span class="field-label">Number</span>
+          <input type="number" id="polypCount" placeholder="n" min="1" step="1" style="width:60px;" oninput="update()">
+        </div>
+        <div class="field-row">
+          <span class="field-label">Max dimension</span>
+          <input type="number" id="polypSize" placeholder="cm" step="0.1" style="width:70px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="sub-label">Cervix finding:</div>
+      <div class="field-row indent">
+        <select id="cervixType" onchange="cervixChange()">
+          <option value="">-- select --</option>
+          <option value="wnl">Within normal limit</option>
+          <option value="chronic">Chronic cervicitis</option>
+          <option value="chronic_active">Chronic active cervicitis</option>
+        </select>
+      </div>
+      <div id="sqMetaRow" class="sub-option-row" style="display:none;">
+        <input type="checkbox" id="sqMeta" onchange="update()">
+        <label for="sqMeta" style="font-size:12px;color:#c9d1d9;cursor:pointer;">with squamous metaplasia</label>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DIAGNOSIS - OVARY / FT -->
+  <div class="section">
+    <div class="section-title">Diagnosis — Ovary / Fallopian Tube Findings</div>
+    <div class="section-body" id="ovaryDxBody">
+      <span id="ovaryDxEmpty" style="font-size:11px;color:#6e7681;">No adnexal structures selected.</span>
+    </div>
+  </div>
+
+  <!-- GROSS - UTERUS -->
+  <div class="section">
+    <div class="section-title">Gross — Uterus</div>
+    <div class="section-body">
+      <div class="field-row">
+        <span class="field-label">Specimen</span>
+        <select id="utPieces" onchange="update()">
+          <option value="one">One piece</option>
+          <option value="multi">Multiple pieces</option>
+        </select>
+        <div id="utPiecesCountWrap" style="display:none;align-items:center;gap:4px;">
+          <input type="number" id="utPiecesCount" placeholder="n" min="2" step="1" style="width:55px;" oninput="update()">
+          <span class="unit">pieces</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Uterus size</span>
+        <div class="size-group">
+          <input type="number" id="utX" placeholder="X" step="0.1" oninput="update()" onkeydown="tabNext(event,'utY')">
+          <span class="size-sep">x</span>
+          <input type="number" id="utY" placeholder="Y" step="0.1" oninput="update()" onkeydown="tabNext(event,'utZ')">
+          <span class="size-sep">x</span>
+          <input type="number" id="utZ" placeholder="Z" step="0.1" oninput="update()" onkeydown="tabNext(event,'utWeight')">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Weight</span>
+        <input type="number" id="utWeight" placeholder="gm" step="1" oninput="update()" onkeydown="tabNext(event,'endoThick')">
+        <span class="unit">gm</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Endometrium</span>
+        <input type="number" id="endoThick" placeholder="thickness" step="0.1" oninput="update()" onkeydown="tabNext(event,'myoThick')">
+        <span class="unit">cm thick</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Myometrium</span>
+        <input type="number" id="myoThick" placeholder="thickness" step="0.1" oninput="update()">
+        <span class="unit">cm thick</span>
+      </div>
+      <div class="field-row">
+        <div class="checkbox-row">
+          <input type="checkbox" id="hasIUD" onchange="update()">
+          <label for="hasIUD">IUD present</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROSS - MYOMAS -->
+  <div class="section">
+    <div class="section-title">Gross — Myomatous Masses</div>
+    <div class="section-body">
+      <div class="field-row">
+        <span class="field-label">Number</span>
+        <input type="number" id="myomaCount" placeholder="0" min="0" step="1" style="width:60px;" oninput="update()">
+      </div>
+      <div class="field-row" id="myomaSizeRow" style="display:none;">
+        <span class="field-label">Largest size</span>
+        <div class="size-group">
+          <input type="number" id="myoX" placeholder="X" step="0.1" oninput="update()" onkeydown="tabNext(event,'myoY')">
+          <span class="size-sep">x</span>
+          <input type="number" id="myoY" placeholder="Y" step="0.1" oninput="update()" onkeydown="tabNext(event,'myoZ')">
+          <span class="size-sep">x</span>
+          <input type="number" id="myoZ" placeholder="Z" step="0.1" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+      <div id="myomaTypeRow" style="display:none;">
+        <div class="sub-label" style="margin-bottom:4px;">Type(s):</div>
+        <div class="inline-group indent">
+          <div class="checkbox-row">
+            <input type="checkbox" id="typeIntramural" onchange="update()">
+            <label for="typeIntramural">Intramural</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="typeSubmucosal" onchange="update()">
+            <label for="typeSubmucosal">Submucosal</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="typeSubserosal" onchange="update()">
+            <label for="typeSubserosal">Subserosal</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROSS - ADNEXA (stable DOM) -->
+  <div class="section">
+    <div class="section-title">Gross — Adnexa</div>
+    <div class="section-body">
+
+      <div id="adnexaGrossEmpty" style="font-size:11px;color:#6e7681;">No adnexal structures selected.</div>
+
+      <!-- Right Fallopian Tube -->
+      <div id="row_rFT" class="adnexa-gross-row hidden">
+        <span class="field-label-wide">Right Fallopian Tube</span>
+        <div class="size-group">
+          <input type="number" id="rFTL" placeholder="length" step="0.1" style="width:60px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="rFTD" placeholder="diam" step="0.1" style="width:60px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+
+      <!-- Left Fallopian Tube -->
+      <div id="row_lFT" class="adnexa-gross-row hidden">
+        <span class="field-label-wide">Left Fallopian Tube</span>
+        <div class="size-group">
+          <input type="number" id="lFTL" placeholder="length" step="0.1" style="width:60px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="lFTD" placeholder="diam" step="0.1" style="width:60px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+
+      <!-- Right Ovary -->
+      <div id="row_rOv" class="adnexa-gross-row hidden">
+        <span class="field-label-wide">Right Ovary</span>
+        <div class="size-group">
+          <input type="number" id="rOvX" placeholder="X" step="0.1" style="width:52px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="rOvY" placeholder="Y" step="0.1" style="width:52px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="rOvZ" placeholder="Z" step="0.1" style="width:52px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+      <div id="row_rOvCyst" class="adnexa-gross-row hidden" style="padding-left:14px;">
+        <div class="checkbox-row">
+          <input type="checkbox" id="rOvCyst" onchange="update()">
+          <label for="rOvCyst">Cyst</label>
+        </div>
+        <div id="rOvCystSizeWrap" style="display:none;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:#8b949e;">Max dim</span>
+          <input type="number" id="rOvCystSize" placeholder="cm" step="0.1" style="width:60px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+
+      <!-- Left Ovary -->
+      <div id="row_lOv" class="adnexa-gross-row hidden">
+        <span class="field-label-wide">Left Ovary</span>
+        <div class="size-group">
+          <input type="number" id="lOvX" placeholder="X" step="0.1" style="width:52px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="lOvY" placeholder="Y" step="0.1" style="width:52px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="lOvZ" placeholder="Z" step="0.1" style="width:52px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+      <div id="row_lOvCyst" class="adnexa-gross-row hidden" style="padding-left:14px;">
+        <div class="checkbox-row">
+          <input type="checkbox" id="lOvCyst" onchange="update()">
+          <label for="lOvCyst">Cyst</label>
+        </div>
+        <div id="lOvCystSizeWrap" style="display:none;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:#8b949e;">Max dim</span>
+          <input type="number" id="lOvCystSize" placeholder="cm" step="0.1" style="width:60px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REPRESENTATIVE SECTIONS -->
+  <div class="section">
+    <div class="section-title">Representative Sections</div>
+    <div class="section-body">
+      <textarea id="repSections" placeholder="A1: cervix&#10;A2: endometrium and myometrium&#10;A3-__: myomatous masses" oninput="update()" rows="5"></textarea>
+      <span class="highlight-note">自由輸入，原文輸出</span>
+    </div>
+  </div>
+
+</div><!-- end form-panel -->
+
+<!-- REPORT PANEL -->
+<div class="report-panel">
+  <div class="report-header">
+    <h2>REPORT OUTPUT</h2>
+    <button class="btn btn-copy" onclick="copyReport()">Copy</button>
+  </div>
+  <div class="report-output" id="reportOutput">（請填寫表單以產生報告）</div>
+</div>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const val = id => { const el=$(id); return el ? el.value.trim() : ''; };
+const checked = id => { const el=$(id); return el ? el.checked : false; };
+
+function tabNext(e, nextId) {
+  if (e.key==='Tab') { e.preventDefault(); const el=$(nextId); if(el) el.focus(); }
+}
+function numWord(n) {
+  const w=['','one','two','three','four','five','six','seven','eight','nine','ten'];
+  return n<=10 ? w[n] : n.toString();
+}
+function capFirst(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+function getNumStr(id) { const el=$(id); return el && el.value!=='' ? el.value : null; }
+function getInt(id) { const el=$(id); return el && el.value!=='' ? parseInt(el.value) : 0; }
+
+// ── cervix ─────────────────────────────────────────────────────────────────
+function cervixChange() {
+  const v = val('cervixType');
+  const showSub = (v==='chronic' || v==='chronic_active');
+  $('sqMetaRow').style.display = showSub ? 'flex' : 'none';
+  if (!showSub) $('sqMeta').checked = false;
+  update();
+}
+function buildCervixLine() {
+  const v = val('cervixType');
+  if (!v) return null;
+  const sq = checked('sqMeta');
+  let base = '';
+  if (v==='wnl') base='Within normal limit';
+  else if (v==='chronic') base='Chronic cervicitis';
+  else if (v==='chronic_active') base='Chronic active cervicitis';
+  else return null;
+  if (sq) base += ' with squamous metaplasia';
+  return `-- ${base}, uterine cervix`;
+}
+
+// ── polyp ──────────────────────────────────────────────────────────────────
+function polypChange() {
+  $('polypBlock').style.display = checked('dxPolyp') ? 'flex' : 'none';
+  update();
+}
+
+// ── adnexa state ───────────────────────────────────────────────────────────
+function getAdnexaState() {
+  return {
+    rO: checked('rightOvary'), lO: checked('leftOvary'),
+    rF: checked('rightFT'),   lF: checked('leftFT')
+  };
+}
+
+// ── adnexal procedures ─────────────────────────────────────────────────────
+// Options per combination:
+// FT + Ovary:  salpingo-oophorectomy, oophorectomy, salpingectomy, salpingo-oophorocystectomy
+// FT only:     salpingectomy
+// Ovary only:  oophorectomy, oophorocystectomy
+
+function getProcOptions(hasFT, hasO) {
+  if (hasFT && hasO) return ['salpingo-oophorectomy','oophorectomy','salpingectomy','salpingo-oophorocystectomy'];
+  if (hasFT)         return ['salpingectomy'];
+  if (hasO)          return ['oophorectomy','oophorocystectomy'];
+  return [];
+}
+
+function renderAdnexalProcedures() {
+  const { rO, lO, rF, lF } = getAdnexaState();
+  const area = $('adnexalProcedureArea');
+  const sides = [];
+  if (rF && rO) sides.push({ key:'right',       label:'Right',        hasFT:true,  hasO:true });
+  else {
+    if (rF) sides.push({ key:'rightFTonly', label:'Right FT',     hasFT:true,  hasO:false });
+    if (rO) sides.push({ key:'rightOonly',  label:'Right Ovary',  hasFT:false, hasO:true  });
+  }
+  if (lF && lO) sides.push({ key:'left',         label:'Left',         hasFT:true,  hasO:true });
+  else {
+    if (lF) sides.push({ key:'leftFTonly',  label:'Left FT',      hasFT:true,  hasO:false });
+    if (lO) sides.push({ key:'leftOonly',   label:'Left Ovary',   hasFT:false, hasO:true  });
+  }
+  // remove stale
+  Array.from(area.children).forEach(child => {
+    if (!sides.find(s => s.key===child.dataset.key)) child.remove();
+  });
+  sides.forEach(s => {
+    if (document.getElementById('proc_'+s.key)) return;
+    const wrap = document.createElement('div');
+    wrap.dataset.key = s.key;
+    wrap.style.cssText='display:flex;align-items:center;gap:6px;';
+    wrap.innerHTML=`<span style="font-size:11px;color:#8b949e;min-width:70px;">${s.label}:</span>`;
+    const sel = document.createElement('select');
+    sel.id = 'proc_'+s.key;
+    sel.style.cssText='background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-family:inherit;font-size:12px;border-radius:4px;padding:4px 7px;';
+    sel.onchange = update;
+    getProcOptions(s.hasFT, s.hasO).forEach(o => {
+      const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op);
+    });
+    wrap.appendChild(sel);
+    area.appendChild(wrap);
+  });
+}
+
+// ── ovary dx options ───────────────────────────────────────────────────────
+// 'free' = free typing; value triggers a text input
+const ovaryDxOptions = [
+  'Within normal limit',
+  'Endometrioma',
+  'Hemorrhagic corpus luteum cyst',
+  'Cystic follicle',
+  '__free__'   // sentinel for free typing
+];
+const ftDxOptions = ['Within normal limit','Paratubal cyst'];
+
+// Build display label for select
+function ovaryOptLabel(o) {
+  return o==='__free__' ? '(free typing…)' : o;
+}
+
+function renderOvaryDx() {
+  const { rO, lO, rF, lF } = getAdnexaState();
+  const body = $('ovaryDxBody');
+
+  const items=[];
+  if (rO) items.push({ key:'dxRO', label:'Right Ovary',          opts:ovaryDxOptions, isOvary:true });
+  if (lO) items.push({ key:'dxLO', label:'Left Ovary',           opts:ovaryDxOptions, isOvary:true });
+  if (rF) items.push({ key:'dxRF', label:'Right Fallopian Tube', opts:ftDxOptions,    isOvary:false });
+  if (lF) items.push({ key:'dxLF', label:'Left Fallopian Tube',  opts:ftDxOptions,    isOvary:false });
+
+  // remove stale rows
+  Array.from(body.children).forEach(child => {
+    if (child.id==='ovaryDxEmpty') return;
+    if (child.dataset.key && !items.find(i=>i.key===child.dataset.key)) child.remove();
+  });
+
+  const empty=$('ovaryDxEmpty');
+  if (!items.length) { if(empty) empty.style.display='block'; return; }
+  if (empty) empty.style.display='none';
+
+  items.forEach(it => {
+    if (document.getElementById(it.key)) return; // already exists — preserve value
+    const wrap = document.createElement('div');
+    wrap.dataset.key = it.key;
+    wrap.style.cssText='display:flex;flex-direction:column;gap:4px;margin-bottom:4px;';
+
+    const row = document.createElement('div');
+    row.className='field-row';
+    row.innerHTML=`<span class="field-label-wide">${it.label}</span>`;
+
+    const sel = document.createElement('select');
+    sel.id = it.key;
+    sel.style.cssText='background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-family:inherit;font-size:12px;border-radius:4px;padding:4px 7px;';
+
+    it.opts.forEach(o => {
+      const op=document.createElement('option');
+      op.value=o;
+      op.textContent=ovaryOptLabel(o);
+      sel.appendChild(op);
+    });
+
+    // free-type input (only for ovary items)
+    let freeInput = null;
+    if (it.isOvary) {
+      freeInput = document.createElement('input');
+      freeInput.type='text';
+      freeInput.id=it.key+'_free';
+      freeInput.placeholder='Type finding…';
+      freeInput.style.cssText='display:none;margin-left:150px;width:200px;';
+      freeInput.oninput = update;
+    }
+
+    sel.onchange = () => {
+      if (freeInput) {
+        freeInput.style.display = sel.value==='__free__' ? 'block' : 'none';
+        if (sel.value!=='__free__') freeInput.value='';
+      }
+      update();
+    };
+
+    row.appendChild(sel);
+    wrap.appendChild(row);
+    if (freeInput) wrap.appendChild(freeInput);
+    body.appendChild(wrap);
+  });
+}
+
+// Get effective dx value for an ovary/FT item
+function getDxEffective(key) {
+  const sel = document.getElementById(key);
+  if (!sel) return 'Within normal limit';
+  if (sel.value==='__free__') {
+    const fi = document.getElementById(key+'_free');
+    return fi && fi.value.trim() ? fi.value.trim() : '___';
+  }
+  return sel.value || 'Within normal limit';
+}
+
+// ── adnexa gross visibility ────────────────────────────────────────────────
+function updateAdnexaGrossVisibility() {
+  const { rO, lO, rF, lF } = getAdnexaState();
+  const anyAdnexa = rO||lO||rF||lF;
+  $('adnexaGrossEmpty').style.display = anyAdnexa ? 'none' : 'block';
+  $('row_rFT').classList.toggle('hidden', !rF);
+  $('row_lFT').classList.toggle('hidden', !lF);
+  $('row_rOv').classList.toggle('hidden', !rO);
+  $('row_rOvCyst').classList.toggle('hidden', !rO);
+  $('row_lOv').classList.toggle('hidden', !lO);
+  $('row_lOvCyst').classList.toggle('hidden', !lO);
+
+  const rOvCystOn = rO && checked('rOvCyst');
+  const lOvCystOn = lO && checked('lOvCyst');
+  $('rOvCystSizeWrap').style.display = rOvCystOn ? 'flex' : 'none';
+  $('lOvCystSizeWrap').style.display = lOvCystOn ? 'flex' : 'none';
+  if (!rO) $('rOvCyst').checked=false;
+  if (!lO) $('lOvCyst').checked=false;
+}
+
+function getProcLabel(id) { const el=document.getElementById('proc_'+id); return el?el.value:''; }
+
+function getMyomaTypeStr() {
+  const types=[];
+  if (checked('typeIntramural')) types.push('intramural');
+  if (checked('typeSubmucosal')) types.push('submucosal');
+  if (checked('typeSubserosal')) types.push('subserosal');
+  if (!types.length) return '';
+  if (types.length===1) return types[0];
+  const last=types.pop();
+  return types.join(', ')+' and '+last;
+}
+
+// ── REPORT ─────────────────────────────────────────────────────────────────
+function generateReport() {
+  const procedure = val('procedure');
+  const { rO, lO, rF, lF } = getAdnexaState();
+  const hasAdenomyosis = checked('dxAdenomyosis');
+  const hasLeiomyoma   = checked('dxLeiomyoma');
+  const hasPolyp       = checked('dxPolyp');
+  const myoN           = getInt('myomaCount');
+  const multiPiece     = val('utPieces')==='multi';
+
+  let procLabel='';
+  if (procedure==='LAVH') procLabel='laparoscopic assisted vaginal hysterectomy';
+  else if (procedure==='TAH') procLabel='abdominal total hysterectomy';
+  else if (procedure==='CTAH') procLabel='complicated total abdominal hysterectomy';
+
+  // ── DIAGNOSIS ─────────────────────────────────────────────────────────
+  let dx='PATHOLOGICAL DIAGNOSIS:\n';
+  dx+=`Uterus, ${procLabel||'___'}\n`;
+
+  const utLines=[];
+  if (hasLeiomyoma && hasAdenomyosis) utLines.push('-- Leiomyoma and adenomyosis, myometrium');
+  else if (hasLeiomyoma)              utLines.push('-- Leiomyoma, myometrium');
+  else if (hasAdenomyosis)            utLines.push('-- Adenomyosis, myometrium');
+
+  const endo=val('endoPhase');
+  if (endo) utLines.push(`-- ${endo}, endometrium`);
+  if (hasPolyp) utLines.push('-- Endometrial polyp, endometrium');
+
+  const cervixLine=buildCervixLine();
+  if (cervixLine) utLines.push(cervixLine);
+  dx+=utLines.join('\n');
+
+  // adnexal dx
+  const adnexaDxLines=[];
+  if (rO||rF) {
+    const proc = rF&&rO ? getProcLabel('right') : rF ? getProcLabel('rightFTonly') : getProcLabel('rightOonly');
+    if (rO&&rF) {
+      adnexaDxLines.push(`Ovary and fallopian tube, right, ${proc||'___'}`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxRO')}, right ovary`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxRF')}, right fallopian tube`);
+    } else if (rO) {
+      adnexaDxLines.push(`Ovary, right, ${proc||'___'}`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxRO')}`);
+    } else {
+      adnexaDxLines.push(`Fallopian tube, right, ${proc||'___'}`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxRF')}`);
+    }
+  }
+  if (lO||lF) {
+    const proc = lF&&lO ? getProcLabel('left') : lF ? getProcLabel('leftFTonly') : getProcLabel('leftOonly');
+    if (lO&&lF) {
+      adnexaDxLines.push(`Ovary and fallopian tube, left, ${proc||'___'}`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxLO')}, left ovary`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxLF')}, left fallopian tube`);
+    } else if (lO) {
+      adnexaDxLines.push(`Ovary, left, ${proc||'___'}`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxLO')}`);
+    } else {
+      adnexaDxLines.push(`Fallopian tube, left, ${proc||'___'}`);
+      adnexaDxLines.push(`-- ${getDxEffective('dxLF')}`);
+    }
+  }
+  if (adnexaDxLines.length) dx+='\n'+adnexaDxLines.join('\n');
+
+  // ── GROSS ─────────────────────────────────────────────────────────────
+  dx+='\n\nGROSS DESCRIPTION:\n';
+
+  let adnexaDesc=[];
+  if (rO&&rF&&lO&&lF)        adnexaDesc=['bilateral adnexa'];
+  else if (rF&&lF&&!rO&&!lO) adnexaDesc=['bilateral fallopian tubes'];
+  else if (rO&&lO&&!rF&&!lF) adnexaDesc=['bilateral ovaries'];
+  else {
+    if (rF&&rO) adnexaDesc.push('right adnexa');
+    else { if(rF) adnexaDesc.push('right fallopian tube'); if(rO) adnexaDesc.push('right ovary'); }
+    if (lF&&lO) adnexaDesc.push('left adnexa');
+    else { if(lF) adnexaDesc.push('left fallopian tube'); if(lO) adnexaDesc.push('left ovary'); }
+  }
+
+  if (multiPiece) {
+    const pN=getInt('utPiecesCount');
+    const nw=pN>=2?numWord(pN):'___';
+    dx+=adnexaDesc.length
+      ? `Received are ${nw} pieces of uterine tissue with ${adnexaDesc.join(' and ')}.`
+      : `Received are ${nw} pieces of uterine tissue.`;
+  } else {
+    dx+=adnexaDesc.length
+      ? `Received is a piece of uterine tissue with ${adnexaDesc.join(' and ')}.`
+      : 'Received is a piece of uterine tissue.';
+  }
+
+  const utX=getNumStr('utX'), utY=getNumStr('utY'), utZ=getNumStr('utZ'), utW=getNumStr('utWeight');
+  if (utX||utY||utZ||utW) {
+    const szParts=[utX,utY,utZ].filter(Boolean);
+    let line=' The uterus measures';
+    if (szParts.length) line+=` ${szParts.join(' x ')} cm`;
+    if (utW) line+=` and ${utW} gm`;
+    if (multiPiece) line+=' in aggregates';
+    line+='.';
+    dx+=line;
+  }
+
+  const endoT=getNumStr('endoThick'), myoT=getNumStr('myoThick');
+  if (endoT||myoT) {
+    dx+=` On cut section, the endometrium and myometrium measure ${endoT||'___'} cm and ${myoT||'___'} cm in thickness, respectively.`;
+  }
+  if (checked('hasIUD')) dx+=' An intrauterine device is seen.';
+  dx+='\n';
+
+  // myomatous masses
+  if (myoN>=1) {
+    const typeStr=getMyomaTypeStr();
+    const typePart=typeStr?typeStr+' ':'';
+    const x=getNumStr('myoX'), y=getNumStr('myoY'), z=getNumStr('myoZ');
+    const szStr=[x,y,z].filter(Boolean).length?[x,y,z].filter(Boolean).join(' x ')+' cm':'___';
+    if (myoN===1) dx+=`One piece of ${typePart}myomatous mass is seen, measuring ${szStr}. On cut section, whorls of whitish fibrous tissue is noted.\n`;
+    else          dx+=`${capFirst(numWord(myoN))} pieces of ${typePart}myomatous masses are seen, measuring up to ${szStr}. On cut section, whorls of whitish fibrous tissue is noted.\n`;
+  }
+
+  if (hasAdenomyosis) dx+='Adenomyosis is seen.\n';
+
+  if (hasPolyp) {
+    const pN=getInt('polypCount'), pSz=getNumStr('polypSize');
+    const szPart=pSz?`${pSz} cm`:'___';
+    if (pN===1)    dx+=`One endometrial polyp is seen, measuring ${szPart} in maximum dimension.\n`;
+    else if (pN>1) dx+=`${capFirst(numWord(pN))} endometrial polyps are seen, measuring up to ${szPart} in maximum dimension.\n`;
+    else           dx+=`___ endometrial polyp(s) is/are seen, measuring up to ___ cm in maximum dimension.\n`;
+  }
+
+  // adnexa gross
+  const rFL=getNumStr('rFTL'), rFD=getNumStr('rFTD');
+  const lFL=getNumStr('lFTL'), lFD=getNumStr('lFTD');
+  const rOX=getNumStr('rOvX'), rOY=getNumStr('rOvY'), rOZ=getNumStr('rOvZ');
+  const lOX=getNumStr('lOvX'), lOY=getNumStr('lOvY'), lOZ=getNumStr('lOvZ');
+
+  if (rF&&lF) {
+    const rSz=[rFL,rFD].filter(Boolean), lSz=[lFL,lFD].filter(Boolean);
+    if (rSz.length||lSz.length)
+      dx+=`Bilateral fallopian tubes measure ${rSz.join(' x ')||'___ x ___'} cm and ${lSz.join(' x ')||'___ x ___'} cm (length and diameter), respectively.\n`;
+  } else {
+    if (rF){ const s=[rFL,rFD].filter(Boolean); if(s.length) dx+=`The right fallopian tube measures ${s.join(' x ')} cm in length and diameter, respectively.\n`; }
+    if (lF){ const s=[lFL,lFD].filter(Boolean); if(s.length) dx+=`The left fallopian tube measures ${s.join(' x ')} cm in length and diameter, respectively.\n`; }
+  }
+  if (rO) {
+    const s=[rOX,rOY,rOZ].filter(Boolean);
+    if (s.length) dx+=`The right ovary measures ${s.join(' x ')} cm.\n`;
+    if (checked('rOvCyst')) {
+      const csz=getNumStr('rOvCystSize');
+      dx+=`A cyst is seen, measuring ${csz||'___'} cm in maximum dimension.\n`;
+    }
+  }
+  if (lO) {
+    const s=[lOX,lOY,lOZ].filter(Boolean);
+    if (s.length) dx+=`The left ovary measures ${s.join(' x ')} cm.\n`;
+    if (checked('lOvCyst')) {
+      const csz=getNumStr('lOvCystSize');
+      dx+=`A cyst is seen, measuring ${csz||'___'} cm in maximum dimension.\n`;
+    }
+  }
+
+  const repSec=val('repSections');
+  dx+='\nRepresentative sections are taken and labeled as follows:';
+  if (repSec) dx+='\n'+repSec;
+
+  $('reportOutput').textContent=dx;
+}
+
+// ── update ─────────────────────────────────────────────────────────────────
+function update() {
+  const multi=val('utPieces')==='multi';
+  $('utPiecesCountWrap').style.display=multi?'flex':'none';
+  const myoN=getInt('myomaCount');
+  $('myomaSizeRow').style.display=myoN>=1?'flex':'none';
+  $('myomaTypeRow').style.display=myoN>=1?'block':'none';
+  renderAdnexalProcedures();
+  renderOvaryDx();
+  updateAdnexaGrossVisibility();
+  generateReport();
+}
+
+function copyReport() {
+  navigator.clipboard.writeText($('reportOutput').textContent).then(()=>{
+    const btn=document.querySelector('.btn-copy');
+    const orig=btn.textContent;
+    btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent=orig,1500);
+  });
+}
+
+function clearAll() {
+  document.querySelectorAll('input[type="number"],input[type="text"],textarea').forEach(el=>el.value='');
+  document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+  document.querySelectorAll('input[type="checkbox"]').forEach(el=>{
+    el.checked=['dxLeiomyoma','dxAdenomyosis'].includes(el.id);
+  });
+  // hide free-type inputs
+  document.querySelectorAll('[id$="_free"]').forEach(el=>{ el.style.display='none'; el.value=''; });
+  $('sqMetaRow').style.display='none';
+  $('polypBlock').style.display='none';
+  $('utPiecesCountWrap').style.display='none';
+  $('myomaSizeRow').style.display='none';
+  $('myomaTypeRow').style.display='none';
+  $('rOvCystSizeWrap').style.display='none';
+  $('lOvCystSizeWrap').style.display='none';
+  update();
+}
+
+update();
+</script>
+</body>
+</html>

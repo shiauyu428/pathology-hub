@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ovary Pathology Report Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:13px;color:#222;background:#f0f2f5;padding:16px}
+h1{font-size:15px;font-weight:700;margin-bottom:14px;color:#1a2a4a}
+.section{background:#fff;border:1px solid #d8dde6;border-radius:9px;margin-bottom:11px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sec-head{background:#f5f7fa;padding:9px 14px;font-weight:700;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;border-bottom:1px solid #e4e8ee;letter-spacing:.4px;color:#1a2a4a;text-transform:uppercase}
+.sec-head:hover{background:#eceef2}
+.sec-body{padding:13px 14px;display:grid;gap:9px}
+.section.collapsed .sec-body{display:none}
+.section.collapsed .arr{transform:rotate(-90deg)}
+.arr{display:inline-block;transition:transform .2s;font-size:10px;color:#666}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl2{font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+input[type=number],input[type=text],select,textarea{border:1px solid #c8cdd6;border-radius:5px;padding:4px 8px;font-size:13px;color:#222;font-family:inherit;background:#fff;transition:border-color .15s}
+input[type=number]:focus,input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:#4a7fd4;box-shadow:0 0 0 2px rgba(74,127,212,.15)}
+input[type=number]{width:60px;text-align:center}
+input[type=text]{width:100%}
+select{width:100%}
+textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
+.sz{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sz input[type=number]{width:56px}
+.sz span{color:#999;font-size:12px;font-weight:700}
+.sep{height:1px;background:#edf0f4;margin:3px 0}
+.rr{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.rr label{font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;color:#333;min-width:unset;white-space:nowrap}
+.cr{display:flex;gap:10px;flex-wrap:wrap}
+.cr label{font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;color:#333;white-space:nowrap}
+.ln-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ln-tbl th{background:#f5f7fa;padding:6px 8px;text-align:left;font-weight:700;border:1px solid #dde0e6;color:#444;font-size:11px}
+.ln-tbl td{padding:5px 8px;border:1px solid #dde0e6;vertical-align:middle}
+.pn-tag{background:#e8f0fe;color:#1a56c4;border-radius:5px;padding:5px 12px;font-size:12px;font-weight:700;display:inline-block;margin-top:5px;border:1px solid #c2d5f8}
+.btn-gen{background:#1a4fcf;color:#fff;border:none;border-radius:7px;padding:10px 0;font-size:14px;font-weight:700;cursor:pointer;width:100%;letter-spacing:.3px;transition:background .15s}
+.btn-gen:hover{background:#1340b0}
+.btn-copy{background:#f2f4f8;border:1px solid #c8cdd6;border-radius:5px;padding:5px 14px;font-size:12px;cursor:pointer;color:#333;margin-top:8px}
+.btn-copy:hover{background:#e6e9ef}
+.out{background:#f8f9fb;border:1px solid #d8dde6;border-radius:6px;padding:14px;font-family:"Courier New",monospace;font-size:12px;white-space:pre-wrap;line-height:1.8;min-height:80px;color:#1a1a1a;margin-top:10px}
+.tag{font-size:10px;background:#fff3cd;color:#7a5800;border-radius:3px;padding:1px 6px;margin-left:5px;font-weight:600;text-transform:none;letter-spacing:0}
+.ok{font-size:11px;color:#1a8a1a;margin-left:8px;display:none;font-weight:600}
+.card{background:#f8faff;border:1px solid #d0dcf0;border-radius:6px;padding:10px 12px}
+.card.green{background:#f6fbf6;border-color:#b8d8b8}
+.sb{display:inline-block;border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:4px;letter-spacing:.3px}
+.sb.R{background:#fef3e8;color:#b05000}
+.sb.L{background:#e8feef;color:#006630}
+.sec-group-label{font-size:10px;color:#1a4fcf;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 0 4px;border-bottom:1px solid #d0dcf0;margin-bottom:2px}
+</style>
+</head>
+<body>
+<h1>Ovary / Fallopian Tube — Pathology Report Generator <span style="font-size:11px;color:#888;font-weight:400">(CAP v1.5.0.0 · AJCC 8th)</span></h1>
+
+<!-- ══ SECTION 1: PROCEDURE ══ -->
+<div class="section" id="s-proc">
+<div class="sec-head" onclick="tog('s-proc')">1 · Specimen / Procedure <span class="arr">▾</span></div>
+<div class="sec-body">
+  <div class="fg">
+    <div class="fl2">術式 (可多選)</div>
+    <div class="cr" id="proc-checks">
+      <label><input type="checkbox" value="Total hysterectomy and bilateral salpingo-oophorectomy"> Total hysterectomy + BSO</label>
+      <label><input type="checkbox" value="Bilateral salpingo-oophorectomy"> BSO only</label>
+      <label><input type="checkbox" value="Right salpingo-oophorectomy"> Right SO</label>
+      <label><input type="checkbox" value="Left salpingo-oophorectomy"> Left SO</label>
+      <label><input type="checkbox" value="Omentectomy"> Omentectomy</label>
+      <label><input type="checkbox" value="Appendectomy"> Appendectomy</label>
+      <label><input type="checkbox" value="Bilateral pelvic lymph node dissection"> Pelvic LND</label>
+      <label><input type="checkbox" value="Para-aortic lymph node sampling"> Para-aortic LN sampling</label>
+      <label><input type="checkbox" value="Peritoneal biopsies"> Peritoneal biopsies</label>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="fg">
+      <div class="fl2">Tumor site (primary) <span class="tag">同步 Gross ovary panels + Micro side label</span></div>
+      <select id="tumor-site" onchange="updateOvaryPanels()">
+        <option value="">— 選擇 —</option>
+        <option value="right">Right ovary (right-sided tumor)</option>
+        <option value="left">Left ovary (left-sided tumor)</option>
+        <option value="bilateral">Bilateral ovaries (bilateral tumor)</option>
+        <option value="right-ft">Right fallopian tube (primary)</option>
+        <option value="left-ft">Left fallopian tube (primary)</option>
+        <option value="bilateral-ft">Bilateral fallopian tubes (primary)</option>
+        <option value="peritoneum">Primary peritoneum</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl2">Tumor site detail / specify (free text)</div>
+      <input type="text" id="tumor-site-detail" placeholder="e.g. right tubo-ovarian, bilateral ovaries...">
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ SECTION 2: GROSS ══ -->
+<div class="section" id="s-gross">
+<div class="sec-head" onclick="tog('s-gross')">2 · Gross Description <span class="arr">▾</span></div>
+<div class="sec-body">
+
+  <div class="sec-group-label">Specimen integrity</div>
+  <div class="grid2">
+    <div class="fg">
+      <div class="fl2"><span class="sb R">R</span>Right Ovary</div>
+      <div class="rr">
+        <label><input type="radio" name="ri-ov" value="Capsule intact" onchange="toggleSpill('r')"> Capsule intact</label>
+        <label><input type="radio" name="ri-ov" value="Capsule ruptured" onchange="toggleSpill('r')"> Capsule ruptured</label>
+        <label><input type="radio" name="ri-ov" value="Fragmented" onchange="toggleSpill('r')"> Fragmented</label>
+        <label><input type="radio" name="ri-ov" value="N/A" onchange="toggleSpill('r')"> N/A</label>
+      </div>
+      <div id="spill-r-wrap" style="display:none;margin-top:4px;margin-left:2px">
+        <label style="font-size:12px;display:flex;align-items:center;gap:5px;color:#b05000;font-weight:600">
+          <input type="checkbox" id="spill-r"> Surgical spill
+        </label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2"><span class="sb L">L</span>Left Ovary</div>
+      <div class="rr">
+        <label><input type="radio" name="li-ov" value="Capsule intact" onchange="toggleSpill('l')"> Capsule intact</label>
+        <label><input type="radio" name="li-ov" value="Capsule ruptured" onchange="toggleSpill('l')"> Capsule ruptured</label>
+        <label><input type="radio" name="li-ov" value="Fragmented" onchange="toggleSpill('l')"> Fragmented</label>
+        <label><input type="radio" name="li-ov" value="N/A" onchange="toggleSpill('l')"> N/A</label>
+      </div>
+      <div id="spill-l-wrap" style="display:none;margin-top:4px;margin-left:2px">
+        <label style="font-size:12px;display:flex;align-items:center;gap:5px;color:#b05000;font-weight:600">
+          <input type="checkbox" id="spill-l"> Surgical spill
+        </label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2"><span class="sb R">R</span>Right Fallopian Tube</div>
+      <div class="rr">
+        <label><input type="radio" name="ri-ft" value="Serosa intact"> Serosa intact</label>
+        <label><input type="radio" name="ri-ft" value="Serosa ruptured"> Serosa ruptured</label>
+        <label><input type="radio" name="ri-ft" value="Fragmented"> Fragmented</label>
+        <label><input type="radio" name="ri-ft" value="N/A"> N/A</label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2"><span class="sb L">L</span>Left Fallopian Tube</div>
+      <div class="rr">
+        <label><input type="radio" name="li-ft" value="Serosa intact"> Serosa intact</label>
+        <label><input type="radio" name="li-ft" value="Serosa ruptured"> Serosa ruptured</label>
+        <label><input type="radio" name="li-ft" value="Fragmented"> Fragmented</label>
+        <label><input type="radio" name="li-ft" value="N/A"> N/A</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Ovarian / tumor sizes <span class="tag">自動依 tumor site 切換 tumor / plain ovary</span></div>
+  <div id="ovary-panels"><div style="color:#999;font-size:12px">← 請先選擇 Tumor site</div></div>
+
+  <div class="grid2">
+    <div class="fg">
+      <div class="fl2"><span class="sb R">R</span>Right tube — length × diameter (cm)</div>
+      <div class="sz">
+        <input type="number" id="r-ft-1" placeholder="—" min="0" step="0.1" tabindex="9">
+        <span>x</span>
+        <input type="number" id="r-ft-2" placeholder="—" min="0" step="0.1" tabindex="10">
+        <span>cm</span>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2"><span class="sb L">L</span>Left tube — length × diameter (cm)</div>
+      <div class="sz">
+        <input type="number" id="l-ft-1" placeholder="—" min="0" step="0.1" tabindex="11">
+        <span>x</span>
+        <input type="number" id="l-ft-2" placeholder="—" min="0" step="0.1" tabindex="12">
+        <span>cm</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Uterus</div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2">Uterus — size (cm) &amp; weight</div>
+      <div class="sz">
+        <input type="number" id="ut-1" placeholder="—" min="0" step="0.1" tabindex="13">
+        <span>x</span>
+        <input type="number" id="ut-2" placeholder="—" min="0" step="0.1" tabindex="14">
+        <span>x</span>
+        <input type="number" id="ut-3" placeholder="—" min="0" step="0.1" tabindex="15">
+        <span>cm</span>
+        <input type="number" id="ut-w" placeholder="wt" min="0" step="0.1" tabindex="16" style="width:56px">
+        <span>g</span>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Endometrium thickness (cm)</div>
+      <input type="number" id="endo-t" placeholder="—" min="0" step="0.1" tabindex="17" style="width:80px">
+    </div>
+    <div class="fg">
+      <div class="fl2">Myometrium thickness (cm)</div>
+      <input type="number" id="myo-t" placeholder="—" min="0" step="0.1" tabindex="18" style="width:80px">
+    </div>
+  </div>
+
+  <!-- Myomatous nodules — revised with pieces + location -->
+  <div class="card">
+    <div class="fl2" style="margin-bottom:7px">Myomatous nodules</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <input type="text" id="myo-pieces" placeholder="1 / multiple" style="width:100px" tabindex="19">
+      <span style="font-size:12px;color:#666">piece(s), up to</span>
+      <input type="number" id="myo-n1" placeholder="—" min="0" step="0.1" tabindex="20">
+      <span style="color:#999;font-size:12px;font-weight:700">x</span>
+      <input type="number" id="myo-n2" placeholder="—" min="0" step="0.1" tabindex="21">
+      <span style="color:#999;font-size:12px;font-weight:700">x</span>
+      <input type="number" id="myo-n3" placeholder="—" min="0" step="0.1" tabindex="22">
+      <span style="font-size:12px;color:#666">cm</span>
+    </div>
+    <div class="rr" style="margin-top:7px">
+      <span style="font-size:12px;color:#666">Location:</span>
+      <label><input type="checkbox" id="myo-intramural"> intramural</label>
+      <label><input type="checkbox" id="myo-subserosal"> subserosal</label>
+      <label><input type="checkbox" id="myo-submucosal"> submucosal</label>
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Perimetrium</div>
+    <div class="rr">
+      <label><input type="radio" name="perim" value="Smooth"> Smooth</label>
+      <label><input type="radio" name="perim" value="Fibrous adhesion"> Fibrous adhesion</label>
+      <label><input type="radio" name="perim" value="Tumor involved"> Tumor involved</label>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Lymph nodes (gross) <span class="tag">同步 Microscopic LN</span></div>
+  <div class="fg">
+    <div class="rr">
+      <label><input type="radio" name="ln-submit" value="yes" checked onchange="buildLNMicro();buildLNGross()"> Yes — submitted</label>
+      <label><input type="radio" name="ln-submit" value="no" onchange="buildLNMicro();buildLNGross()"> No — not submitted</label>
+    </div>
+  </div>
+  <div id="ln-gross-wrap">
+    <table class="ln-tbl">
+      <thead><tr><th>Station</th><th>Pieces (數字 or "multiple")</th><th>Total size (cm, L×W×H)</th></tr></thead>
+      <tbody>
+        <tr><td>Right pelvic LNs</td>
+          <td><input type="text" id="ln-rp-pieces" placeholder="3 / multiple" style="width:110px" tabindex="30"></td>
+          <td><div class="sz"><input type="number" id="ln-rp-1" min="0" step="0.1" tabindex="31"><span>x</span><input type="number" id="ln-rp-2" min="0" step="0.1" tabindex="32"><span>x</span><input type="number" id="ln-rp-3" min="0" step="0.1" tabindex="33"><span>cm</span></div></td>
+        </tr>
+        <tr><td>Left pelvic LNs</td>
+          <td><input type="text" id="ln-lp-pieces" placeholder="3 / multiple" style="width:110px" tabindex="34"></td>
+          <td><div class="sz"><input type="number" id="ln-lp-1" min="0" step="0.1" tabindex="35"><span>x</span><input type="number" id="ln-lp-2" min="0" step="0.1" tabindex="36"><span>x</span><input type="number" id="ln-lp-3" min="0" step="0.1" tabindex="37"><span>cm</span></div></td>
+        </tr>
+        <tr><td>Para-aortic LNs</td>
+          <td><input type="text" id="ln-pa-pieces" placeholder="1 / multiple" style="width:110px" tabindex="38"></td>
+          <td><div class="sz"><input type="number" id="ln-pa-1" min="0" step="0.1" tabindex="39"><span>x</span><input type="number" id="ln-pa-2" min="0" step="0.1" tabindex="40"><span>x</span><input type="number" id="ln-pa-3" min="0" step="0.1" tabindex="41"><span>cm</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sep"></div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2">Omentum — size (cm)</div>
+      <div class="sz">
+        <input type="number" id="om-1" placeholder="—" min="0" step="0.1" tabindex="42"><span>x</span>
+        <input type="number" id="om-2" placeholder="—" min="0" step="0.1" tabindex="43"><span>x</span>
+        <input type="number" id="om-3" placeholder="—" min="0" step="0.1" tabindex="44"><span>cm</span>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Omentum tumor — up to (cm)</div>
+      <div class="sz">
+        <input type="number" id="om-t1" placeholder="—" min="0" step="0.1" tabindex="45"><span>x</span>
+        <input type="number" id="om-t2" placeholder="—" min="0" step="0.1" tabindex="46"><span>x</span>
+        <input type="number" id="om-t3" placeholder="—" min="0" step="0.1" tabindex="47"><span>cm</span>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Appendix — length × diameter (cm)</div>
+      <div class="sz">
+        <input type="number" id="app-1" placeholder="—" min="0" step="0.1" tabindex="48"><span>x</span>
+        <input type="number" id="app-2" placeholder="—" min="0" step="0.1" tabindex="49"><span>cm</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ SECTION 3: MICROSCOPIC ══ -->
+<div class="section" id="s-micro">
+<div class="sec-head" onclick="tog('s-micro')">3 · Microscopic Description <span class="arr">▾</span></div>
+<div class="sec-body">
+
+  <!-- Histologic type & grade -->
+  <div class="grid2">
+    <div class="fg">
+      <div class="fl2">Histologic type <span class="tag">同步 Diagnosis</span></div>
+      <select id="histo-type">
+        <option value="">— 選擇 —</option>
+        <option value="High-grade serous carcinoma">High-grade serous carcinoma</option>
+        <option value="Low-grade serous carcinoma">Low-grade serous carcinoma</option>
+        <option value="Mucinous adenocarcinoma">Mucinous adenocarcinoma</option>
+        <option value="Endometrioid carcinoma">Endometrioid carcinoma</option>
+        <option value="Clear cell carcinoma">Clear cell carcinoma</option>
+        <option value="Carcinosarcoma">Carcinosarcoma</option>
+        <option value="Serous borderline tumor">Serous borderline tumor</option>
+        <option value="Mucinous borderline tumor">Mucinous borderline tumor</option>
+        <option value="Endometrioid borderline tumor">Endometrioid borderline tumor</option>
+        <option value="Clear cell borderline tumor">Clear cell borderline tumor</option>
+        <option value="Granulosa cell tumor, adult type">Granulosa cell tumor, adult type</option>
+        <option value="Granulosa cell tumor, juvenile type">Granulosa cell tumor, juvenile type</option>
+        <option value="Dysgerminoma">Dysgerminoma</option>
+        <option value="Yolk sac tumor">Yolk sac tumor</option>
+        <option value="Immature teratoma">Immature teratoma</option>
+        <option value="Carcinoma, subtype cannot be determined">Carcinoma, subtype cannot be determined</option>
+        <option value="Other (specify)">Other (specify)</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl2">Histologic grade</div>
+      <div class="rr" style="margin-top:4px">
+        <label><input type="radio" name="histo-grade" value="Not applicable (serous carcinoma)"> Not applicable (serous)</label>
+        <label><input type="radio" name="histo-grade" value="Grade 1"> Grade 1</label>
+        <label><input type="radio" name="histo-grade" value="Grade 2"> Grade 2</label>
+        <label><input type="radio" name="histo-grade" value="Grade 3"> Grade 3</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Ovary &amp; Adnexa</div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2">Contralateral ovary involvement (right/left)</div>
+      <div class="rr"><label><input type="radio" name="contra-ov" value="Present"> Present</label><label><input type="radio" name="contra-ov" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Tumor side ovarian surface involvement</div>
+      <div class="rr"><label><input type="radio" name="tumor-surf" value="Present"> Present</label><label><input type="radio" name="tumor-surf" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Contralateral ovarian surface involvement</div>
+      <div class="rr"><label><input type="radio" name="contra-surf" value="Present"> Present</label><label><input type="radio" name="contra-surf" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Right adnexa soft tissue involvement</div>
+      <div class="rr"><label><input type="radio" name="r-adnexa-soft" value="Present"> Present</label><label><input type="radio" name="r-adnexa-soft" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Left adnexa soft tissue involvement</div>
+      <div class="rr"><label><input type="radio" name="l-adnexa-soft" value="Present"> Present</label><label><input type="radio" name="l-adnexa-soft" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Peritumoral lymphovascular invasion</div>
+      <div class="rr"><label><input type="radio" name="lvi" value="Present"> Present</label><label><input type="radio" name="lvi" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Perineural invasion</div>
+      <div class="rr"><label><input type="radio" name="pni" value="Present"> Present</label><label><input type="radio" name="pni" value="Absent"> Absent</label></div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Fallopian Tubes &amp; STIC</div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2"><span class="sb R">R</span>Right fallopian tube</div>
+      <div class="rr">
+        <label><input type="radio" name="r-ft-micro" value="Free of carcinoma"> Free of carcinoma</label>
+        <label><input type="radio" name="r-ft-micro" value="Carcinoma, involved (in lumen and/or parenchyma)"> Carcinoma, involved</label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2"><span class="sb L">L</span>Left fallopian tube</div>
+      <div class="rr">
+        <label><input type="radio" name="l-ft-micro" value="Free of carcinoma"> Free of carcinoma</label>
+        <label><input type="radio" name="l-ft-micro" value="Carcinoma, involved (in lumen and/or parenchyma)"> Carcinoma, involved</label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">STIC</div>
+      <div class="rr">
+        <label><input type="radio" name="stic" value="Absent"> Absent</label>
+        <label><input type="radio" name="stic" value="Present, right side"> Present, right</label>
+        <label><input type="radio" name="stic" value="Present, left side"> Present, left</label>
+        <label><input type="radio" name="stic" value="Present, bilateral"> Present, bilateral</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Uterus</div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2">Corpus uteri</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:2px">
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="corpus-micro" value="Leiomyomas; Free of carcinoma"> Leiomyomas; Free of carcinoma</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="corpus-micro" value="Leiomyomas; Carcinoma, involved"> Leiomyomas; Carcinoma, involved</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="corpus-micro" value="Free of carcinoma"> Free of carcinoma</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="corpus-micro" value="Carcinoma, involved"> Carcinoma, involved</label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Uterine serosa involvement</div>
+      <div class="rr"><label><input type="radio" name="ut-serosa" value="Present"> Present</label><label><input type="radio" name="ut-serosa" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Myometrium involvement</div>
+      <div class="rr"><label><input type="radio" name="myometrium" value="Present"> Present</label><label><input type="radio" name="myometrium" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Endometrium involvement</div>
+      <div class="rr"><label><input type="radio" name="endometrium" value="Present"> Present</label><label><input type="radio" name="endometrium" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Cervix involvement</div>
+      <div class="rr"><label><input type="radio" name="cervix-micro" value="Present"> Present</label><label><input type="radio" name="cervix-micro" value="Absent"> Absent</label></div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="sec-group-label">Other Organs / Peritoneum</div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2">Omentum involvement</div>
+      <div class="rr"><label><input type="radio" name="omentum-micro" value="Present"> Present</label><label><input type="radio" name="omentum-micro" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Pelvic soft tissue involvement</div>
+      <div class="rr"><label><input type="radio" name="pelvic-soft" value="Present"> Present</label><label><input type="radio" name="pelvic-soft" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Appendix involvement</div>
+      <div class="rr"><label><input type="radio" name="appendix-micro" value="Present"> Present</label><label><input type="radio" name="appendix-micro" value="Absent"> Absent</label></div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Other organs or specimens</div>
+      <div class="rr">
+        <label><input type="radio" name="other-organs" value="Present" onchange="toggleOtherOrgans()"> Present</label>
+        <label><input type="radio" name="other-organs" value="Absent" onchange="toggleOtherOrgans()"> Absent</label>
+      </div>
+      <div id="other-organs-detail-wrap" style="display:none;margin-top:4px">
+        <input type="text" id="other-organs-detail" placeholder="specify site(s), e.g. liver surface, sigmoid colon...">
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Implants <span style="font-size:10px;color:#888;text-transform:none;letter-spacing:0">(borderline tumors only)</span></div>
+      <select id="implants">
+        <option value="Not applicable">Not applicable</option>
+        <option value="Not sampled">Not sampled</option>
+        <option value="Not identified">Not identified</option>
+        <option value="Present">Present</option>
+        <option value="Indeterminate">Indeterminate</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl2">Largest extrapelvic peritoneal focus</div>
+      <select id="extrapelvic">
+        <option value="Not applicable">Not applicable</option>
+        <option value="Microscopic">Microscopic</option>
+        <option value="Macroscopic (2 cm or less)">Macroscopic (2 cm or less)</option>
+        <option value="Macroscopic (greater than 2 cm)">Macroscopic (greater than 2 cm)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Peritoneal / Ascitic Fluid -->
+  <div class="card">
+    <div class="fl2" style="margin-bottom:7px">Peritoneal / Ascitic Fluid</div>
+    <div class="grid2">
+      <div class="fg">
+        <div class="fl2">Result</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:2px">
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="peritoneal-fluid" value="Not submitted"> Not submitted</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="peritoneal-fluid" value="Negative for malignancy (normal/benign)"> Negative for malignancy (normal/benign)</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="peritoneal-fluid" value="Atypical"> Atypical</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="peritoneal-fluid" value="Suspicious"> Suspicious</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="radio" name="peritoneal-fluid" value="Malignant (positive for malignancy)"> Malignant (positive for malignancy)</label>
+        </div>
+      </div>
+      <div class="fg" style="gap:8px">
+        <div class="fg">
+          <div class="fl2">Cytology report reference no.</div>
+          <input type="text" id="cytology-ref" placeholder="e.g. C24-12345">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <!-- LYMPH NODES MICRO — 7 stations -->
+  <div class="sec-group-label">Lymph nodes — Microscopic <span class="tag">自動加總 → Diagnosis pN</span></div>
+  <div id="ln-micro-content"></div>
+  <div class="pn-tag" id="pn-display">pN: —</div>
+
+  <div class="sep"></div>
+  <div class="grid3">
+    <div class="fg">
+      <div class="fl2">Extranodal extension</div>
+      <div class="rr">
+        <label><input type="radio" name="extranodal" value="Present"> Present</label>
+        <label><input type="radio" name="extranodal" value="Absent"> Absent</label>
+        <label><input type="radio" name="extranodal" value="N/A"> N/A</label>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fl2">Metastatic size (cm, greatest dimension)</div>
+      <input type="number" id="meta-size" placeholder="—" min="0" step="0.1" style="width:80px">
+    </div>
+    <div class="fg">
+      <div class="fl2">Distant metastasis (pM)</div>
+      <select id="pm-cat">
+        <option value="Not applicable">Not applicable</option>
+        <option value="pM1a (pleural effusion with positive cytology)">pM1a – pleural effusion positive</option>
+        <option value="pM1b (extra-abdominal organ involvement)">pM1b – extra-abdominal organ</option>
+        <option value="Cannot be determined">Cannot be determined</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="fg">
+    <div class="fl2">Immunohistochemical study</div>
+    <textarea id="ihc-text" placeholder="e.g. WT1(+), p53(mutant type), PAX8(+), ER(−), PR(−)..." rows="2"></textarea>
+  </div>
+
+  <div class="sep"></div>
+  <div class="grid2">
+    <div class="fg">
+      <div class="fl2">pT Category (AJCC 8th / FIGO 2021)</div>
+      <select id="pt-cat" onchange="calcLN()">
+        <option value="">— 選擇 —</option>
+        <option value="pT1a">pT1a – Tumor limited to 1 ovary/FT; capsule intact; no surface tumor; no malignant cells in ascites</option>
+        <option value="pT1b">pT1b – Tumor limited to both ovaries/FTs; capsules intact; no surface tumor</option>
+        <option value="pT1c1">pT1c1 – Surgical spill</option>
+        <option value="pT1c2">pT1c2 – Capsule ruptured before surgery, or tumor on surface</option>
+        <option value="pT1c3">pT1c3 – Malignant cells in ascites or peritoneal washings</option>
+        <option value="pT2a">pT2a – Extension/implants on uterus and/or FTs and/or ovaries</option>
+        <option value="pT2b">pT2b – Extension to/implants on other pelvic tissues</option>
+        <option value="pT3a">pT3a – Microscopic extrapelvic peritoneal involvement ± retroperitoneal LNs</option>
+        <option value="pT3b">pT3b – Macroscopic peritoneal metastasis beyond pelvis ≤2 cm</option>
+        <option value="pT3c">pT3c – Macroscopic peritoneal metastasis beyond pelvis >2 cm</option>
+        <option value="pT not assigned">pT not assigned</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl2">TNM descriptors</div>
+      <div class="rr" style="margin-top:4px">
+        <label><input type="checkbox" id="tnm-y"> y (post-neoadjuvant)</label>
+        <label><input type="checkbox" id="tnm-r"> r (recurrent)</label>
+        <label><input type="checkbox" id="tnm-m"> m (multiple)</label>
+      </div>
+      <div id="ptn-display" style="font-size:13px;font-weight:700;padding:5px 0;color:#1a4fcf;margin-top:3px"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ SECTION 4: OUTPUT ══ -->
+<div class="section" id="s-out">
+<div class="sec-head" onclick="tog('s-out')">4 · Generate Report <span class="arr">▾</span></div>
+<div class="sec-body">
+  <button class="btn-gen" onclick="generateReport()">▶ 生成病理報告純文字</button>
+  <div class="out" id="report-out">（點擊上方按鈕生成報告）</div>
+  <div><button class="btn-copy" onclick="copyReport()">⧉ Copy report</button><span class="ok" id="copy-ok">✓ Copied!</span></div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// LN stations (7 stations for full Micro table)
+// ═══════════════════════════════════════════
+const LN_ST=[
+  {id:'ln-rp',   label:'Pelvic: Right (total)'},
+  {id:'ln-lp',   label:'Pelvic: Left (total)'},
+  {id:'ln-ei-r', label:'External iliac: Right'},
+  {id:'ln-ei-l', label:'External iliac: Left'},
+  {id:'ln-ob-r', label:'Obturator: Right'},
+  {id:'ln-ob-l', label:'Obturator: Left'},
+  {id:'ln-pa',   label:'Para-aortic'},
+];
+
+// ═══════════════════════════════════════════
+// TOGGLE SECTION
+// ═══════════════════════════════════════════
+function tog(id){ document.getElementById(id).classList.toggle('collapsed'); }
+
+// ═══════════════════════════════════════════
+// OVARY PANELS — dynamic based on tumor site
+// ═══════════════════════════════════════════
+function updateOvaryPanels(){
+  const site=document.getElementById('tumor-site').value;
+  const cont=document.getElementById('ovary-panels');
+  if(!site){ cont.innerHTML='<div style="color:#999;font-size:12px">← 請先選擇 Tumor site</div>'; return; }
+  const rTumor=site==='right'||site==='bilateral'||site==='right-ft'||site==='bilateral-ft';
+  const lTumor=site==='left'||site==='bilateral'||site==='left-ft'||site==='bilateral-ft';
+  let h='<div class="grid2">';
+  h+=buildOvaryPanel('r',rTumor);
+  h+=buildOvaryPanel('l',lTumor);
+  h+='</div>';
+  cont.innerHTML=h;
+}
+
+function buildOvaryPanel(side,isTumor){
+  const label=side==='r'?'Right':'Left';
+  const badge=side==='r'?'R':'L';
+  const desc=isTumor?`<strong>${label} ovarian TUMOR</strong> — size (cm) &amp; weight`:`${label} ovary (no tumor) — plain size (cm) &amp; weight`;
+  const cls=isTumor?'card':'card green';
+  return `<div class="${cls} fg">
+    <div class="fl2"><span class="sb ${badge}">${badge}</span>${desc}</div>
+    <div class="sz" style="margin-top:4px">
+      <input type="number" id="${side}-ov-1" placeholder="—" min="0" step="0.1">
+      <span>x</span>
+      <input type="number" id="${side}-ov-2" placeholder="—" min="0" step="0.1">
+      <span>x</span>
+      <input type="number" id="${side}-ov-3" placeholder="—" min="0" step="0.1">
+      <span>cm,</span>
+      <input type="number" id="${side}-ov-w" placeholder="wt" min="0" step="0.1" style="width:56px">
+      <span>g</span>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// LN GROSS TOGGLE
+// ═══════════════════════════════════════════
+function buildLNGross(){
+  const sub=document.querySelector('input[name="ln-submit"]:checked')?.value==='yes';
+  document.getElementById('ln-gross-wrap').style.display=sub?'':'none';
+}
+
+// ═══════════════════════════════════════════
+// LN MICRO TABLE (7 stations)
+// ═══════════════════════════════════════════
+function buildLNMicro(){
+  const sub=document.querySelector('input[name="ln-submit"]:checked')?.value==='yes';
+  const wrap=document.getElementById('ln-micro-content');
+  if(!sub){
+    wrap.innerHTML='<div style="font-size:12px;color:#777;padding:4px 0">Not assessed (pN not assigned)</div>';
+    document.getElementById('pn-display').textContent='pN not assigned';
+    document.getElementById('ptn-display').textContent='';
+    return;
+  }
+  let h='<table class="ln-tbl"><thead><tr><th>Station</th><th>Positive</th><th>Total examined</th><th>Result</th></tr></thead><tbody>';
+  LN_ST.forEach(s=>{
+    h+=`<tr>
+      <td>${s.label}</td>
+      <td><input type="number" id="${s.id}-pos" min="0" value="" placeholder="0" style="width:52px" oninput="calcLN()"></td>
+      <td><input type="number" id="${s.id}-tot" min="0" value="" placeholder="0" style="width:52px" oninput="calcLN()"></td>
+      <td id="${s.id}-res" style="color:#777;font-weight:600">—</td>
+    </tr>`;
+  });
+  h+='</tbody></table>';
+  wrap.innerHTML=h;
+  calcLN();
+}
+
+// ═══════════════════════════════════════════
+// CALC LN
+// ═══════════════════════════════════════════
+function calcLN(){
+  const sub=document.querySelector('input[name="ln-submit"]:checked')?.value==='yes';
+  let totalPos=0,totalTot=0;
+  if(sub){
+    LN_ST.forEach(s=>{
+      const pe=document.getElementById(s.id+'-pos');
+      const te=document.getElementById(s.id+'-tot');
+      if(!pe||!te)return;
+      const pos=parseInt(pe.value)||0;
+      const tot=parseInt(te.value)||0;
+      totalPos+=pos; totalTot+=tot;
+      const re=document.getElementById(s.id+'-res');
+      if(re) re.textContent=tot>0?`${pos}/${tot}`:'—';
+    });
+  }
+  let pnStr='';
+  if(!sub) pnStr='pN not assigned';
+  else if(totalTot===0) pnStr='pNX (no nodes examined)';
+  else if(totalPos===0) pnStr=`pN0 (0/${totalTot})`;
+  else pnStr=`pN1 (${totalPos}/${totalTot})`;
+  document.getElementById('pn-display').textContent=pnStr;
+  const pt=document.getElementById('pt-cat').value;
+  document.getElementById('ptn-display').textContent=`${pt||'pT?'}, ${pnStr}`;
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function gv(id){ const e=document.getElementById(id); return e?e.value:''; }
+function gn(id){ const e=document.getElementById(id); return e&&e.value!==''?e.value:null; }
+function gr(name){ return document.querySelector(`input[name="${name}"]:checked`)?.value||''; }
+function gc(id){ return document.getElementById(id)?.checked||false; }
+function gSz(ids){
+  const v=ids.map(id=>{const e=document.getElementById(id);return e&&e.value!==''?e.value:null;});
+  return v.every(x=>x===null)?null:v.map(x=>x||'_').join(' x ');
+}
+function getProcs(){ return [...document.querySelectorAll('#proc-checks input:checked')].map(c=>c.value); }
+
+function isRightTumor(){
+  const v=document.getElementById('tumor-site').value;
+  return v==='right'||v==='bilateral'||v==='right-ft'||v==='bilateral-ft';
+}
+function isLeftTumor(){
+  const v=document.getElementById('tumor-site').value;
+  return v==='left'||v==='bilateral'||v==='left-ft'||v==='bilateral-ft';
+}
+function isBilateral(){
+  const v=document.getElementById('tumor-site').value;
+  return v==='bilateral'||v==='bilateral-ft';
+}
+function getSideStr(){
+  const v=document.getElementById('tumor-site').value;
+  if(v==='right'||v==='right-ft') return 'right';
+  if(v==='left'||v==='left-ft')   return 'left';
+  if(v==='bilateral'||v==='bilateral-ft') return 'bilateral';
+  return '';
+}
+
+function getPNStr(){
+  const sub=document.querySelector('input[name="ln-submit"]:checked')?.value==='yes';
+  if(!sub) return 'pN not assigned';
+  let tp=0,tt=0;
+  LN_ST.forEach(s=>{
+    tp+=parseInt(document.getElementById(s.id+'-pos')?.value)||0;
+    tt+=parseInt(document.getElementById(s.id+'-tot')?.value)||0;
+  });
+  if(tt===0) return 'pNX';
+  if(tp===0) return `pN0 (0/${tt})`;
+  return `pN1 (${tp}/${tt})`;
+}
+
+// ═══════════════════════════════════════════
+// GENERATE REPORT
+// ═══════════════════════════════════════════
+function generateReport(){
+  const procs=getProcs();
+  const procStr=procs.length?procs.join(', '):'[procedure not selected]';
+  const tumorSiteDetail=gv('tumor-site-detail').trim();
+  const histoType=gv('histo-type');
+  const histoGrade=gr('histo-grade');
+  const pt=gv('pt-cat');
+  const pnStr=getPNStr();
+  const sub=document.querySelector('input[name="ln-submit"]:checked')?.value==='yes';
+  const hasHyst=procs.some(p=>p.toLowerCase().includes('hysterectomy'));
+  const rTumor=isRightTumor(), lTumor=isLeftTumor();
+
+  const tnmDesc=[];
+  if(gc('tnm-y')) tnmDesc.push('y (post-neoadjuvant therapy)');
+  if(gc('tnm-r')) tnmDesc.push('r (recurrent)');
+  if(gc('tnm-m')) tnmDesc.push('m (multiple)');
+  const tnmDescStr=tnmDesc.length?tnmDesc.join(', '):'Not applicable';
+
+  // ── PATHOLOGIC DIAGNOSIS ──
+  let lines=[];
+  const rFtMicro=gr('r-ft-micro');
+  const lFtMicro=gr('l-ft-micro');
+
+  if(rTumor) lines.push(`Ovary, right, salpingo-oophorectomy --- ${histoType||'[histologic type]'} (${pt||'pT?'})`);
+  else if(lTumor||document.getElementById('tumor-site').value) lines.push(`Ovary, right, salpingo-oophorectomy --- Free of carcinoma`);
+  if(lTumor) lines.push(`Ovary, left, salpingo-oophorectomy --- ${histoType||'[histologic type]'}`);
+  else if(rTumor||document.getElementById('tumor-site').value) lines.push(`Ovary, left, salpingo-oophorectomy --- Free of carcinoma`);
+  if(!rTumor&&!lTumor&&document.getElementById('tumor-site').value==='peritoneum')
+    lines.push(`Peritoneum, primary --- ${histoType||'[histologic type]'} (${pt||'pT?'})`);
+
+  lines.push(`Fallopian tube, right, salpingo-oophorectomy --- ${rFtMicro||'[see microscopic]'}`);
+  lines.push(`Fallopian tube, left, salpingo-oophorectomy --- ${lFtMicro||'[see microscopic]'}`);
+
+  if(hasHyst){
+    lines.push('Uterus, corpus, abdominal total hysterectomy --- Leiomyoma');
+    lines.push('Uterus, cervix, abdominal total hysterectomy --- Chronic cervicitis');
+  }
+
+  if(sub){
+    // Aggregate pelvic R = rp + ei-r + ob-r
+    const aggR={pos:0,tot:0}, aggL={pos:0,tot:0}, aggPA={pos:0,tot:0};
+    ['ln-rp','ln-ei-r','ln-ob-r'].forEach(sid=>{
+      aggR.pos+=parseInt(document.getElementById(sid+'-pos')?.value)||0;
+      aggR.tot+=parseInt(document.getElementById(sid+'-tot')?.value)||0;
+    });
+    ['ln-lp','ln-ei-l','ln-ob-l'].forEach(sid=>{
+      aggL.pos+=parseInt(document.getElementById(sid+'-pos')?.value)||0;
+      aggL.tot+=parseInt(document.getElementById(sid+'-tot')?.value)||0;
+    });
+    aggPA.pos=parseInt(document.getElementById('ln-pa-pos')?.value)||0;
+    aggPA.tot=parseInt(document.getElementById('ln-pa-tot')?.value)||0;
+
+    if(aggR.tot>0) lines.push(`Lymph nodes pelvic, right, dissection --- ${aggR.pos===0?'Free of metastasis':'Carcinoma, metastatic'} (${aggR.pos}/${aggR.tot})`);
+    if(aggL.tot>0) lines.push(`Lymph nodes pelvic, left, dissection --- ${aggL.pos===0?'Free of metastasis':'Carcinoma, metastatic'} (${aggL.pos}/${aggL.tot})`);
+    if(aggPA.tot>0) lines.push(`Lymph nodes para-aortic, dissection --- ${aggPA.pos===0?'Free of metastasis':'Carcinoma, metastatic'} (${aggPA.pos}/${aggPA.tot}) (${pnStr})`);
+  }
+
+  const omMicro=gr('omentum-micro');
+  if(procs.some(p=>p.includes('Omentectomy'))||omMicro)
+    lines.push(`Omentum, omentectomy --- ${omMicro==='Present'?'Carcinoma, metastatic':'Free of metastasis'}`);
+
+  let report='PATHOLOGIC DIAGNOSIS:\n'+lines.join('\n');
+
+  // ── GROSS ──
+  report+='\n\nGROSS DESCRIPTION:\n';
+  report+=`Procedure: ${procStr}.\n`;
+  report+=`Specimen: Total hysterectomy with bilateral adnexa and omentum, pelvic and para-aortic lymph nodes, fixed in formalin.\n`;
+
+  const riOv=gr('ri-ov'),liOv=gr('li-ov'),riFt=gr('ri-ft'),liFt=gr('li-ft');
+  const spillR=gc('spill-r'), spillL=gc('spill-l');
+  if(riOv&&riOv!=='N/A') report+=`Specimen integrity, right ovary: ${riOv}${riOv==='Capsule ruptured'&&spillR?' (surgical spill)':''}\n`;
+  if(liOv&&liOv!=='N/A') report+=`Specimen integrity, left ovary: ${liOv}${liOv==='Capsule ruptured'&&spillL?' (surgical spill)':''}\n`;
+  if(riFt&&riFt!=='N/A') report+=`Specimen integrity, right fallopian tube: ${riFt}\n`;
+  if(liFt&&liFt!=='N/A') report+=`Specimen integrity, left fallopian tube: ${liFt}\n`;
+
+  const rovSz=gSz(['r-ov-1','r-ov-2','r-ov-3']),rovW=gn('r-ov-w');
+  if(rovSz) report+=`${rTumor?'Right ovarian tumor':'Right ovary'}: ${rovSz} cm, weighing ${rovW||'_'} g\n`;
+  const lovSz=gSz(['l-ov-1','l-ov-2','l-ov-3']),lovW=gn('l-ov-w');
+  if(lovSz) report+=`${lTumor?'Left ovarian tumor':'Left ovary'}: ${lovSz} cm, weighing ${lovW||'_'} g\n`;
+
+  const rFtSz=gSz(['r-ft-1','r-ft-2']);
+  if(rFtSz) report+=`Right tube: ${rFtSz} cm (length x diameter)\n`;
+  const lFtSz=gSz(['l-ft-1','l-ft-2']);
+  if(lFtSz) report+=`Left tube: ${lFtSz} cm (length x diameter)\n`;
+
+  const utSz=gSz(['ut-1','ut-2','ut-3']),utW=gn('ut-w');
+  if(utSz) report+=`Uterus: ${utSz} cm, weighing ${utW||'_'} g\n`;
+  const endoT=gn('endo-t'),myoT=gn('myo-t');
+  if(endoT) report+=`- Endometrium: ${endoT} cm in thickness\n`;
+  if(myoT)  report+=`- Myometrium: ${myoT} cm in thickness\n`;
+
+  // Myomatous nodules
+  const myoPieces=gv('myo-pieces').trim();
+  const myoNSz=gSz(['myo-n1','myo-n2','myo-n3']);
+  const myoLocs=[];
+  if(gc('myo-intramural')) myoLocs.push('intramural');
+  if(gc('myo-subserosal')) myoLocs.push('subserosal');
+  if(gc('myo-submucosal')) myoLocs.push('submucosal');
+  if(myoNSz||myoPieces){
+    const locStr=myoLocs.length?', '+myoLocs.join(', '):'';
+    report+=`- Myomatous nodules: ${myoPieces||'_'} piece(s)${locStr}, up to ${myoNSz||'_ x _ x _'} cm\n`;
+  }
+
+  const perim=gr('perim');
+  if(perim) report+=`Perimetrium: ${perim}\n`;
+
+  if(sub){
+    [
+      {label:'Right pelvic LNs', pieces:'ln-rp-pieces', sz:['ln-rp-1','ln-rp-2','ln-rp-3']},
+      {label:'Left pelvic LNs',  pieces:'ln-lp-pieces', sz:['ln-lp-1','ln-lp-2','ln-lp-3']},
+      {label:'Para-aortic LNs',  pieces:'ln-pa-pieces', sz:['ln-pa-1','ln-pa-2','ln-pa-3']},
+    ].forEach(s=>{
+      const pEl=document.getElementById(s.pieces);
+      const pieces=pEl&&pEl.value?pEl.value:'_';
+      const sz=gSz(s.sz)||'_ x _ x _';
+      report+=`[${s.label}] ${pieces} piece(s), ${sz} cm in total.\n`;
+    });
+  } else {
+    report+=`[Lymph nodes] Not submitted.\n`;
+  }
+
+  const omSz=gSz(['om-1','om-2','om-3']),omTSz=gSz(['om-t1','om-t2','om-t3']);
+  if(omSz){ report+=`[Omentum] ${omSz} cm`; if(omTSz) report+=`. Tumor: up to ${omTSz} cm`; report+='\n'; }
+  const appSz=gSz(['app-1','app-2']);
+  if(appSz) report+=`[Appendix] ${appSz} cm (length x diameter)\n`;
+
+  // ── MICROSCOPIC ──
+  report+='\nMICROSCOPIC DESCRIPTION:\n';
+
+  const sideV=getSideStr();
+  let histoSide='';
+  if(sideV==='right') histoSide='right ';
+  else if(sideV==='left') histoSide='left ';
+  else if(sideV==='bilateral') histoSide='right and left ';
+  report+=`Histologic type of ${histoSide}ovarian tumor${sideV==='bilateral'?'s':''}: ${histoType||'[not specified]'}\n`;
+  report+=`Histologic grade: ${histoGrade||'[not selected]'}\n`;
+
+  const binF=[
+    {n:'contra-ov',    l:'Contralateral ovary involvement (right / left)'},
+    {n:'tumor-surf',   l:'Tumor side ovarian surface involvement'},
+    {n:'contra-surf',  l:'Contralateral ovarian surface involvement'},
+    {n:'r-adnexa-soft',l:'Right adnexa soft tissue involvement'},
+    {n:'l-adnexa-soft',l:'Left adnexa soft tissue involvement'},
+    {n:'lvi',          l:'Peritumoral lymphovascular invasion'},
+    {n:'pni',          l:'Perineural invasion'},
+  ];
+  binF.forEach(f=>{ const v=gr(f.n); if(v) report+=`${f.l}: ${v}\n`; });
+
+  const rFtM=gr('r-ft-micro'),lFtM=gr('l-ft-micro');
+  if(rFtM) report+=`Right fallopian tube: ${rFtM}\n`;
+  if(lFtM) report+=`Left fallopian tube: ${lFtM}\n`;
+
+  const stic=gr('stic');
+  if(stic) report+=`Serous tubal intraepithelial carcinoma (STIC): ${stic}\n`;
+
+  const corpus=gr('corpus-micro');
+  if(corpus) report+=`Corpus uteri: ${corpus}\n`;
+
+  [
+    {n:'ut-serosa',   l:'Uterine serosa involvement'},
+    {n:'myometrium',  l:'Myometrium involvement'},
+    {n:'endometrium', l:'Endometrium involvement'},
+    {n:'cervix-micro',l:'Cervix involvement'},
+    {n:'omentum-micro',l:'Omentum involvement'},
+    {n:'pelvic-soft', l:'Pelvic soft tissue involvement'},
+    {n:'appendix-micro',l:'Appendix involvement'},
+  ].forEach(f=>{ const v=gr(f.n); if(v) report+=`${f.l}: ${v}\n`; });
+
+  const otherOrgans=gr('other-organs');
+  if(otherOrgans){
+    const detail=gv('other-organs-detail').trim();
+    report+=`Other organs or specimens: ${otherOrgans}${otherOrgans==='Present'&&detail?' ('+detail+')':''}\n`;
+  }
+
+  report+=`Implants (required for advanced stage serous/seromucinous borderline tumors only): ${gv('implants')}\n`;
+  report+=`Largest extrapelvic peritoneal focus: ${gv('extrapelvic')}\n`;
+
+  // Peritoneal fluid
+  const fluid=gr('peritoneal-fluid');
+  let fluidLine=`Peritoneal/ascitic fluid: ${fluid||'[not selected]'}`;
+  const cytRef=gv('cytology-ref').trim();
+  if(cytRef) fluidLine+=` (cytology ref: ${cytRef})`;
+  report+=fluidLine+'\n';
+
+  // LN microscopic — detailed
+  report+='\nLymph nodes (Positive/Total):';
+  if(!sub){
+    report+=' Not assessed (pN not assigned)\n';
+  } else {
+    let hasAny=false;
+    report+='\n';
+
+    // Pelvic section
+    const rpPos=parseInt(document.getElementById('ln-rp-pos')?.value)||0;
+    const rpTot=parseInt(document.getElementById('ln-rp-tot')?.value)||0;
+    const lpPos=parseInt(document.getElementById('ln-lp-pos')?.value)||0;
+    const lpTot=parseInt(document.getElementById('ln-lp-tot')?.value)||0;
+    const eiRPos=parseInt(document.getElementById('ln-ei-r-pos')?.value)||0;
+    const eiRTot=parseInt(document.getElementById('ln-ei-r-tot')?.value)||0;
+    const eiLPos=parseInt(document.getElementById('ln-ei-l-pos')?.value)||0;
+    const eiLTot=parseInt(document.getElementById('ln-ei-l-tot')?.value)||0;
+    const obRPos=parseInt(document.getElementById('ln-ob-r-pos')?.value)||0;
+    const obRTot=parseInt(document.getElementById('ln-ob-r-tot')?.value)||0;
+    const obLPos=parseInt(document.getElementById('ln-ob-l-pos')?.value)||0;
+    const obLTot=parseInt(document.getElementById('ln-ob-l-tot')?.value)||0;
+    const paPos=parseInt(document.getElementById('ln-pa-pos')?.value)||0;
+    const paTot=parseInt(document.getElementById('ln-pa-tot')?.value)||0;
+
+    const pelvicRTot=rpTot+eiRTot+obRTot, pelvicRPos=rpPos+eiRPos+obRPos;
+    const pelvicLTot=lpTot+eiLTot+obLTot, pelvicLPos=lpPos+eiLPos+obLPos;
+
+    if(pelvicRTot>0||pelvicLTot>0){
+      report+=`- Pelvic: Right: ${pelvicRTot>0?pelvicRPos+'/'+pelvicRTot:'0/0'}; Left: ${pelvicLTot>0?pelvicLPos+'/'+pelvicLTot:'0/0'}\n`;
+      hasAny=true;
+    }
+    if(eiRTot>0||eiLTot>0){
+      report+=`- External iliac: Right: ${eiRTot>0?eiRPos+'/'+eiRTot:'0/0'}; Left: ${eiLTot>0?eiLPos+'/'+eiLTot:'0/0'}\n`;
+      hasAny=true;
+    }
+    if(obRTot>0||obLTot>0){
+      report+=`- Obturator: Right: ${obRTot>0?obRPos+'/'+obRTot:'0/0'}; Left: ${obLTot>0?obLPos+'/'+obLTot:'0/0'}\n`;
+      hasAny=true;
+    }
+    if(paTot>0){
+      report+=`- Para-aortic: ${paPos}/${paTot}\n`;
+      hasAny=true;
+    }
+    if(!hasAny) report+=`- No nodes examined (pNX)\n`;
+
+    const extranodal=gr('extranodal');
+    if(extranodal&&extranodal!=='N/A') report+=`Extranodal extension: ${extranodal}\n`;
+    const metaSize=gn('meta-size');
+    if(metaSize) report+=`Metastatic size: ${metaSize} cm in greatest dimension\n`;
+  }
+
+  report+=`Distant metastasis (pM): ${gv('pm-cat')}\n`;
+
+  const ihc=gv('ihc-text').trim();
+  report+=`Immunohistochemical study: ${ihc||'[none / see addendum]'}\n`;
+
+  report+=`\npTNM: ${pt||'pT?'}, ${pnStr} (AJCC cancer staging system, 8th edition)\n`;
+  report+=`TNM descriptors: ${tnmDescStr}\n`;
+  report+='\n(This case has been reviewed by two pathologists.)';
+
+  document.getElementById('report-out').textContent=report;
+}
+
+// ═══════════════════════════════════════════
+// COPY
+// ═══════════════════════════════════════════
+function copyReport(){
+  const txt=document.getElementById('report-out').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const ok=document.getElementById('copy-ok');
+    ok.style.display='inline';
+    setTimeout(()=>ok.style.display='none',2000);
+  });
+}
+
+// ═══════════════════════════════════════════
+// TOGGLE SURGICAL SPILL
+// ═══════════════════════════════════════════
+function toggleSpill(side){
+  const name=side==='r'?'ri-ov':'li-ov';
+  const val=document.querySelector(`input[name="${name}"]:checked`)?.value;
+  const wrap=document.getElementById(`spill-${side}-wrap`);
+  if(wrap) wrap.style.display=val==='Capsule ruptured'?'':'none';
+  if(val!=='Capsule ruptured'){
+    const cb=document.getElementById(`spill-${side}`);
+    if(cb) cb.checked=false;
+  }
+}
+
+// ═══════════════════════════════════════════
+// TOGGLE OTHER ORGANS DETAIL
+// ═══════════════════════════════════════════
+function toggleOtherOrgans(){
+  const val=document.querySelector('input[name="other-organs"]:checked')?.value;
+  document.getElementById('other-organs-detail-wrap').style.display=val==='Present'?'':'none';
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+updateOvaryPanels();
+buildLNMicro();
+buildLNGross();
+</script>
+</body>
+</html>

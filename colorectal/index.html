@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colorectal Pathology Report Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:15px;color:#222;background:#f5f5f5;padding:12px}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:16px;font-weight:600;margin-bottom:12px;color:#111;padding:10px 14px;background:#fff;border:1px solid #ddd;border-radius:8px}
+.tabs{display:flex;gap:0;border-bottom:1px solid #ddd;margin-bottom:12px;background:#fff;border-radius:8px 8px 0 0;overflow:hidden}
+.tab{padding:8px 20px;font-size:13px;cursor:pointer;border:none;background:none;color:#666;border-bottom:2px solid transparent;font-family:Arial,sans-serif}
+.tab.active{color:#111;border-bottom:2px solid #333;background:#f9f9f9}
+.tab-content{display:none}.tab-content.active{display:block}
+.section{border:1px solid #ddd;border-radius:8px;margin-bottom:10px;background:#fff;overflow:hidden}
+.sec-head{font-weight:600;font-size:11px;padding:6px 12px;background:#f0f0f0;border-bottom:1px solid #ddd;color:#555;text-transform:uppercase;letter-spacing:.5px}
+.sec-body{padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.row label.lbl{font-size:13px;color:#555;white-space:nowrap;min-width:130px;flex-shrink:0}
+select,input[type=text],input[type=number],textarea{background:#fff;border:1px solid #ccc;border-radius:6px;padding:4px 8px;font-size:14px;color:#222;font-family:Arial,sans-serif}
+select{cursor:pointer}
+input[type=number]{width:60px;text-align:center}
+textarea{width:100%;min-height:60px;resize:vertical}
+.size-group{display:flex;align-items:center;gap:4px}
+.size-group input{width:56px}
+.size-group span{color:#888;font-size:12px}
+.radio-group{display:flex;flex-wrap:wrap;gap:5px}
+.radio-group label{display:flex;align-items:center;gap:4px;font-size:13px;color:#333;cursor:pointer;padding:3px 9px;border:1px solid #ccc;border-radius:20px;white-space:nowrap;user-select:none}
+.radio-group label.sel{border-color:#555;background:#f0f0f0;font-weight:500}
+.radio-group input{display:none}
+.ln-simple{display:flex;align-items:center;gap:6px;font-size:12px}
+.ln-simple input[type=number]{width:52px}
+.ln-simple span{color:#888}
+.out-area{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px;font-family:'Courier New',monospace;font-size:14px;line-height:1.9;white-space:pre-wrap;color:#111;min-height:400px}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+button.gen{padding:7px 18px;border:1px solid #999;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;font-family:Arial,sans-serif;color:#222}
+button.gen:hover{background:#f0f0f0}
+button.copy-btn{padding:7px 14px;border:1px solid #bbb;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;font-family:Arial,sans-serif;color:#555}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dist-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.dist-item{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.dist-item label{color:#666}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#e0ecff;color:#004eaa;font-weight:600}
+select.wide{min-width:220px}
+.note-txt{font-size:11px;color:#888}
+.ln-summary{margin-top:6px;font-size:12px;color:#555}
+.sub-head{font-size:11px;font-weight:600;color:#666;margin-bottom:6px}
+.ihc-prev-area{width:100%;min-height:80px;resize:vertical;font-family:'Courier New',monospace;font-size:12px;background:#fafafa;border:1px solid #ddd;border-radius:6px;padding:8px;color:#222}
+.ck-label{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer}
+.ck-label input[type=checkbox]{width:13px;height:13px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Colorectal Pathology Report Generator — AJCC 8th Edition</h1>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('input')">Input Form</button>
+  <button class="tab" onclick="showTab('output')">Generated Report</button>
+</div>
+
+<div id="tab-input" class="tab-content active">
+
+<!-- PROCEDURE -->
+<div class="section">
+  <div class="sec-head">Procedure &amp; Specimen</div>
+  <div class="sec-body">
+    <div class="row">
+      <label class="lbl">Surgical procedure</label>
+      <select id="procedure" onchange="syncProcedure()">
+        <option value="">-- select --</option>
+        <option value="right hemicolectomy">Right hemicolectomy</option>
+        <option value="left hemicolectomy">Left hemicolectomy</option>
+        <option value="low anterior resection">Low anterior resection</option>
+        <option value="high anterior resection">High anterior resection</option>
+        <option value="abdominoperineal resection">Abdominoperineal resection</option>
+        <option value="total abdominal colectomy">Total abdominal colectomy</option>
+        <option value="Hartmann's operation">Hartmann's operation</option>
+      </select>
+    </div>
+    <div class="row">
+      <label class="lbl">Neoadjuvant therapy</label>
+      <div class="radio-group">
+        <label onclick="setRadio('neoadj','none',this)"><input type="radio" name="neoadj" value="none"> None</label>
+        <label onclick="setRadio('neoadj','CT',this)"><input type="radio" name="neoadj" value="CT"> C/T</label>
+        <label onclick="setRadio('neoadj','RT',this)"><input type="radio" name="neoadj" value="RT"> R/T</label>
+        <label onclick="setRadio('neoadj','CCRT',this)"><input type="radio" name="neoadj" value="CCRT"> CCRT</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROSS -->
+<div class="section">
+  <div class="sec-head">Gross Description</div>
+  <div class="sec-body">
+    <div class="row">
+      <label class="lbl">Tumor site</label>
+      <select id="tumor-site" onchange="autoGen()">
+        <option value="">-- select --</option>
+        <option value="Cecum">Cecum</option>
+        <option value="Ascending colon">Ascending colon</option>
+        <option value="Colon, hepatic flexure">Colon, hepatic flexure</option>
+        <option value="Transverse colon">Transverse colon</option>
+        <option value="Colon, splenic flexure">Colon, splenic flexure</option>
+        <option value="Descending colon">Descending colon</option>
+        <option value="Sigmoid colon">Sigmoid colon</option>
+        <option value="Rectosigmoid colon">Rectosigmoid colon</option>
+        <option value="Rectum">Rectum</option>
+      </select>
+    </div>
+    <div class="row">
+      <label class="lbl">Tumor size (cm)</label>
+      <div class="size-group">
+        <input type="number" id="ts1" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+        <span>x</span>
+        <input type="number" id="ts2" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+        <span>x</span>
+        <input type="number" id="ts3" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+      </div>
+    </div>
+    <div class="row">
+      <label class="lbl">Configuration</label>
+      <div class="radio-group">
+        <label onclick="setRadio('config','Ulcerative',this)"><input type="radio" name="config" value="Ulcerative"> Ulcerative</label>
+        <label onclick="setRadio('config','Polypoid',this)"><input type="radio" name="config" value="Polypoid"> Polypoid</label>
+        <label onclick="setRadio('config','Fungating',this)"><input type="radio" name="config" value="Fungating"> Fungating</label>
+        <label onclick="setRadio('config','Infiltrative',this)"><input type="radio" name="config" value="Infiltrative"> Infiltrative</label>
+        <label onclick="setRadio('config','Flat',this)"><input type="radio" name="config" value="Flat"> Flat</label>
+      </div>
+    </div>
+
+    <!-- SPECIMEN DIMENSIONS -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">SPECIMEN DIMENSIONS — Tab moves between fields</div>
+      <div class="grid2">
+        <!-- Colon with diameter/circumference toggle -->
+        <div>
+          <div class="note-txt" style="margin-bottom:5px">Colon</div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:11px">L</span>
+            <input type="number" id="co-l" step="0.1" min="0" placeholder="—" style="width:70px" oninput="autoGen()">
+            <span style="font-size:12px;color:#888">cm</span>
+            <select id="co-dim-type" onchange="autoGen()" style="font-size:11px;padding:3px 5px;border-radius:5px">
+              <option value="diameter">∅ diameter</option>
+              <option value="circumference">circumference</option>
+            </select>
+            <input type="number" id="co-dim" step="0.1" min="0" placeholder="—" style="width:70px" oninput="autoGen()">
+            <span style="font-size:12px;color:#888">cm</span>
+          </div>
+        </div>
+        <div id="ileum-wrap">
+          <div class="note-txt" style="margin-bottom:5px">Ileum</div>
+          <div class="size-group">
+            <span style="font-size:11px">L</span>
+            <input type="number" id="il-l" step="0.1" min="0" placeholder="—" style="width:70px" oninput="autoGen()">
+            <span>cm &nbsp;∅</span>
+            <input type="number" id="il-d" step="0.1" min="0" placeholder="—" style="width:70px" oninput="autoGen()">
+            <span>cm</span>
+          </div>
+        </div>
+        <div id="appendix-wrap">
+          <div class="note-txt" style="margin-bottom:5px">Appendix</div>
+          <div class="size-group">
+            <span style="font-size:11px">L</span>
+            <input type="number" id="ap-l" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+            <span>cm &nbsp;∅</span>
+            <input type="number" id="ap-d" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+            <span>cm</span>
+          </div>
+        </div>
+        <div id="anus-wrap" style="display:none">
+          <div class="note-txt" style="margin-bottom:5px">Anus</div>
+          <div class="size-group">
+            <span style="font-size:11px">L</span>
+            <input type="number" id="an-l" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+            <span>cm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARGINS -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="sub-head" style="margin-bottom:0">MARGINS</span>
+        <label class="ck-label">
+          <input type="checkbox" id="bilateral-mode" onchange="syncBilateral()"> Bilateral (cannot distinguish proximal/distal)
+        </label>
+      </div>
+      <!-- Proximal / Distal mode -->
+      <div id="margin-pd">
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;color:#666;margin-bottom:3px">Proximal</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="radio-group">
+              <label onclick="setMarginStatus('prox','Uninvolved',this)"><input type="radio" name="ms-prox" value="Uninvolved"> Uninvolved</label>
+              <label onclick="setMarginStatus('prox','<1 mm',this)"><input type="radio" name="ms-prox" value="<1 mm"> &lt;1 mm</label>
+              <label onclick="setMarginStatus('prox','Involved',this)"><input type="radio" name="ms-prox" value="Involved"> Involved</label>
+              <label onclick="setMarginStatus('prox','Cannot be assessed',this)"><input type="radio" name="ms-prox" value="Cannot be assessed"> Cannot assess</label>
+            </div>
+            <div id="prox-dist-wrap" style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="m-prox" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+              <span class="note-txt">cm</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;color:#666;margin-bottom:3px">Distal</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="radio-group">
+              <label onclick="setMarginStatus('dist','Uninvolved',this)"><input type="radio" name="ms-dist" value="Uninvolved"> Uninvolved</label>
+              <label onclick="setMarginStatus('dist','<1 mm',this)"><input type="radio" name="ms-dist" value="<1 mm"> &lt;1 mm</label>
+              <label onclick="setMarginStatus('dist','Involved',this)"><input type="radio" name="ms-dist" value="Involved"> Involved</label>
+              <label onclick="setMarginStatus('dist','Cannot be assessed',this)"><input type="radio" name="ms-dist" value="Cannot be assessed"> Cannot assess</label>
+            </div>
+            <div id="dist-dist-wrap" style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="m-dist" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+              <span class="note-txt">cm</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;color:#666;margin-bottom:3px">Radial / CRM</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="radio-group">
+              <label onclick="setMarginStatus('rad','Uninvolved',this)"><input type="radio" name="ms-rad" value="Uninvolved"> Uninvolved</label>
+              <label onclick="setMarginStatus('rad','<1 mm',this)"><input type="radio" name="ms-rad" value="<1 mm"> &lt;1 mm</label>
+              <label onclick="setMarginStatus('rad','Involved',this)"><input type="radio" name="ms-rad" value="Involved"> Involved</label>
+              <label onclick="setMarginStatus('rad','Cannot be assessed',this)"><input type="radio" name="ms-rad" value="Cannot be assessed"> Cannot assess</label>
+            </div>
+            <div id="rad-dist-wrap" style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="m-rad" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+              <span class="note-txt">cm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Bilateral mode -->
+      <div id="margin-bi" style="display:none">
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;color:#666;margin-bottom:3px">Margin A</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="radio-group">
+              <label onclick="setMarginStatus('bi-a','Uninvolved',this)"><input type="radio" name="ms-bi-a" value="Uninvolved"> Uninvolved</label>
+              <label onclick="setMarginStatus('bi-a','<1 mm',this)"><input type="radio" name="ms-bi-a" value="<1 mm"> &lt;1 mm</label>
+              <label onclick="setMarginStatus('bi-a','Involved',this)"><input type="radio" name="ms-bi-a" value="Involved"> Involved</label>
+              <label onclick="setMarginStatus('bi-a','Cannot be assessed',this)"><input type="radio" name="ms-bi-a" value="Cannot be assessed"> Cannot assess</label>
+            </div>
+            <div id="bi-a-dist-wrap" style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="m-bi-a" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+              <span class="note-txt">cm</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;color:#666;margin-bottom:3px">Margin B</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="radio-group">
+              <label onclick="setMarginStatus('bi-b','Uninvolved',this)"><input type="radio" name="ms-bi-b" value="Uninvolved"> Uninvolved</label>
+              <label onclick="setMarginStatus('bi-b','<1 mm',this)"><input type="radio" name="ms-bi-b" value="<1 mm"> &lt;1 mm</label>
+              <label onclick="setMarginStatus('bi-b','Involved',this)"><input type="radio" name="ms-bi-b" value="Involved"> Involved</label>
+              <label onclick="setMarginStatus('bi-b','Cannot be assessed',this)"><input type="radio" name="ms-bi-b" value="Cannot be assessed"> Cannot assess</label>
+            </div>
+            <div id="bi-b-dist-wrap" style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="m-bi-b" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+              <span class="note-txt">cm</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;color:#666;margin-bottom:3px">Radial / CRM</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="radio-group">
+              <label onclick="setMarginStatus('rad-bi','Uninvolved',this)"><input type="radio" name="ms-rad-bi" value="Uninvolved"> Uninvolved</label>
+              <label onclick="setMarginStatus('rad-bi','<1 mm',this)"><input type="radio" name="ms-rad-bi" value="<1 mm"> &lt;1 mm</label>
+              <label onclick="setMarginStatus('rad-bi','Involved',this)"><input type="radio" name="ms-rad-bi" value="Involved"> Involved</label>
+              <label onclick="setMarginStatus('rad-bi','Cannot be assessed',this)"><input type="radio" name="ms-rad-bi" value="Cannot be assessed"> Cannot assess</label>
+            </div>
+            <div id="rad-bi-dist-wrap" style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="m-rad-bi" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+              <span class="note-txt">cm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMA GROSS -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">IMA LYMPH NODES (Gross)</div>
+      <div class="row">
+        <label class="lbl">Pieces</label>
+        <input type="text" id="ima-pieces" placeholder="e.g. 3 or multiple" style="width:100px" oninput="syncIMArows();autoGen()">
+        <span class="note-txt">up to</span>
+        <div class="size-group">
+          <input type="number" id="ima-s1" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span>x</span>
+          <input type="number" id="ima-s2" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span>x</span>
+          <input type="number" id="ima-s3" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span class="note-txt">cm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMA GROSS -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">SMA LYMPH NODES (Gross) <span class="note-txt">— leave blank if not submitted</span></div>
+      <div class="row">
+        <label class="lbl">Pieces</label>
+        <input type="text" id="sma-pieces" placeholder="e.g. 2 or multiple" style="width:100px" oninput="syncIMArows();autoGen()">
+        <span class="note-txt">up to</span>
+        <div class="size-group">
+          <input type="number" id="sma-s1" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span>x</span>
+          <input type="number" id="sma-s2" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span>x</span>
+          <input type="number" id="sma-s3" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span class="note-txt">cm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOUGHNUTS -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">DOUGHNUTS</div>
+      <div class="row">
+        <span class="note-txt">Two colonic rings up to</span>
+        <div class="size-group">
+          <input type="number" id="dg-s1" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span>x</span>
+          <input type="number" id="dg-s2" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span>x</span>
+          <input type="number" id="dg-s3" step="0.1" min="0" placeholder="—" oninput="autoGen()">
+          <span class="note-txt">cm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="lbl">Additional polyp(s)</label>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="number" id="polyp-count" min="1" step="1" placeholder="n" style="width:52px" oninput="autoGen()">
+        <span class="note-txt">polyp(s), max size</span>
+        <input type="number" id="polyp-size" min="0" step="0.1" placeholder="cm" style="width:60px" oninput="autoGen()">
+        <span class="note-txt">cm (leave blank if none)</span>
+      </div>
+    </div>
+    <div class="row" style="align-items:flex-start">
+      <label class="lbl" style="padding-top:4px">Gross remarks</label>
+      <textarea id="gross-remarks" placeholder="e.g. Diverticulum noted; adhesion present..." oninput="autoGen()" style="min-height:48px;flex:1"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- REPRESENTATIVE SECTIONS -->
+<div class="section">
+  <div class="sec-head">Representative Sections</div>
+  <div class="sec-body">
+    <div class="note-txt" style="margin-bottom:2px">Representative sections are taken and labeled as follows:</div>
+    <textarea id="rep-sections" placeholder="e.g. A1-A3: tumor with adjacent mucosa; B1-B2: proximal margin; C1: distal margin; D1-D5: lymph nodes..." oninput="autoGen()" style="min-height:80px"></textarea>
+  </div>
+</div>
+
+<!-- MICROSCOPIC -->
+<div class="section">
+  <div class="sec-head">Microscopic Description</div>
+  <div class="sec-body">
+    <div class="row">
+      <label class="lbl">Histologic type</label>
+      <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+        <div class="radio-group">
+          <label onclick="setRadio('htype','Adenocarcinoma',this)"><input type="radio" name="htype" value="Adenocarcinoma"> Adenocarcinoma</label>
+          <label onclick="setRadio('htype','Mucinous adenocarcinoma',this)"><input type="radio" name="htype" value="Mucinous adenocarcinoma"> Mucinous adenocarcinoma</label>
+          <label onclick="setRadio('htype','Signet-ring cell carcinoma',this)"><input type="radio" name="htype" value="Signet-ring cell carcinoma"> Signet-ring cell carcinoma</label>
+        </div>
+        <input type="text" id="htype-free" placeholder="or type freely (overrides selection above)..." style="font-size:12px;padding:3px 8px;width:100%;max-width:420px" oninput="autoGen()">
+      </div>
+    </div>
+    <div class="row">
+      <label class="lbl">Histologic grade</label>
+      <div class="radio-group">
+        <label onclick="setRadio('hgrade','Low-grade (well-differentiated)',this)"><input type="radio" name="hgrade" value="Low-grade (well-differentiated)"> Well-differentiated (low)</label>
+        <label onclick="setRadio('hgrade','Low-grade (moderately differentiated)',this)"><input type="radio" name="hgrade" value="Low-grade (moderately differentiated)"> Moderately differentiated (low)</label>
+        <label onclick="setRadio('hgrade','High-grade (poorly differentiated)',this)"><input type="radio" name="hgrade" value="High-grade (poorly differentiated)"> Poorly differentiated (high)</label>
+        <label onclick="setRadio('hgrade','High-grade (undifferentiated)',this)"><input type="radio" name="hgrade" value="High-grade (undifferentiated)"> Undifferentiated (high)</label>
+      </div>
+    </div>
+    <div class="row">
+      <label class="lbl">pT stage</label>
+      <select id="pt-stage" class="wide" onchange="syncPT()">
+        <option value="">-- select --</option>
+        <option value="pTis">pTis — intramucosal carcinoma (carcinoma in situ)</option>
+        <option value="pT1">pT1 — submucosa</option>
+        <option value="pT2">pT2 — muscularis propria</option>
+        <option value="pT3">pT3 — subserosa / nonperitonealized pericolorectal tissues</option>
+        <option value="pT4a">pT4a — surface of visceral peritoneum</option>
+        <option value="pT4b">pT4b — direct invasion of other organs/structures</option>
+      </select>
+    </div>
+    <div class="row" id="pt4b-detail-row" style="display:none">
+      <label class="lbl">T4b — specify organ</label>
+      <input type="text" id="pt4b-organ" style="width:180px" placeholder="e.g. urinary bladder" oninput="autoGen()">
+    </div>
+
+    <!-- TUMOR CHARACTERISTICS (before LN) -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">TUMOR CHARACTERISTICS</div>
+      <div class="row">
+        <label class="lbl">Tumor budding</label>
+        <div class="radio-group">
+          <label onclick="setRadio('tbd','Low score (0-4)',this)"><input type="radio" name="tbd" value="Low score (0-4)"> Low (0–4)</label>
+          <label onclick="setRadio('tbd','Intermediate score (5-9)',this)"><input type="radio" name="tbd" value="Intermediate score (5-9)"> Intermediate (5–9)</label>
+          <label onclick="setRadio('tbd','High score (10 or more)',this)"><input type="radio" name="tbd" value="High score (10 or more)"> High (≥10)</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="lbl" style="min-width:200px">Type of polyp in which invasive<br>carcinoma arose</label>
+        <div class="radio-group">
+          <label onclick="setRadio('polyp-type','Not identified',this)"><input type="radio" name="polyp-type" value="Not identified"> Not identified</label>
+          <label onclick="setRadio('polyp-type','Tubular adenoma',this)"><input type="radio" name="polyp-type" value="Tubular adenoma"> Tubular adenoma</label>
+          <label onclick="setRadio('polyp-type','Villous adenoma',this)"><input type="radio" name="polyp-type" value="Villous adenoma"> Villous adenoma</label>
+          <label onclick="setRadio('polyp-type','Tubulovillous adenoma',this)"><input type="radio" name="polyp-type" value="Tubulovillous adenoma"> Tubulovillous adenoma</label>
+          <label onclick="setRadio('polyp-type','Traditional serrated adenoma',this)"><input type="radio" name="polyp-type" value="Traditional serrated adenoma"> Traditional serrated adenoma</label>
+          <label onclick="setRadio('polyp-type','Sessile serrated adenoma',this)"><input type="radio" name="polyp-type" value="Sessile serrated adenoma"> Sessile serrated adenoma</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="lbl">Angiolymphatic invasion</label>
+        <div class="radio-group">
+          <label onclick="setRadio('ali','Absent',this)"><input type="radio" name="ali" value="Absent"> Absent</label>
+          <label onclick="setRadio('ali','Present',this)"><input type="radio" name="ali" value="Present"> Present</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="lbl">Perineural invasion</label>
+        <div class="radio-group">
+          <label onclick="setRadio('pni','Absent',this)"><input type="radio" name="pni" value="Absent"> Absent</label>
+          <label onclick="setRadio('pni','Intratumoral',this)"><input type="radio" name="pni" value="Intratumoral"> Present — intratumoral</label>
+          <label onclick="setRadio('pni','Extratumoral',this)"><input type="radio" name="pni" value="Extratumoral"> Present — extratumoral</label>
+          <label onclick="setRadio('pni','Both',this)"><input type="radio" name="pni" value="Both"> Present — both</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="lbl">CRM (Micro)</label>
+        <div class="radio-group" id="crm-micro-group">
+          <label onclick="setRadio('crm','Uninvolved',this)"><input type="radio" name="crm" value="Uninvolved"> Uninvolved</label>
+          <label onclick="setRadio('crm','<1 mm',this)"><input type="radio" name="crm" value="<1 mm"> &lt;1 mm</label>
+          <label onclick="setRadio('crm','Involved',this)"><input type="radio" name="crm" value="Involved"> Involved</label>
+          <label onclick="setRadio('crm','Cannot be assessed',this)"><input type="radio" name="crm" value="Cannot be assessed"> Cannot be assessed</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- LYMPH NODES: single-row per group -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="sub-head" style="margin-bottom:0">LYMPH NODES — Positive / Total</span>
+        <label class="ck-label">
+          <input type="checkbox" id="ck-confirmed" onchange="autoGen()"> show "(confirmed by CK)"
+        </label>
+      </div>
+      <div class="row" style="margin-bottom:6px">
+        <label class="lbl">Regional</label>
+        <div class="ln-simple">
+          <input type="number" id="reg-pos" min="0" value="0" style="width:52px" onchange="updateLNSummary();autoGen()">
+          <span>/</span>
+          <input type="number" id="reg-tot" min="0" value="0" style="width:52px" onchange="updateLNSummary();autoGen()">
+        </div>
+      </div>
+      <div id="ima-micro-row" class="row" style="margin-bottom:6px;display:none">
+        <label class="lbl">IMA</label>
+        <div class="ln-simple">
+          <input type="number" id="ima-pos" min="0" value="0" style="width:52px" onchange="updateLNSummary();autoGen()">
+          <span>/</span>
+          <input type="number" id="ima-tot" min="0" value="0" style="width:52px" onchange="updateLNSummary();autoGen()">
+        </div>
+      </div>
+      <div id="sma-micro-row" class="row" style="margin-bottom:6px;display:none">
+        <label class="lbl">SMA</label>
+        <div class="ln-simple">
+          <input type="number" id="sma-pos" min="0" value="0" style="width:52px" onchange="updateLNSummary();autoGen()">
+          <span>/</span>
+          <input type="number" id="sma-tot" min="0" value="0" style="width:52px" onchange="updateLNSummary();autoGen()">
+        </div>
+        <span class="note-txt">(leave 0/0 if not submitted)</span>
+      </div>
+      <div class="row" style="margin-bottom:6px">
+        <label class="lbl" style="color:#666">Isolated tumor cells</label>
+        <div class="ln-simple">
+          <span class="note-txt">No. of LN with ITC:</span>
+          <input type="number" id="itc-count" min="0" placeholder="—" style="width:52px" oninput="autoGen()">
+          <span class="note-txt">(optional)</span>
+        </div>
+      </div>
+      <div class="ln-summary" id="ln-summary"></div>
+      <div class="row" style="margin-top:8px">
+        <label class="lbl">pN stage</label>
+        <select id="pn-select" class="wide" onchange="autoGen()">
+          <option value="pN0">pN0 — No regional lymph node metastasis</option>
+          <option value="pN1a">pN1a — Metastasis in 1 regional lymph node</option>
+          <option value="pN1b">pN1b — Metastasis in 2–3 regional lymph nodes</option>
+          <option value="pN1c">pN1c — No positive nodes, but tumor deposit(s) present</option>
+          <option value="pN2a">pN2a — Metastasis in 4–6 regional lymph nodes</option>
+          <option value="pN2b">pN2b — Metastasis in 7+ regional lymph nodes</option>
+        </select>
+        <span class="note-txt" id="pn-auto-hint" style="color:#888"></span>
+      </div>
+    </div>
+
+    <!-- EXTRANODAL EXTENSION: default Not applicable -->
+    <div class="row">
+      <label class="lbl">Extranodal extension</label>
+      <div class="radio-group">
+        <label onclick="setRadio('ene','Not applicable',this)"><input type="radio" name="ene" value="Not applicable"> Not applicable</label>
+        <label onclick="setRadio('ene','Absent',this)"><input type="radio" name="ene" value="Absent"> Absent</label>
+        <label onclick="setRadio('ene','Present',this)"><input type="radio" name="ene" value="Present"> Present</label>
+      </div>
+    </div>
+    <div class="row">
+      <label class="lbl">Tumor deposit</label>
+      <div class="radio-group">
+        <label onclick="setRadio('td','Absent',this);updateLNSummary();"><input type="radio" name="td" value="Absent"> Absent</label>
+        <label onclick="setRadio('td','Present',this);updateLNSummary();"><input type="radio" name="td" value="Present"> Present</label>
+      </div>
+    </div>
+    <!-- TRG (neoadjuvant) -->
+    <div id="trg-section" style="display:none;border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">TREATMENT RESPONSE (Neoadjuvant)</div>
+      <div class="row">
+        <label class="lbl">TRG (5-tier)</label>
+        <select id="trg5" class="wide" onchange="autoGen()">
+          <option value="">-- select --</option>
+          <option value="TRG1">TRG1 — No residual cancer</option>
+          <option value="TRG2">TRG2 — Rare residual cancer</option>
+          <option value="TRG3">TRG3 — Fibrosis outgrowing residual cancer</option>
+          <option value="TRG4">TRG4 — Residual cancer outgrowing fibrosis</option>
+          <option value="TRG5">TRG5 — Absence of regressive changes</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="lbl">Modified Ryan score</label>
+        <select id="ryan" class="wide" onchange="autoGen()">
+          <option value="">-- select --</option>
+          <option value="score0">Score 0 — No viable cancer cells (complete response)</option>
+          <option value="score1">Score 1 — Single cells / rare small groups (near complete)</option>
+          <option value="score2">Score 2 — Residual cancer with evident regression (partial)</option>
+          <option value="score3">Score 3 — Extensive residual cancer, no regression (poor/no response)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ADDITIONAL STRUCTURES -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">ADDITIONAL STRUCTURES</div>
+      <div class="grid2">
+        <div class="row"><label class="lbl">Terminal ileum</label>
+          <div class="radio-group">
+            <label onclick="setRadio('term-il','Free of carcinoma',this)"><input type="radio" name="term-il" value="Free of carcinoma"> Free</label>
+            <label onclick="setRadio('term-il','Involved',this)"><input type="radio" name="term-il" value="Involved"> Involved</label>
+            <label onclick="setRadio('term-il','N/A',this)"><input type="radio" name="term-il" value="N/A"> N/A</label>
+          </div>
+        </div>
+        <div class="row"><label class="lbl">Appendix</label>
+          <div class="radio-group">
+            <label onclick="setRadio('appendix-s','Free of carcinoma',this)"><input type="radio" name="appendix-s" value="Free of carcinoma"> Free</label>
+            <label onclick="setRadio('appendix-s','Involved',this)"><input type="radio" name="appendix-s" value="Involved"> Involved</label>
+            <label onclick="setRadio('appendix-s','N/A',this)"><input type="radio" name="appendix-s" value="N/A"> N/A</label>
+          </div>
+        </div>
+        <div class="row"><label class="lbl">Omentum</label>
+          <div class="radio-group">
+            <label onclick="setRadio('omentum','Free of carcinoma',this)"><input type="radio" name="omentum" value="Free of carcinoma"> Free</label>
+            <label onclick="setRadio('omentum','Involved',this)"><input type="radio" name="omentum" value="Involved"> Involved</label>
+            <label onclick="setRadio('omentum','N/A',this)"><input type="radio" name="omentum" value="N/A"> N/A</label>
+          </div>
+        </div>
+        <div class="row" id="anus-micro-row" style="display:none"><label class="lbl">Anus</label>
+          <div class="radio-group">
+            <label onclick="setRadio('anus-m','Free of carcinoma',this)"><input type="radio" name="anus-m" value="Free of carcinoma"> Free</label>
+            <label onclick="setRadio('anus-m','Involved',this)"><input type="radio" name="anus-m" value="Involved"> Involved</label>
+            <label onclick="setRadio('anus-m','N/A',this)"><input type="radio" name="anus-m" value="N/A"> N/A</label>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="note-txt" style="margin-bottom:4px">Additional pathologic findings (leave blank for "Not identified"):</div>
+        <textarea id="addl-findings" placeholder="e.g. Chronic colitis; Serosal fibrous adhesion..." oninput="autoGen()" style="min-height:50px"></textarea>
+      </div>
+    </div>
+
+    <!-- IHC / MMR -->
+    <div style="border-top:1px solid #eee;padding-top:8px">
+      <div class="sub-head">MMR IMMUNOHISTOCHEMISTRY</div>
+      <!-- Previous specimen toggle -->
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label class="ck-label">
+          <input type="checkbox" id="ihc-prev-toggle" onchange="syncIHCprev()">
+          Results reported in previous specimen — specimen no.:
+        </label>
+        <input type="text" id="ihc-prev-no" placeholder="e.g. S24-1234" style="width:130px;display:none" oninput="autoGen()">
+      </div>
+
+      <!-- IHC fields (hidden when prev specimen chosen) -->
+      <div id="ihc-fields">
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="row"><label class="lbl">MLH1</label>
+            <div class="radio-group">
+              <label onclick="setRadio('mlh1','intact',this)"><input type="radio" name="mlh1" value="intact"> Intact</label>
+              <label onclick="setRadio('mlh1','loss',this)"><input type="radio" name="mlh1" value="loss"> Loss</label>
+            </div>
+          </div>
+          <div class="row"><label class="lbl">MSH2</label>
+            <div class="radio-group">
+              <label onclick="setRadio('msh2','intact',this)"><input type="radio" name="msh2" value="intact"> Intact</label>
+              <label onclick="setRadio('msh2','loss',this)"><input type="radio" name="msh2" value="loss"> Loss</label>
+            </div>
+          </div>
+          <div class="row"><label class="lbl">MSH6</label>
+            <div class="radio-group">
+              <label onclick="setRadio('msh6','intact',this)"><input type="radio" name="msh6" value="intact"> Intact</label>
+              <label onclick="setRadio('msh6','loss',this)"><input type="radio" name="msh6" value="loss"> Loss</label>
+            </div>
+          </div>
+          <div class="row"><label class="lbl">PMS2</label>
+            <div class="radio-group">
+              <label onclick="setRadio('pms2','intact',this)"><input type="radio" name="pms2" value="intact"> Intact</label>
+              <label onclick="setRadio('pms2','loss',this)"><input type="radio" name="pms2" value="loss"> Loss</label>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <label class="lbl">BRAF</label>
+          <div class="radio-group">
+            <label onclick="setRadio('braf','not performed',this)"><input type="radio" name="braf" value="not performed"> Not performed</label>
+            <label onclick="setRadio('braf','Positive',this)"><input type="radio" name="braf" value="Positive"> Positive</label>
+            <label onclick="setRadio('braf','Negative',this)"><input type="radio" name="braf" value="Negative"> Negative</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paste area for previous specimen results -->
+      <div id="ihc-prev-paste" style="display:none">
+        <div class="note-txt" style="margin-bottom:4px">Paste IHC results from previous report here (will be embedded verbatim):</div>
+        <textarea class="ihc-prev-area" id="ihc-prev-text" placeholder="Paste result text here..." oninput="autoGen()"></textarea>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="gen" onclick="showTab('output')">View Report &#8599;</button>
+</div>
+
+</div><!-- end tab-input -->
+
+<div id="tab-output" class="tab-content">
+  <div class="out-area" id="report-out"></div>
+  <div class="btn-row">
+    <button class="copy-btn" onclick="copyReport()">Copy to clipboard</button>
+    <button class="gen" onclick="showTab('input')">&larr; Back to form</button>
+  </div>
+</div>
+
+</div><!-- .wrap -->
+
+<script>
+var radioState={};
+
+function setRadio(name,val,el){
+  radioState[name]=val;
+  var parent=el.closest('.radio-group');
+  if(parent) parent.querySelectorAll('label').forEach(function(l){l.classList.remove('sel');});
+  el.classList.add('sel');
+  if(name==='neoadj') syncNeoadj();
+  autoGen();
+}
+
+function rv(name){return radioState[name]||'';}
+function v(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function fv(id){var e=document.getElementById(id);return(e&&e.value!=='')?parseFloat(e.value):null;}
+function iv(id){var e=document.getElementById(id);return e?(parseInt(e.value)||0):0;}
+function sz(a,b,c){var vs=[fv(a),fv(b),fv(c)].filter(function(x){return x!==null;});return vs.length>0?vs.join(' x '):'___';}
+function cb(id){var e=document.getElementById(id);return e?e.checked:false;}
+
+function tabNext(el,nextId){
+  var next=document.getElementById(nextId);
+  if(next&&el.value!=='') next.focus();
+}
+
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(function(b,i){b.classList.toggle('active',['input','output'][i]===t);});
+  document.querySelectorAll('.tab-content').forEach(function(c){c.classList.toggle('active',c.id==='tab-'+t);});
+  if(t==='output') autoGen();
+}
+
+function syncBilateral(){
+  var bi=cb('bilateral-mode');
+  document.getElementById('margin-pd').style.display=bi?'none':'block';
+  document.getElementById('margin-bi').style.display=bi?'block':'none';
+  autoGen();
+}
+
+// margin status radio handler — shows/hides distance input, syncs CRM → Micro
+function setMarginStatus(margin,val,el){
+  var parent=el.closest('.radio-group');
+  if(parent) parent.querySelectorAll('label').forEach(function(l){l.classList.remove('sel');});
+  el.classList.add('sel');
+  radioState['ms-'+margin]=val;
+  // show distance input only when Uninvolved or <1 mm
+  var wrapId=margin+'-dist-wrap';
+  var wrap=document.getElementById(wrapId);
+  if(wrap){
+    var show=(val==='Uninvolved');
+    wrap.style.display=show?'flex':'none';
+  }
+  // sync CRM gross → Micro CRM radio
+  if(margin==='rad'||margin==='rad-bi'){
+    var crmMap={'Uninvolved':'Uninvolved','<1 mm':'<1 mm','Involved':'Involved','Cannot be assessed':'Cannot be assessed'};
+    var crmVal=crmMap[val]||val;
+    var crmLabels=document.querySelectorAll('#crm-micro-group label');
+    crmLabels.forEach(function(lbl){
+      lbl.classList.remove('sel');
+      if(lbl.getAttribute('onclick').indexOf("'"+crmVal+"'")>=0){
+        lbl.classList.add('sel');
+        radioState['crm']=crmVal;
+      }
+    });
+  }
+  autoGen();
+}
+
+function syncIHCprev(){
+  var on=cb('ihc-prev-toggle');
+  document.getElementById('ihc-prev-no').style.display=on?'inline-block':'none';
+  document.getElementById('ihc-fields').style.display=on?'none':'block';
+  document.getElementById('ihc-prev-paste').style.display=on?'block':'none';
+  autoGen();
+}
+
+function computePN(pos, tdPresent){
+  if(pos===0 && tdPresent) return 'pN1c';
+  if(pos===0) return 'pN0';
+  if(pos===1) return 'pN1a';
+  if(pos>=2&&pos<=3) return 'pN1b';
+  if(pos>=4&&pos<=6) return 'pN2a';
+  return 'pN2b';
+}
+function getNeoadj(){return rv('neoadj')||'none';}
+
+function updateLNSummary(){
+  var regPos=iv('reg-pos'),regTot=iv('reg-tot');
+  var imaPos=iv('ima-pos'),imaTot=iv('ima-tot');
+  var smaPos=iv('sma-pos'),smaTot=iv('sma-tot');
+  var totalPos=regPos+imaPos+smaPos;
+  var tdPresent=(rv('td')==='Present');
+  var autoPn=computePN(totalPos,tdPresent);
+  // auto-set the select if user hasn't manually overridden
+  var sel=document.getElementById('pn-select');
+  if(sel){
+    sel.value=autoPn;
+    var hint=document.getElementById('pn-auto-hint');
+    if(hint) hint.textContent='auto: '+autoPn;
+  }
+  var neoadj=getNeoadj();
+  var prefix=neoadj!=='none'?'y':'';
+  var parts=['Regional: '+regPos+'/'+regTot];
+  var smaPiecesVal=v('sma-pieces');
+  var imaPiecesVal2=v('ima-pieces');
+  if(imaTot>0||imaPos>0||imaPiecesVal2!=='') parts.push('IMA: '+imaPos+'/'+imaTot);
+  if(smaTot>0||smaPos>0||smaPiecesVal!=='') parts.push('SMA: '+smaPos+'/'+smaTot);
+  document.getElementById('ln-summary').innerHTML=
+    '<span class="badge">'+prefix+autoPn+'</span>&nbsp; '+parts.join(' &nbsp;|&nbsp; ');
+}
+
+function syncIMArows(){
+  var imaVal=document.getElementById('ima-pieces').value.trim();
+  var smaVal=document.getElementById('sma-pieces').value.trim();
+  document.getElementById('ima-micro-row').style.display=imaVal?'flex':'none';
+  document.getElementById('sma-micro-row').style.display=smaVal?'flex':'none';
+}
+
+function syncNeoadj(){
+  var n=getNeoadj();
+  document.getElementById('trg-section').style.display=(n!=='none')?'block':'none';
+  autoGen();
+}
+
+function syncProcedure(){
+  var p=document.getElementById('procedure').value;
+  var showIleum=['right hemicolectomy','total abdominal colectomy'].indexOf(p)>=0;
+  var showApp=['right hemicolectomy','total abdominal colectomy'].indexOf(p)>=0;
+  var showAnus=(p==='abdominoperineal resection');
+  document.getElementById('ileum-wrap').style.display=showIleum?'':'none';
+  document.getElementById('appendix-wrap').style.display=showApp?'':'none';
+  document.getElementById('anus-wrap').style.display=showAnus?'':'none';
+  document.getElementById('anus-micro-row').style.display=showAnus?'':'none';
+  autoGen();
+}
+
+function syncPT(){
+  var pt=document.getElementById('pt-stage').value;
+  document.getElementById('pt4b-detail-row').style.display=(pt==='pT4b')?'flex':'none';
+  autoGen();
+}
+
+function autoGen(){
+  var proc=document.getElementById('procedure').value;
+  var neoadj=getNeoadj();
+  var site=v('tumor-site')||'___';
+  var htype=(v('htype-free')||rv('htype')||'Adenocarcinoma');
+  var hgrade=rv('hgrade')||'___';
+  var ptStage=v('pt-stage')||'pT___';
+  var config=rv('config')||'Ulcerative';
+  var ali=rv('ali')||'___';
+  var pni_v=rv('pni')||'___';
+  var crm=rv('crm')||'___';
+  var ene=rv('ene')||'Not applicable';
+  var td=rv('td')||'___';
+  var tbd=rv('tbd')||'___';
+  var mlh1=rv('mlh1')||'intact';
+  var msh2=rv('msh2')||'intact';
+  var msh6=rv('msh6')||'intact';
+  var pms2=rv('pms2')||'intact';
+  var braf=rv('braf')||'not performed';
+  var tiText=rv('term-il')||'N/A';
+  var apText=rv('appendix-s')||'N/A';
+  var omText=rv('omentum')||'N/A';
+  var anText=rv('anus-m')||'N/A';
+  var showCK=cb('ck-confirmed');
+  var ihcPrev=cb('ihc-prev-toggle');
+  var ihcPrevNo=v('ihc-prev-no');
+  var ihcPrevText=v('ihc-prev-text');
+  var repSections=v('rep-sections');
+
+  var prefix=neoadj!=='none'?'y':'';
+  var neoadjStr=neoadj==='CT'?'s/p neoadjuvant C/T':neoadj==='RT'?'s/p neoadjuvant R/T':neoadj==='CCRT'?'s/p neoadjuvant CCRT':'';
+  var prevTreat=neoadj==='CT'?'C/T':neoadj==='RT'?'R/T':neoadj==='CCRT'?'CCRT':'None';
+
+  var regPos=iv('reg-pos'),regTot=iv('reg-tot');
+  var imaPos=iv('ima-pos'),imaTot=iv('ima-tot');
+  var smaPos=iv('sma-pos'),smaTot=iv('sma-tot');
+  var totalPos=regPos+imaPos+smaPos;
+  var tdPresent=(td==='Present');
+  var pN=v('pn-select')||computePN(totalPos,tdPresent);
+  var pNfull=prefix+pN;
+
+  var ptLetter=ptStage.replace('pT','');
+  var diagPT=prefix+'pT'+ptLetter;
+  var pt4bOrgan=v('pt4b-organ');
+
+  // DIAGNOSIS LN lines — no leading dash (items 10)
+  var lnDiagStatus=(totalPos===0)?'Free of metastasis':'Carcinoma, metastatic';
+  var lnDiagCount='('+regPos+'/'+regTot+', '+pNfull+')';
+  var imaStatusTxt=(imaPos===0)?'Free of metastasis':'Carcinoma, metastatic';
+  var imaCountTxt='('+imaPos+'/'+imaTot+')';
+  var imaPiecesVal=v('ima-pieces');
+  var imaHasData=(imaTot>0||imaPos>0||imaPiecesVal!=='');
+  var imaLine=imaHasData?('Lymph node, IMA, dissection --- '+imaStatusTxt+' '+imaCountTxt+'\n'):'';
+  var smaLine='';
+  var smaPieces=v('sma-pieces');
+  var smaHasData=(smaTot>0||smaPos>0||smaPieces!=='');
+  if(smaHasData){
+    var smaStatus=(smaPos===0)?'Free of metastasis':'Carcinoma, metastatic';
+    smaLine='Lymph node, SMA, dissection --- '+smaStatus+' ('+smaPos+'/'+smaTot+')\n';
+  }
+
+  // Gross sizes
+  var ts=sz('ts1','ts2','ts3');
+  var biMode=cb('bilateral-mode');
+
+  // helper: build margin text from status + distance
+  function marginText(statusKey,distId){
+    var s=radioState['ms-'+statusKey]||'';
+    var d=fv(distId);
+    if(!s) return '___';
+    if(s==='Uninvolved') return 'Uninvolved; '+(d!==null?d:'___')+' cm in distance';
+    if(s==='<1 mm') return '<1 mm';
+    return s;
+  }
+  function marginDistOnly(statusKey,distId){
+    var s=radioState['ms-'+statusKey]||'';
+    var d=fv(distId);
+    if(s==='Uninvolved') return (d!==null?d:'___')+' cm';
+    if(s==='<1 mm') return '<1 mm';
+    if(s) return s;
+    return '___';
+  }
+  function grossMarginShort(statusKey,distId){
+    var s=radioState['ms-'+statusKey]||'';
+    var d=fv(distId);
+    if(!s) return '___ cm';
+    if(s==='Uninvolved') return (d!==null?d:'___')+' cm';
+    if(s==='<1 mm') return '<1 mm';
+    return s;
+  }
+
+  var mRad=biMode?fv('m-rad-bi'):fv('m-rad');
+  var radStatusKey=biMode?'rad-bi':'rad';
+  var radStatusVal=radioState['ms-'+radStatusKey]||'';
+  var radGrossStr=grossMarginShort(radStatusKey,biMode?'m-rad-bi':'m-rad');
+
+  // Gross margin distance line
+  var grossMarginStr='';
+  if(biMode){
+    grossMarginStr=
+      grossMarginShort('bi-a','m-bi-a')+' and '+grossMarginShort('bi-b','m-bi-b')+
+      ' from bilateral margins, respectively; Radial (circumferential): '+radGrossStr;
+  } else {
+    grossMarginStr=
+      'Proximal: '+grossMarginShort('prox','m-prox')+
+      '; Distal: '+grossMarginShort('dist','m-dist')+
+      '; Radial (circumferential): '+radGrossStr;
+  }
+
+  // Micro margin lines
+  var microMarginLines='';
+  if(biMode){
+    microMarginLines=
+      '- Bilateral margins: '+marginDistOnly('bi-a','m-bi-a')+' and '+marginDistOnly('bi-b','m-bi-b')+' from bilateral margins, respectively.\n';
+  } else {
+    microMarginLines=
+      '- Proximal margin: '+marginText('prox','m-prox')+'\n'+
+      '- Distal margin: '+marginText('dist','m-dist')+'\n';
+  }
+
+  var diagPrefix='';
+  var proc_str=proc||'___';
+  var proc_cap=proc_str.charAt(0).toUpperCase()+proc_str.slice(1);
+
+  // Colon dim
+  var coDimType=document.getElementById('co-dim-type').value;
+  var coL=fv('co-l'),coDim=fv('co-dim');
+  var colonStr='';
+  if(coL!==null||coDim!==null){
+    var dimLabel=(coDimType==='circumference')?'circumference':'diameter';
+    colonStr='Colon: '+(coL!==null?coL:'___')+' cm in length and '+(coDim!==null?coDim:'___')+' cm in '+dimLabel;
+  }
+
+  var specLines=[];
+  if(colonStr) specLines.push(colonStr);
+  if(['right hemicolectomy','total abdominal colectomy'].indexOf(proc)>=0){
+    var ilL=fv('il-l'),ilD=fv('il-d');
+    if(ilL!==null||ilD!==null) specLines.push('Ileum: '+(ilL!==null?ilL:'___')+' cm in length and '+(ilD!==null?ilD:'___')+' cm in diameter');
+    var apL=fv('ap-l'),apD=fv('ap-d');
+    if(apL!==null||apD!==null) specLines.push('Appendix: '+(apL!==null?apL:'___')+' cm in length and '+(apD!==null?apD:'___')+' cm in maximum diameter');
+  }
+  if(proc==='abdominoperineal resection'){
+    var anL=fv('an-l');
+    if(anL!==null) specLines.push('Anus: '+anL+' cm');
+  }
+  var specStr=specLines.length>0?specLines.join('; '):'Colon: ___ cm in length and ___ cm in diameter';
+
+  var imaPieces=v('ima-pieces');
+  var imaGross='';
+  if(imaPieces){
+    var imaS=sz('ima-s1','ima-s2','ima-s3');
+    if(imaPieces==='1'){
+      imaGross='[IMA LNs] 1 piece'+(imaS!=='___'?', '+imaS+' cm':'')+'\n';
+    } else {
+      imaGross='[IMA LNs] '+imaPieces+' pieces'+(imaS!=='___'?', up to '+imaS+' cm':'')+'\n';
+    }
+  }
+  var smaGross='';
+  if(smaPieces){
+    var smaS=sz('sma-s1','sma-s2','sma-s3');
+    if(smaPieces==='1'){
+      smaGross='[SMA LNs] 1 piece'+(smaS!=='___'?', '+smaS+' cm':'')+'\n';
+    } else {
+      smaGross='[SMA LNs] '+smaPieces+' pieces'+(smaS!=='___'?', up to '+smaS+' cm':'')+'\n';
+    }
+  }
+  var dgS=sz('dg-s1','dg-s2','dg-s3');
+  var doughnuts=(dgS!=='___')?('[Doughnuts] Two colonic rings are seen measuring up to '+dgS+' cm.\n'):'';
+  var polypCount=iv('polyp-count');
+  var polypSize=fv('polyp-size');
+  var polypLine='';
+  if(polypCount>0){
+    var sizeStr=polypSize!==null?', '+polypSize+' cm in maximum dimension':'';
+    polypLine=(polypCount===1?'One additional polyp':polypCount+' additional polyps')+sizeStr+'.';
+  }
+  var grossRemarks=v('gross-remarks');
+  var grossRemarksLine=grossRemarks||'';
+
+  // Representative sections block
+  var repBlock='Representative sections are taken and labeled as follows:'+(repSections?'\n'+repSections:'')+'\n';
+
+  var pniText='';
+  if(pni_v==='Absent') pniText='Absent';
+  else if(pni_v==='Intratumoral') pniText='Present; intratumoral';
+  else if(pni_v==='Extratumoral') pniText='Present; extratumoral';
+  else if(pni_v==='Both') pniText='Present; intratumoral and extratumoral';
+  else pniText='___';
+
+  // LN micro line — item 11: optional (confirmed by CK)
+  var ckNote=showCK?' (confirmed by CK)':'';
+  var lnMicroParts='- Regional: '+regPos+'/'+regTot+(imaHasData?'; IMA: '+imaPos+'/'+imaTot:'')+(smaHasData?'; SMA: '+smaPos+'/'+smaTot:'');
+  var itcRaw=document.getElementById('itc-count').value.trim();
+  var itcLine=itcRaw!==''?'No. of lymph nodes with isolated tumor cells: '+itcRaw+'\n':'';
+  var lnMicroLine='Lymph nodes (Positive/Total):'+ckNote+'\n'+lnMicroParts+'\n'+itcLine;
+
+  // ENE: item 12 — "- " prefix before value
+  var eneLine='- Extranodal extension: '+ene;
+
+  // IHC block
+  var ihcBlock='';
+  if(ihcPrev){
+    ihcBlock='Immunohistochemical stain: (Results reported in previous specimen '+(ihcPrevNo||'___')+')\n';
+    if(ihcPrevText) ihcBlock+=ihcPrevText+'\n';
+  } else {
+    var allIntact=(mlh1==='intact'&&msh2==='intact'&&msh6==='intact'&&pms2==='intact');
+    var lossArr=[];
+    if(mlh1==='loss') lossArr.push('MLH1');
+    if(msh2==='loss') lossArr.push('MSH2');
+    if(msh6==='loss') lossArr.push('MSH6');
+    if(pms2==='loss') lossArr.push('PMS2');
+    var mmrInterp=allIntact?
+      'No loss of nuclear expression of MMR proteins: low probability of microsatellite instability-high (MSI-H)':
+      'Loss of nuclear expression of '+lossArr.join(', ')+': consistent with microsatellite instability-high (MSI-H)';
+    ihcBlock=
+      'Immunohistochemical stain:\n'+
+      'IHC Testing for Mismatch Repair (MMR) Proteins\n'+
+      '- MLH1: '+(mlh1==='intact'?'Intact nuclear expression':'Loss of nuclear expression')+'\n'+
+      '- MSH2: '+(msh2==='intact'?'Intact nuclear expression':'Loss of nuclear expression')+'\n'+
+      '- MSH6: '+(msh6==='intact'?'Intact nuclear expression':'Loss of nuclear expression')+'\n'+
+      '- PMS2: '+(pms2==='intact'?'Intact nuclear expression':'Loss of nuclear expression')+'\n'+
+      'IHC Interpretation: '+mmrInterp+'\n'+
+      (braf!=='not performed'?'BRAF: '+braf+'\n':'');
+  }
+
+  // TRG
+  var trgApplicable=(neoadj!=='none');
+  var trg5=v('trg5');
+  var ryan=v('ryan');
+  var ryanMap={
+    'score0':'No viable cancer cells (complete response, score 0)',
+    'score1':'Single cells or rare small groups of cancer cells (near complete response, score 1)',
+    'score2':'Residual cancer with evident tumor regression, but more than single cells or rare small groups of cancer cells (partial response, score 2)',
+    'score3':'Extensive residual cancer with no evident tumor regression (poor or no response, score 3)'
+  };
+  var ryanText=ryanMap[ryan]||'';
+  var trgBlock='';
+  if(trgApplicable){
+    trgBlock='Treatment Effect: Present\n';
+    if(trg5) trgBlock+='Tumor regression grade (TRG): '+trg5+'\n';
+    if(ryanText) trgBlock+='Modified Ryan Scheme: '+ryanText+'\n';
+  } else {
+    trgBlock='Treatment Effect: Not applicable\n';
+  }
+  var polypType=rv('polyp-type')||'Not identified';
+
+  // pTNM: ypT2N0 — strip leading p from pN
+  var ptDisplay=(ptStage==='pT___')?'pT___':ptStage;
+  var pN_noP=pN.replace(/^p/,'');
+  var pTN_final=prefix+'pT'+(ptDisplay.replace('pT',''))+pN_noP;
+  var descriptor=(neoadj!=='none')?'y (posttreatment)':'Not applicable';
+
+  var ptMap={
+    'pTis':'Intraepithelial or lamina propria/muscularis mucosae, intramucosal carcinoma (pTis)',
+    'pT1':'Submucosa (pT1)',
+    'pT2':'Muscularis propria (pT2)',
+    'pT3':'Subserosa or nonperitonealized pericolorectal tissues (pT3)',
+    'pT4a':'Surface of the visceral peritoneum (pT4a)',
+    'pT4b':'Other organs or structures'+(pt4bOrgan?': '+pt4bOrgan:'')+' (pT4b)'
+  };
+  var ptInvasionText=ptMap[ptStage]||'___';
+
+  var addlFindings=v('addl-findings');
+  var addlLines=[];
+  if(tiText!=='N/A') addlLines.push('Terminal ileum: '+tiText);
+  if(apText!=='N/A') addlLines.push('Appendix: '+apText);
+  if(omText!=='N/A') addlLines.push('Omentum: '+omText);
+  if(anText!=='N/A'&&proc==='abdominoperineal resection') addlLines.push('Anus: '+anText);
+
+  var report=
+'PATHOLOGIC DIAGNOSIS:\n'+
+diagPrefix+site+(neoadjStr?', '+neoadjStr:'')+', '+proc_str+'\n'+
+'--- '+htype+' ('+diagPT+')\n'+
+'Lymph nodes, regional, dissection --- '+lnDiagStatus+' '+lnDiagCount+'\n'+
+imaLine+
+smaLine+
+'\n'+
+'MACROSCOPIC DESCRIPTION:\n'+
+imaGross+
+smaGross+
+doughnuts+
+'\n'+
+'[Main lesion]\n'+
+'Specimen type: '+proc_cap+'\n'+
+'Specimen: '+specStr+'\n'+
+'Tumor:\n'+
+'- Site: '+site+'\n'+
+'- Tumor size: '+ts+' cm\n'+
+'- Configuration: '+config+'\n'+
+'- Distance from margins: '+grossMarginStr+'\n'+
+'- Previous treatment: '+prevTreat+'\n'+
+(polypLine||grossRemarksLine?([polypLine,grossRemarksLine].filter(Boolean).join('\n'))+'\n':'')+
+'\n'+
+repBlock+
+'\n'+
+'MICROSCOPIC DESCRIPTION:\n'+
+'Histologic type: '+htype+'\n'+
+'Histologic grade: '+hgrade+'\n'+
+'Depth of invasion: '+ptInvasionText+'\n'+
+'Tumor budding: '+tbd+'\n'+
+'Type of polyp in which invasive carcinoma arose: '+polypType+'\n'+
+'Angiolymphatic invasion status: '+ali+'\n'+
+'Perineural invasion status: '+pniText+'\n'+
+'Margin:\n'+
+microMarginLines+
+'- Circumferential margin: '+crm+'\n'+
+lnMicroLine+
+eneLine+'\n'+
+'Tumor deposit: '+td+'\n'+
+'Site of distant metastasis: Not included\n'+
+'Additional pathologic findings: '+(addlFindings||'Not identified')+'\n'+
+(addlLines.length>0?addlLines.join('\n')+'\n':'')+
+ihcBlock+
+trgBlock+
+'pTNM: '+pTN_final+' (AJCC 8th Edition)\n'+
+'TNM descriptors: '+descriptor+'\n'+
+'\n'+
+'(This case has been reviewed by two pathologists.)';
+
+  document.getElementById('report-out').textContent=report;
+  updateLNSummary();
+}
+
+function copyReport(){
+  var text=document.getElementById('report-out').textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    var b=document.querySelector('.copy-btn');
+    var orig=b.textContent;
+    b.textContent='Copied!';
+    setTimeout(function(){b.textContent=orig;},1500);
+  });
+}
+
+// Init defaults
+(function(){
+  function clickFirst(name){
+    var el=document.querySelector('.radio-group label[onclick*="\''+name+'\'"]');
+    if(el) el.click();
+  }
+  function clickVal(name,val){
+    var els=document.querySelectorAll('.radio-group label[onclick*="\''+name+'\'"]');
+    els.forEach(function(el){
+      if(el.getAttribute('onclick').indexOf("'"+val+"'")>=0) el.click();
+    });
+  }
+  clickFirst('neoadj');
+  clickFirst('config');
+  clickFirst('htype');
+  clickFirst('hgrade');
+  clickVal('ene','Not applicable');
+  clickFirst('td');
+  clickFirst('tbd');
+  clickFirst('ali');
+  clickFirst('pni');
+  clickFirst('polyp-type');
+  clickFirst('mlh1');
+  // init margin statuses — Uninvolved by default
+  ['prox','dist','rad','bi-a','bi-b','rad-bi'].forEach(function(m){
+    var el=document.querySelector('.radio-group label[onclick*="setMarginStatus(\''+m+'\',\'Uninvolved\'"]');
+    if(el) el.click();
+  });
+  // init CRM Micro
+  clickFirst('crm');
+  clickFirst('msh2');
+  clickFirst('msh6');
+  clickFirst('pms2');
+  clickFirst('braf');
+  // Additional structures: default N/A
+  clickVal('term-il','N/A');
+  clickVal('appendix-s','N/A');
+  clickVal('omentum','N/A');
+  clickVal('anus-m','N/A');
+  document.getElementById('ck-confirmed').checked=false;
+  syncProcedure();
+  syncNeoadj();
+  syncIMArows();
+  autoGen();
+})();
+</script>
+</body>
+</html>

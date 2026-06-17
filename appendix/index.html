@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appendix Pathology Report Generator</title>
+<style>
+  :root {
+    --bg: #f4f1eb;
+    --panel: #ffffff;
+    --border: #d4cfc4;
+    --accent: #2d5a6e;
+    --accent2: #4a8fa8;
+    --text: #1e2a30;
+    --muted: #7a8a90;
+    --label: #3a5060;
+    --highlight: #e8f4f8;
+    --red: #c0392b;
+    --section-bg: #f9f7f4;
+    --output-bg: #1e2a30;
+    --output-text: #e8f0f4;
+    --output-accent: #7ecfea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 3px solid var(--accent2);
+  }
+  header h1 {
+    font-size: 1.1rem;
+    font-weight: normal;
+    letter-spacing: 0.04em;
+  }
+  header .badge {
+    background: var(--accent2);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.06em;
+    font-family: 'Courier New', monospace;
+  }
+  .main-layout {
+    display: flex;
+    flex: 1;
+    gap: 0;
+    height: calc(100vh - 55px);
+    overflow: hidden;
+  }
+  .form-panel {
+    width: 52%;
+    overflow-y: auto;
+    padding: 20px 22px;
+    background: var(--panel);
+    border-right: 2px solid var(--border);
+  }
+  .output-panel {
+    width: 48%;
+    overflow-y: auto;
+    background: var(--output-bg);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+  }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .output-header span {
+    color: var(--output-accent);
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .copy-btn {
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.04em;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: #5aaabf; }
+  .copy-btn.copied { background: #27ae60; }
+  #reportOutput {
+    flex: 1;
+    white-space: pre-wrap;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--output-text);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+  }
+
+  /* Form sections */
+  .section {
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 7px 14px;
+    font-size: 0.78rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+  }
+  .section-body {
+    padding: 12px 14px;
+    background: var(--section-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  label.field-label {
+    font-size: 0.78rem;
+    color: var(--label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .radio-group, .check-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+  .radio-group label, .check-group label {
+    font-size: 0.8rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  input[type=radio], input[type=checkbox] {
+    accent-color: var(--accent);
+    width: 14px; height: 14px;
+  }
+  input[type=text], input[type=number], textarea, select {
+    font-family: 'Georgia', serif;
+    font-size: 0.82rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    background: #fff;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus {
+    border-color: var(--accent2);
+  }
+  input[type=number] { width: 72px; -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  textarea { width: 100%; resize: vertical; min-height: 52px; }
+  select { padding: 5px 8px; }
+
+  .size-inputs { display: flex; align-items: center; gap: 6px; }
+  .size-inputs span { color: var(--muted); font-size: 0.85rem; }
+  .size-inputs input { width: 62px; }
+
+  .inline-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .note-box {
+    background: #fffbe6;
+    border-left: 3px solid #e6b800;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    color: #7a6000;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* LN table */
+  .ln-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .ln-table th {
+    background: var(--highlight);
+    color: var(--accent);
+    padding: 5px 8px;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+  .ln-table td {
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+  .ln-table input[type=number] { width: 52px; }
+  .ln-total-row td {
+    background: var(--highlight);
+    font-weight: bold;
+    color: var(--accent);
+  }
+  .add-ln-btn, .rem-ln-btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--accent);
+    transition: background 0.15s;
+  }
+  .add-ln-btn:hover { background: var(--highlight); }
+  .rem-ln-btn { color: var(--red); }
+  .rem-ln-btn:hover { background: #fde8e8; }
+
+  .subsection-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  .indent { margin-left: 12px; }
+
+  /* TNM display */
+  .tnm-preview {
+    background: var(--highlight);
+    border: 1px solid var(--accent2);
+    border-radius: 4px;
+    padding: 7px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--accent);
+    font-weight: bold;
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Appendix Carcinoma — Pathology Report Generator</h1>
+  </div>
+  <span class="badge">CAP v5.1.0.0 · AJCC 9th</span>
+</header>
+
+<div class="main-layout">
+<!-- ========== FORM PANEL ========== -->
+<div class="form-panel">
+
+  <!-- SPECIMEN -->
+  <div class="section">
+    <div class="section-header">Specimen</div>
+    <div class="section-body">
+      <div>
+        <label class="field-label">Procedure</label>
+        <div class="radio-group">
+          <label><input type="radio" name="procedure" value="laparoscopic appendectomy" checked onchange="updateReport()"> Laparoscopic appendectomy</label>
+          <label><input type="radio" name="procedure" value="open appendectomy" onchange="updateReport()"> Open appendectomy</label>
+          <label><input type="radio" name="procedure" value="right colectomy" onchange="updateReport()"> Right colectomy</label>
+          <label><input type="radio" name="procedure" value="cecectomy" onchange="updateReport()"> Cecectomy</label>
+          <label><input type="radio" name="procedure" value="other" onchange="updateReport()"> Other</label>
+        </div>
+        <div id="procOtherWrap" style="display:none; margin-top:6px;">
+          <input type="text" id="procOther" placeholder="Specify procedure..." style="width:100%" oninput="updateReport()">
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Neoadjuvant Therapy</label>
+        <div class="radio-group">
+          <label><input type="radio" name="neoadj" value="no" checked onchange="updateReport()"> No</label>
+          <label><input type="radio" name="neoadj" value="yes" onchange="updateReport()"> Yes</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROSS -->
+  <div class="section">
+    <div class="section-header">Gross Description</div>
+    <div class="section-body">
+      <div>
+        <label class="field-label">Specimen Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="specType" value="one" checked onchange="updateReport()"> Single piece (appendix)</label>
+          <label><input type="radio" name="specType" value="multi" onchange="updateReport()"> Multiple pieces</label>
+        </div>
+      </div>
+
+      <!-- One piece -->
+      <div id="onePieceWrap">
+        <label class="field-label">Appendix Size (cm)</label>
+        <div class="size-inputs">
+          <input type="number" id="g1" min="0" step="0.1" placeholder="—" oninput="updateReport()" onkeydown="tabNext(event,'g2')">
+          <span>x</span>
+          <input type="number" id="g2" min="0" step="0.1" placeholder="—" oninput="updateReport()" onkeydown="tabNext(event,'g3')">
+          <span>x</span>
+          <input type="number" id="g3" min="0" step="0.1" placeholder="—" oninput="updateReport()">
+          <span style="font-size:0.75rem; color:var(--muted)">cm</span>
+        </div>
+      </div>
+
+      <!-- Multi piece -->
+      <div id="multiPieceWrap" style="display:none">
+        <label class="field-label">Number of Pieces</label>
+        <input type="number" id="numPieces" min="2" step="1" value="2" oninput="updateReport()" style="width:72px">
+        <div style="margin-top:8px">
+          <label class="field-label">Aggregate Size (cm)</label>
+          <div class="size-inputs">
+            <input type="number" id="mg1" min="0" step="0.1" placeholder="—" oninput="updateReport()" onkeydown="tabNext(event,'mg2')">
+            <span>x</span>
+            <input type="number" id="mg2" min="0" step="0.1" placeholder="—" oninput="updateReport()" onkeydown="tabNext(event,'mg3')">
+            <span>x</span>
+            <input type="number" id="mg3" min="0" step="0.1" placeholder="—" oninput="updateReport()">
+            <span style="font-size:0.75rem; color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <label class="field-label">Multi-piece Qualifier</label>
+          <div class="radio-group">
+            <label><input type="radio" name="multiQ" value="up to" checked onchange="updateReport()"> up to</label>
+            <label><input type="radio" name="multiQ" value="in aggregates" onchange="updateReport()"> in aggregates</label>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Submitted In (cassettes)</label>
+        <input type="number" id="cassettes" min="1" step="1" value="1" oninput="updateReport()" style="width:72px">
+        <span style="font-size:0.78rem; color:var(--muted); margin-left:6px">cassette(s)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPRESENTATIVE SECTIONS -->
+  <div class="section">
+    <div class="section-header">Representative Sections</div>
+    <div class="section-body">
+      <textarea id="repSections" rows="3" placeholder="Type representative section labeling here..." oninput="updateReport()"></textarea>
+    </div>
+  </div>
+
+  <!-- MICROSCOPIC -->
+  <div class="section">
+    <div class="section-header">Microscopic Description</div>
+    <div class="section-body">
+
+      <div>
+        <label class="field-label">Histologic Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="histotype" value="Adenocarcinoma" checked onchange="updateReport()"> Adenocarcinoma</label>
+          <label><input type="radio" name="histotype" value="Mucinous adenocarcinoma" onchange="updateReport()"> Mucinous adenocarcinoma</label>
+          <label><input type="radio" name="histotype" value="Low-grade appendiceal mucinous neoplasm" onchange="updateReport()"> LAMN</label>
+          <label><input type="radio" name="histotype" value="High-grade appendiceal mucinous neoplasm" onchange="updateReport()"> HAMN</label>
+          <label><input type="radio" name="histotype" value="Signet-ring cell carcinoma" onchange="updateReport()"> Signet-ring cell carcinoma</label>
+          <label><input type="radio" name="histotype" value="Goblet cell adenocarcinoma" onchange="updateReport()"> Goblet cell adenocarcinoma</label>
+          <label><input type="radio" name="histotype" value="other" onchange="updateReport()"> Other</label>
+        </div>
+        <div id="histoOtherWrap" style="display:none; margin-top:6px">
+          <input type="text" id="histoOther" placeholder="Specify histologic type..." style="width:100%" oninput="updateReport()">
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Tumor Size — Greatest Dimension (cm)</label>
+        <div class="size-inputs">
+          <input type="number" id="ts1" min="0" step="0.1" placeholder="—" oninput="updateReport()" onkeydown="tabNext(event,'ts2')">
+          <span>x</span>
+          <input type="number" id="ts2" min="0" step="0.1" placeholder="—" oninput="updateReport()" onkeydown="tabNext(event,'ts3')">
+          <span>x</span>
+          <input type="number" id="ts3" min="0" step="0.1" placeholder="—" oninput="updateReport()">
+          <span style="font-size:0.75rem; color:var(--muted)">cm</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+          <label class="field-label" style="margin-bottom:0">Histologic Grade</label>
+          <button type="button" onclick="document.getElementById('gradeModal').style.display='flex'"
+            style="background:var(--accent2);color:#fff;border:none;border-radius:10px;padding:1px 9px;font-size:0.72rem;cursor:pointer;letter-spacing:0.04em;font-family:'Courier New',monospace;">
+            Grading Criteria
+          </button>
+        </div>
+        <div class="radio-group">
+          <label><input type="radio" name="grade" value="G1, well differentiated" checked onchange="updateReport()"> G1, well differentiated</label>
+          <label><input type="radio" name="grade" value="G2, moderately differentiated" onchange="updateReport()"> G2, moderately differentiated</label>
+          <label><input type="radio" name="grade" value="G3, poorly differentiated" onchange="updateReport()"> G3, poorly differentiated</label>
+          <label><input type="radio" name="grade" value="GX, cannot be assessed" onchange="updateReport()"> GX, cannot be assessed</label>
+          <label><input type="radio" name="grade" value="Not applicable" onchange="updateReport()"> Not applicable</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Tumor Deposits</label>
+        <div class="radio-group">
+          <label><input type="radio" name="deposits" value="Not identified" checked onchange="updateReport()"> Not identified</label>
+          <label><input type="radio" name="deposits" value="Present" onchange="updateReport()"> Present</label>
+          <label><input type="radio" name="deposits" value="Cannot be determined" onchange="updateReport()"> Cannot be determined</label>
+        </div>
+        <div id="depositNumWrap" style="display:none; margin-top:5px">
+          <label class="field-label">Number of Deposits</label>
+          <input type="number" id="depositNum" min="1" step="1" value="" oninput="updateReport()" style="width:72px">
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Tumor Extension</label>
+        <div class="note-box" style="margin-bottom:6px">Acellular mucin or mucinous epithelium that extends into the subserosa or serosa should be classified as T3 or T4a, respectively.</div>
+        <div class="check-group" style="flex-direction:column; gap:5px">
+          <label><input type="checkbox" value="Tumor invades lamina propria or muscularis mucosa" onchange="updateReport()"> Tumor invades lamina propria or muscularis mucosa</label>
+          <label><input type="checkbox" value="Acellular mucin invades submucosa" onchange="updateReport()"> Acellular mucin invades submucosa</label>
+          <label><input type="checkbox" value="Tumor invades submucosa" onchange="updateReport()"> Tumor invades submucosa</label>
+          <label><input type="checkbox" value="Acellular mucin invades muscularis propria" onchange="updateReport()"> Acellular mucin invades muscularis propria</label>
+          <label><input type="checkbox" value="Tumor invades muscularis propria" onchange="updateReport()"> Tumor invades muscularis propria</label>
+          <label><input type="checkbox" value="Acellular mucin invades subserosa or mesoappendix but does not extend to serosal surface" onchange="updateReport()"> Acellular mucin invades subserosa or mesoappendix but does not extend to serosal surface</label>
+          <label><input type="checkbox" value="Tumor invades through muscularis propria into subserosa or mesoappendix but does not extend to serosal surface" onchange="updateReport()"> Tumor invades through muscularis propria into subserosa or mesoappendix but does not extend to serosal surface</label>
+          <label><input type="checkbox" value="Acellular mucin invades visceral peritoneum (serosa)" onchange="updateReport()"> Acellular mucin invades visceral peritoneum (serosa)</label>
+          <label><input type="checkbox" value="Tumor invades visceral peritoneum (serosa)" onchange="updateReport()"> Tumor invades visceral peritoneum (serosa)</label>
+          <label><input type="checkbox" id="invadeAdjacentCb" value="Tumor directly invades adjacent organ(s) or structure(s)" onchange="updateReport()"> Tumor directly invades adjacent organ(s) or structure(s)</label>
+        </div>
+        <div id="adjacentSpecWrap" style="display:none; margin-top:5px">
+          <input type="text" id="adjacentSpec" placeholder="Specify organ/structure..." style="width:100%" oninput="updateReport()">
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Margin Status</label>
+        <div class="radio-group" style="flex-direction:column; gap:5px">
+          <label><input type="radio" name="margin" value="cannot" checked onchange="updateReport()"> Cannot be evaluated</label>
+          <label><input type="radio" name="margin" value="involved_tumor" onchange="updateReport()"> Involved by tumor cells</label>
+          <label><input type="radio" name="margin" value="acellular" onchange="updateReport()"> Presence with acellular mucin</label>
+          <label><input type="radio" name="margin" value="less1mm" onchange="updateReport()"> &lt;1 mm</label>
+          <label><input type="radio" name="margin" value="uninvolved" onchange="updateReport()"> Uninvolved (specify distance)</label>
+          <label><input type="radio" name="margin" value="lamn" onchange="updateReport()"> Involved by low-grade appendiceal mucinous neoplasm</label>
+          <label><input type="radio" name="margin" value="hamn" onchange="updateReport()"> Involved by high-grade appendiceal mucinous neoplasm</label>
+          <label><input type="radio" name="margin" value="lgd_proximal" onchange="updateReport()"> Low-grade dysplasia present at proximal margin</label>
+          <label><input type="radio" name="margin" value="hgd_proximal" onchange="updateReport()"> High-grade dysplasia present at proximal margin</label>
+        </div>
+        <div id="marginDistWrap" style="display:none; margin-top:5px">
+          <label class="field-label">Distance (mm)</label>
+          <div class="inline-row">
+            <input type="number" id="marginDist" min="0" step="0.1" placeholder="—" oninput="updateReport()" style="width:80px"> mm
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Lymphovascular Invasion</label>
+        <div class="radio-group">
+          <label><input type="radio" name="lvi" value="Not identified" checked onchange="updateReport()"> Not identified</label>
+          <label><input type="radio" name="lvi" value="Present" onchange="updateReport()"> Present</label>
+          <label><input type="radio" name="lvi" value="Cannot be determined" onchange="updateReport()"> Cannot be determined</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Perineural Invasion</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pni" value="Not identified" checked onchange="updateReport()"> Not identified</label>
+          <label><input type="radio" name="pni" value="Present" onchange="updateReport()"> Present</label>
+          <label><input type="radio" name="pni" value="Cannot be determined" onchange="updateReport()"> Cannot be determined</label>
+        </div>
+      </div>
+
+      <!-- REGIONAL LYMPH NODES -->
+      <div>
+        <div class="subsection-label">Regional Lymph Nodes</div>
+        <div style="margin-top:6px">
+          <label class="field-label">Lymph Node Sampling</label>
+          <div class="radio-group">
+            <label><input type="radio" name="lnSampling" value="not_assessed" checked onchange="updateReport()"> Not assessed</label>
+            <label><input type="radio" name="lnSampling" value="submitted" onchange="updateReport()"> Nodes submitted</label>
+          </div>
+        </div>
+        <div id="lnTableWrap" style="display:none; margin-top:8px">
+          <table class="ln-table" id="lnTable">
+            <thead>
+              <tr>
+                <th>Station / Site</th>
+                <th>Positive</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="lnRows"></tbody>
+            <tfoot>
+              <tr class="ln-total-row">
+                <td>Total</td>
+                <td id="lnTotalPos">0</td>
+                <td id="lnTotalAll">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div style="margin-top:6px">
+            <button class="add-ln-btn" onclick="addLNRow()">+ Add station</button>
+          </div>
+          <div style="margin-top:6px">
+            <label class="field-label">Extranodal Extension</label>
+            <div class="radio-group">
+              <label><input type="radio" name="ene" value="Not applicable" checked onchange="updateReport()"> Not applicable</label>
+              <label><input type="radio" name="ene" value="Not identified" onchange="updateReport()"> Not identified</label>
+              <label><input type="radio" name="ene" value="Present" onchange="updateReport()"> Present</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TREATMENT EFFECT -->
+      <div id="treatEffectWrap" style="display:none">
+        <label class="field-label">Treatment Effect</label>
+        <div class="radio-group" style="flex-direction:column; gap:4px">
+          <label><input type="radio" name="treatEffect" value="No known presurgical therapy" checked onchange="updateReport()"> No known presurgical therapy</label>
+          <label><input type="radio" name="treatEffect" value="Present — Grade 0 (no response)" onchange="updateReport()"> Present — Grade 0 (no response)</label>
+          <label><input type="radio" name="treatEffect" value="Present — Grade 1 (poor response)" onchange="updateReport()"> Present — Grade 1 (poor response)</label>
+          <label><input type="radio" name="treatEffect" value="Present — Grade 2 (partial response)" onchange="updateReport()"> Present — Grade 2 (partial response)</label>
+          <label><input type="radio" name="treatEffect" value="Present — Grade 3 (complete response)" onchange="updateReport()"> Present — Grade 3 (complete response)</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Additional Pathologic Findings</label>
+        <textarea id="addFindings" rows="2" placeholder="e.g., Appendicitis, Perforation not at tumor, etc." oninput="updateReport()"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TNM -->
+  <div class="section">
+    <div class="section-header">pTNM Classification (AJCC 9th Edition)</div>
+    <div class="section-body">
+
+      <div>
+        <label class="field-label">Distant Metastasis</label>
+        <div class="radio-group" style="flex-direction:column; gap:4px">
+          <label><input type="radio" name="distMet" value="not_applicable" checked onchange="updateReport()"> Not applicable</label>
+          <label><input type="radio" name="distMet" value="acellular_mucin" onchange="updateReport()"> Intraperitoneal acellular mucin without identifiable tumor cells in the disseminated peritoneal mucinous deposits</label>
+          <label><input type="radio" name="distMet" value="intraperitoneal" onchange="updateReport()"> Intraperitoneal metastasis only (including peritoneal mucinous deposits containing tumor cells)</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">pT Category</label>
+        <div class="radio-group" style="flex-direction:column; gap:4px">
+          <label><input type="radio" name="pT" value="" checked onchange="updateReport()"> Not assigned</label>
+          <label><input type="radio" name="pT" value="0" onchange="updateReport()"> pT0: No evidence of primary tumor</label>
+          <label><input type="radio" name="pT" value="is" onchange="updateReport()"> pTis: Carcinoma in situ</label>
+          <label><input type="radio" name="pT" value="is(LAMN)" onchange="updateReport()"> pTis(LAMN): LAMN confined to muscularis propria</label>
+          <label><input type="radio" name="pT" value="1" onchange="updateReport()"> pT1: Invades submucosa</label>
+          <label><input type="radio" name="pT" value="2" onchange="updateReport()"> pT2: Invades muscularis propria</label>
+          <label><input type="radio" name="pT" value="3" onchange="updateReport()"> pT3: Through muscularis propria into subserosa/mesoappendix</label>
+          <label><input type="radio" name="pT" value="4a" onchange="updateReport()"> pT4a: Invades through visceral peritoneum (serosa)</label>
+          <label><input type="radio" name="pT" value="4b" onchange="updateReport()"> pT4b: Directly invades adjacent organs or structures</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">pN Category</label>
+        <div class="radio-group" style="flex-direction:column; gap:4px">
+          <label><input type="radio" name="pN" value="not_assigned_none" checked onchange="updateReport()"> pN not assigned (no nodes submitted or found)</label>
+          <label><input type="radio" name="pN" value="not_assigned_undet" onchange="updateReport()"> pN not assigned (cannot be determined)</label>
+          <label><input type="radio" name="pN" value="0" onchange="updateReport()"> pN0: No tumor involvement of regional lymph nodes</label>
+          <label><input type="radio" name="pN" value="1a" onchange="updateReport()"> pN1a: Involvement of one regional lymph node</label>
+          <label><input type="radio" name="pN" value="1b" onchange="updateReport()"> pN1b: Involvement of two or three regional lymph nodes</label>
+          <label><input type="radio" name="pN" value="1c" onchange="updateReport()"> pN1c: No nodal involvement, but tumor deposits present</label>
+          <label><input type="radio" name="pN" value="1" onchange="updateReport()"> pN1 (subcategory cannot be determined)</label>
+          <label><input type="radio" name="pN" value="2" onchange="updateReport()"> pN2: Four or more regional lymph nodes</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">pM Category (only if pathologically confirmed)</label>
+        <div class="radio-group" style="flex-direction:column; gap:4px">
+          <label><input type="radio" name="pM" value="" checked onchange="updateReport()"> Not applicable</label>
+          <label><input type="radio" name="pM" value="1a" onchange="updateReport()"> pM1a: Intraperitoneal acellular mucin, no tumor cells</label>
+          <label><input type="radio" name="pM" value="1b" onchange="updateReport()"> pM1b: Intraperitoneal metastasis with tumor cells</label>
+          <label><input type="radio" name="pM" value="1c" onchange="updateReport()"> pM1c: Metastasis to sites other than peritoneum</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">TNM Descriptor</label>
+        <div class="radio-group">
+          <label><input type="radio" name="tnmDesc" value="not_applicable" checked onchange="updateReport()"> Not applicable</label>
+          <label><input type="radio" name="tnmDesc" value="y" onchange="updateReport()"> y (post-neoadjuvant therapy)</label>
+          <label><input type="radio" name="tnmDesc" value="r" onchange="updateReport()"> r (recurrence)</label>
+        </div>
+      </div>
+
+      <div class="tnm-preview" id="tnmPreview">pTNM: —</div>
+
+      <div>
+        <label class="field-label">Note / Comment</label>
+        <textarea id="noteField" rows="2" placeholder="Additional note or comment..." oninput="updateReport()"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MMR IHC -->
+  <div class="section">
+    <div class="section-header">IHC — Mismatch Repair (MMR) Proteins</div>
+    <div class="section-body">
+      <div style="font-size:0.76rem; color:var(--muted); margin-bottom:4px;">Select result for each marker (leave unselected to omit from report)</div>
+      <table style="width:100%; border-collapse:collapse; font-size:0.81rem;">
+        <thead>
+          <tr style="background:var(--highlight);">
+            <th style="padding:6px 10px; text-align:left; border:1px solid var(--border); color:var(--accent); width:70px;">Marker</th>
+            <th style="padding:6px 10px; text-align:left; border:1px solid var(--border); color:var(--accent);">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:6px 10px; border:1px solid var(--border); font-weight:bold;">MLH1</td>
+            <td style="padding:6px 10px; border:1px solid var(--border);">
+              <div class="radio-group">
+                <label><input type="radio" name="mmr_mlh1" value="" checked onchange="updateReport()"> —</label>
+                <label><input type="radio" name="mmr_mlh1" value="Intact nuclear expression" onchange="updateReport()"> Intact</label>
+                <label><input type="radio" name="mmr_mlh1" value="Loss of nuclear expression" onchange="updateReport()"> Loss</label>
+              </div>
+            </td>
+          </tr>
+          <tr style="background:var(--section-bg);">
+            <td style="padding:6px 10px; border:1px solid var(--border); font-weight:bold;">MSH2</td>
+            <td style="padding:6px 10px; border:1px solid var(--border);">
+              <div class="radio-group">
+                <label><input type="radio" name="mmr_msh2" value="" checked onchange="updateReport()"> —</label>
+                <label><input type="radio" name="mmr_msh2" value="Intact nuclear expression" onchange="updateReport()"> Intact</label>
+                <label><input type="radio" name="mmr_msh2" value="Loss of nuclear expression" onchange="updateReport()"> Loss</label>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 10px; border:1px solid var(--border); font-weight:bold;">MSH6</td>
+            <td style="padding:6px 10px; border:1px solid var(--border);">
+              <div class="radio-group">
+                <label><input type="radio" name="mmr_msh6" value="" checked onchange="updateReport()"> —</label>
+                <label><input type="radio" name="mmr_msh6" value="Intact nuclear expression" onchange="updateReport()"> Intact</label>
+                <label><input type="radio" name="mmr_msh6" value="Loss of nuclear expression" onchange="updateReport()"> Loss</label>
+              </div>
+            </td>
+          </tr>
+          <tr style="background:var(--section-bg);">
+            <td style="padding:6px 10px; border:1px solid var(--border); font-weight:bold;">PMS2</td>
+            <td style="padding:6px 10px; border:1px solid var(--border);">
+              <div class="radio-group">
+                <label><input type="radio" name="mmr_pms2" value="" checked onchange="updateReport()"> —</label>
+                <label><input type="radio" name="mmr_pms2" value="Intact nuclear expression" onchange="updateReport()"> Intact</label>
+                <label><input type="radio" name="mmr_pms2" value="Loss of nuclear expression" onchange="updateReport()"> Loss</label>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /form-panel -->
+
+<!-- ========== OUTPUT PANEL ========== -->
+<div class="output-panel">
+  <div class="output-header">
+    <span>■ Report Output</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyReport()">Copy Report</button>
+  </div>
+  <textarea id="reportOutput" readonly spellcheck="false"></textarea>
+</div>
+
+</div><!-- /main-layout -->
+
+<!-- Grade Reference Modal -->
+<div id="gradeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:8px; max-width:680px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,0.3); font-family:'Georgia',serif;">
+    <div style="background:var(--accent); color:#fff; padding:14px 20px; border-radius:8px 8px 0 0; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.9rem; letter-spacing:0.05em; font-family:'Courier New',monospace;">HISTOLOGIC GRADING — CAP v5.1.0.0 / AJCC 9th</span>
+      <button onclick="document.getElementById('gradeModal').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:1rem;border-radius:4px;padding:2px 10px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:20px 22px; font-size:0.83rem; line-height:1.72; color:#1e2a30;">
+
+      <!-- General Principles -->
+      <div style="margin-bottom:18px; background:#f0f7fa; border-left:4px solid var(--accent2); border-radius:0 6px 6px 0; padding:10px 14px;">
+        <div style="font-weight:bold; color:var(--accent); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">General Principles</div>
+        <p style="margin-bottom:5px;"><b>Prognostic value:</b> Histologic grade is a proven prognostic factor for appendiceal carcinoma.</p>
+        <p><b>Discordance rule:</b> Appendiceal and peritoneal grades are usually concordant but may differ. When discordant, both must be recorded independently; the <u>peritoneal tumor grade drives the final staging grade</u>.</p>
+      </div>
+
+      <!-- Nonmucinous -->
+      <div style="margin-bottom:18px;">
+        <div style="font-weight:bold; color:var(--accent); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px;">Nonmucinous Tumors — Gland Formation</div>
+        <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+          <thead>
+            <tr style="background:#e8f4f8;">
+              <th style="padding:6px 12px; text-align:left; border:1px solid #d4cfc4; color:var(--accent); width:90px;">Grade</th>
+              <th style="padding:6px 12px; text-align:left; border:1px solid #d4cfc4; color:var(--accent);">Gland Formation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:6px 12px; border:1px solid #d4cfc4;"><b>G1</b> Well-differentiated</td><td style="padding:6px 12px; border:1px solid #d4cfc4;">&gt;95%</td></tr>
+            <tr style="background:#f9f7f4;"><td style="padding:6px 12px; border:1px solid #d4cfc4;"><b>G2</b> Moderately differentiated</td><td style="padding:6px 12px; border:1px solid #d4cfc4;">50–95%</td></tr>
+            <tr><td style="padding:6px 12px; border:1px solid #d4cfc4;"><b>G3</b> Poorly differentiated</td><td style="padding:6px 12px; border:1px solid #d4cfc4;">&lt;50%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mucinous -->
+      <div style="margin-bottom:18px;">
+        <div style="font-weight:bold; color:var(--accent); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:8px;">Mucinous Tumors — AJCC 3-Tier Scheme</div>
+        <p style="font-size:0.79rem; color:#5a7080; margin-bottom:10px;">Based on cytologic atypia, tumor cellularity, and signet-ring cell component.</p>
+
+        <!-- G1 -->
+        <div style="border:1px solid #b8dce8; border-radius:6px; margin-bottom:9px; overflow:hidden;">
+          <div style="background:#dceef5; padding:6px 13px; font-weight:bold; color:#1a4a5e; font-size:0.82rem;">G1 — Well-differentiated</div>
+          <div style="padding:8px 14px;">
+            <ul style="padding-left:17px; margin:0; line-height:1.85;">
+              <li>Low-grade cytologic atypia; no signet-ring cells</li>
+              <li>Typically LAMN (pushing borders only, no destructive invasion)</li>
+              <li>Peritoneal involvement: acellular mucin or low cellularity (&lt;20%), no infiltrative invasion</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- G2 -->
+        <div style="border:1px solid #e6d58a; border-radius:6px; margin-bottom:9px; overflow:hidden;">
+          <div style="background:#fef8d8; padding:6px 13px; font-weight:bold; color:#7a5a00; font-size:0.82rem;">G2 — Moderately differentiated</div>
+          <div style="padding:8px 14px;">
+            <ul style="padding-left:17px; margin:0; line-height:1.85;">
+              <li>Mixed low/high-grade or diffuse high-grade cytologic atypia; no signet-ring cells</li>
+              <li>Typically HAMN, or mucinous adenocarcinoma with destructive invasion and desmoplasia</li>
+              <li>Complex architecture: cribriform glands, complex papillary structures</li>
+              <li>Extra-appendiceal spread may show perineural or lymphovascular invasion</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- G3 -->
+        <div style="border:1px solid #e8b8b8; border-radius:6px; margin-bottom:4px; overflow:hidden;">
+          <div style="background:#fde8e8; padding:6px 13px; font-weight:bold; color:#8b1a1a; font-size:0.82rem;">G3 — Poorly differentiated</div>
+          <div style="padding:8px 14px;">
+            <ul style="padding-left:17px; margin:0; line-height:1.85;">
+              <li>High-grade cytologic atypia with signet-ring cell component (&gt;10%)</li>
+              <li>Includes: pure signet-ring cell adenocarcinoma, high-grade goblet cell adenocarcinoma</li>
+              <li><b>Exclusion:</b> <i>Pseudosignet ring cells</i> (degenerate cells floating in mucin) do <u>not</u> qualify as G3</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exceptions -->
+      <div style="background:#f4f1eb; border:1px solid #c8c0b0; border-radius:6px; padding:10px 14px; font-size:0.8rem;">
+        <b style="color:var(--accent);">⚠ Exceptions — Grading schemes above do NOT apply to:</b>
+        <ul style="padding-left:17px; margin:5px 0 0; line-height:1.85;">
+          <li>Poorly differentiated neuroendocrine carcinoma</li>
+          <li>Goblet cell adenocarcinoma</li>
+          <li>Undifferentiated carcinoma (G4 is not included in AJCC 9th edition)</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- Utility ----
+function v(id){ return (document.getElementById(id)||{}).value||''; }
+function rv(name){ const el=document.querySelector(`input[name="${name}"]:checked`); return el?el.value:''; }
+function tabNext(e, nextId){
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const n=document.getElementById(nextId);
+    if(n){ n.focus(); n.select(); }
+  }
+}
+
+// ---- LN rows ----
+let lnRows=[];
+function addLNRow(){
+  const id=Date.now();
+  lnRows.push({id, station:'', pos:'', total:''});
+  renderLNTable();
+}
+function removeLNRow(id){
+  lnRows=lnRows.filter(r=>r.id!==id);
+  renderLNTable();
+  updateReport();
+}
+function renderLNTable(){
+  const tbody=document.getElementById('lnRows');
+  tbody.innerHTML='';
+  lnRows.forEach(row=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="text" value="${row.station}" placeholder="Station name" style="width:110px"
+        onchange="lnRows.find(r=>r.id===${row.id}).station=this.value; updateReport()"></td>
+      <td><input type="number" min="0" step="1" value="${row.pos}" placeholder="0"
+        onchange="lnRows.find(r=>r.id===${row.id}).pos=this.value||'0'; updateLNTotals(); updateReport()"
+        onkeydown="if(event.key==='Tab'){event.preventDefault();this.closest('tr').querySelector('td:nth-child(3) input').focus();}"></td>
+      <td><input type="number" min="0" step="1" value="${row.total}" placeholder="0"
+        onchange="lnRows.find(r=>r.id===${row.id}).total=this.value||'0'; updateLNTotals(); updateReport()"></td>
+      <td><button class="rem-ln-btn" onclick="removeLNRow(${row.id})">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  updateLNTotals();
+}
+function updateLNTotals(){
+  let pos=0, tot=0;
+  lnRows.forEach(r=>{ pos+=parseInt(r.pos||0); tot+=parseInt(r.total||0); });
+  document.getElementById('lnTotalPos').textContent=pos;
+  document.getElementById('lnTotalAll').textContent=tot;
+}
+function getLNTotals(){
+  let pos=0, tot=0;
+  lnRows.forEach(r=>{ pos+=parseInt(r.pos||0); tot+=parseInt(r.total||0); });
+  return {pos, tot};
+}
+
+// ---- Conditional show/hide ----
+function updateVisibility(){
+  const specType=rv('specType');
+  document.getElementById('onePieceWrap').style.display=specType==='one'?'block':'none';
+  document.getElementById('multiPieceWrap').style.display=specType==='multi'?'block':'none';
+
+  const proc=rv('procedure');
+  document.getElementById('procOtherWrap').style.display=proc==='other'?'block':'none';
+
+  const histo=rv('histotype');
+  document.getElementById('histoOtherWrap').style.display=histo==='other'?'block':'none';
+
+  const dep=rv('deposits');
+  document.getElementById('depositNumWrap').style.display=dep==='Present'?'block':'none';
+
+  const margin=rv('margin');
+  document.getElementById('marginDistWrap').style.display=margin==='uninvolved'?'block':'none';
+
+  const lnS=rv('lnSampling');
+  document.getElementById('lnTableWrap').style.display=lnS==='submitted'?'block':'none';
+
+  const neoadj=rv('neoadj');
+  document.getElementById('treatEffectWrap').style.display=neoadj==='yes'?'block':'none';
+
+  const adjCb=document.getElementById('invadeAdjacentCb');
+  document.getElementById('adjacentSpecWrap').style.display=adjCb&&adjCb.checked?'block':'none';
+
+  // Auto-sync TNM descriptor with neoadjuvant
+  if(neoadj==='yes'){
+    const yRadio=document.querySelector('input[name="tnmDesc"][value="y"]');
+    if(yRadio) yRadio.checked=true;
+  } else {
+    // Only auto-reset if no manual selection besides NA/r
+    const current=rv('tnmDesc');
+    if(current==='y'){
+      document.querySelector('input[name="tnmDesc"][value="not_applicable"]').checked=true;
+    }
+  }
+}
+
+// ---- Report builder ----
+function buildReport(){
+  const neoadj=rv('neoadj')==='yes';
+  const prefix=neoadj?'y':'';
+  const procedure=rv('procedure')==='other'?v('procOther'):rv('procedure');
+  const specType=rv('specType');
+  const lnSampling=rv('lnSampling');
+
+  // pT/pN/pM
+  const rawT=rv('pT');
+  const rawN=rv('pN');
+  const rawM=rv('pM');
+
+  let pTtext='', pNtext='', pMtext='';
+  if(rawT!==''){
+    pTtext = rawT.startsWith('is')? `pT${rawT}` : (rawT===''? '' : `pT${rawT}`);
+  }
+  if(rawN===''||rawN.startsWith('not_assigned')){
+    pNtext='';
+  } else {
+    pNtext=`pN${rawN}`;
+  }
+  if(rawM!=='') pMtext=`pM${rawM}`;
+
+  // TNM summary line
+  let tnmLine='';
+  if(pTtext||pNtext||pMtext){
+    let tPart = pTtext? (prefix+(pTtext)) : '';
+    let nPart = pNtext? pNtext : '';
+    let mPart = pMtext? pMtext : '';
+    let parts=[tPart,nPart,mPart].filter(Boolean).join('');
+    tnmLine=`pTNM: ${parts} (AJCC 9th Edition)`;
+    document.getElementById('tnmPreview').textContent=tnmLine;
+  } else {
+    document.getElementById('tnmPreview').textContent='pTNM: —';
+    tnmLine='pTNM: (AJCC 9th Edition)';
+  }
+
+  // Diagnosis pT display
+  let diagPT = rawT!==''? `${prefix}pT${rawT}` : '';
+  let diagPN = (rawN!==''&&!rawN.startsWith('not_assigned'))? `${prefix}pN${rawN}` : '';
+
+  // Gross size
+  let grossSize='';
+  if(specType==='one'){
+    const a=v('g1'), b=v('g2'), c=v('g3');
+    if(a||b||c){
+      grossSize=`${a||'_'} x ${b||'_'} x ${c||'_'} cm`;
+    } else { grossSize='_ x _ x _ cm'; }
+  } else {
+    const n=v('numPieces')||'_';
+    const a=v('mg1'), b=v('mg2'), c=v('mg3');
+    const q=rv('multiQ');
+    const sz=`${a||'_'} x ${b||'_'} x ${c||'_'} cm`;
+    grossSize=`${n} pieces of appendiceal tissue, measuring ${q} ${sz}`;
+  }
+
+  // Cassettes
+  const cassN=parseInt(v('cassettes'))||1;
+  const cassSuffix=cassN===1?'cassette':'cassettes';
+  const specLabel=specType==='one'?'appendix':'tissue';
+  const cassTxt=`The ${specLabel} is totally submitted in ${cassN} ${cassSuffix}.`;
+
+  // Gross line
+  let grossDesc='';
+  if(specType==='one'){
+    grossDesc=`Received is an appendix measuring ${grossSize}.`;
+  } else {
+    grossDesc=`Received are ${grossSize}.`;
+  }
+
+  // Rep sections
+  const repSec=v('repSections');
+
+  // Histologic type
+  const histoType=rv('histotype')==='other'? v('histoOther') : rv('histotype');
+
+  // Tumor size
+  const ts1=v('ts1'), ts2=v('ts2'), ts3=v('ts3');
+  let tumorSizeStr='';
+  if(ts1){
+    tumorSizeStr=ts1;
+    if(ts2) tumorSizeStr+=` x ${ts2}`;
+    if(ts3) tumorSizeStr+=` x ${ts3}`;
+    tumorSizeStr+=' cm';
+  } else { tumorSizeStr='___ cm'; }
+
+  // Grade
+  const grade=rv('grade');
+
+  // Tumor deposits
+  const deposits=rv('deposits');
+  let depositsStr=`Tumor Deposits: ${deposits}`;
+  if(deposits==='Present'){
+    const n=v('depositNum');
+    if(n) depositsStr+=`\n- Number of Deposits: ${n}`;
+  }
+
+  // Tumor extension
+  const extChecks=Array.from(document.querySelectorAll('.check-group input[type=checkbox]:checked'));
+  let extLines=extChecks.map(cb=>{
+    let val=cb.value;
+    if(val==='Tumor directly invades adjacent organ(s) or structure(s)'){
+      const spec=v('adjacentSpec');
+      if(spec) val+=`: ${spec}`;
+    }
+    return `- ${val}`;
+  });
+
+  // Margin
+  const margin=rv('margin');
+  let marginStr='';
+  if(margin==='cannot') marginStr='Margin: Cannot be evaluated';
+  else if(margin==='involved_tumor') marginStr='Margin: Involved by tumor cells';
+  else if(margin==='acellular') marginStr='Margin: Presence with acellular mucin';
+  else if(margin==='less1mm') marginStr='Margin: <1 mm';
+  else if(margin==='lamn') marginStr='Margin: Involved by low-grade appendiceal mucinous neoplasm';
+  else if(margin==='hamn') marginStr='Margin: Involved by high-grade appendiceal mucinous neoplasm';
+  else if(margin==='lgd_proximal') marginStr='Margin: Low-grade dysplasia present at proximal margin';
+  else if(margin==='hgd_proximal') marginStr='Margin: High-grade dysplasia present at proximal margin';
+  else if(margin==='uninvolved'){
+    const dist=parseFloat(v('marginDist'));
+    if(!isNaN(dist)){
+      if(dist<1){
+        marginStr='Margin: <1 mm';
+      } else {
+        marginStr=`Margin: Uninvolved, ${dist} mm in closest distance`;
+      }
+    } else {
+      marginStr='Margin: Uninvolved, ___ mm in closest distance';
+    }
+  }
+
+  // LVI / PNI
+  const lvi=rv('lvi');
+  const pni=rv('pni');
+
+  // LN
+  let lnStr='';
+  if(lnSampling==='not_assessed'){
+    lnStr='Regional Lymph Nodes: Not assessed\nExtranodal Extension: Not applicable';
+  } else {
+    const {pos,tot}=getLNTotals();
+    const ene=rv('ene');
+    if(tot===0){
+      lnStr='Regional Lymph Nodes: Not assessed\nExtranodal Extension: Not applicable';
+    } else {
+      const lnStatus=pos===0?`Free of metastasis (0/${tot})`:`Metastatic (${pos}/${tot})`;
+      lnStr=`Regional Lymph Nodes: ${lnStatus}\nExtranodal Extension: ${ene}`;
+    }
+  }
+
+  // Treatment effect
+  let treatStr='';
+  if(neoadj){
+    const te=rv('treatEffect');
+    treatStr=`\nTreatment Effect: ${te}`;
+  }
+
+  // Additional findings
+  const addF=v('addFindings');
+
+  // Distant metastasis
+  const distMet=rv('distMet');
+  let distMetStr='';
+  if(distMet==='not_applicable') distMetStr='Distant Metastasis: Not applicable';
+  else if(distMet==='acellular_mucin') distMetStr='Distant Metastasis: Intraperitoneal acellular mucin without identifiable tumor cells in the disseminated peritoneal mucinous deposits';
+  else if(distMet==='intraperitoneal') distMetStr='Distant Metastasis: Intraperitoneal metastasis only (including peritoneal mucinous deposits containing tumor cells)';
+
+  // TNM descriptor
+  const desc=rv('tnmDesc');
+  let descStr='TNM Descriptors: ';
+  if(desc==='not_applicable') descStr+='Not applicable';
+  else if(desc==='y') descStr+='y (post-neoadjuvant therapy)';
+  else if(desc==='r') descStr+='r (recurrence)';
+
+  // MMR IHC
+  const mmrMarkers=[
+    {name:'MLH1', key:'mmr_mlh1'},
+    {name:'MSH2', key:'mmr_msh2'},
+    {name:'MSH6', key:'mmr_msh6'},
+    {name:'PMS2', key:'mmr_pms2'},
+  ];
+  const mmrLines=mmrMarkers.map(m=>{
+    const val=rv(m.key);
+    return val? `- ${m.name}: ${val}` : null;
+  }).filter(Boolean);
+
+  // Note
+  const note=v('noteField');
+
+  // ---- ASSEMBLE ----
+  // Diagnosis: Appendix, procedure\n--- Histotype (pTNpM)
+  let tnmBracket='';
+  {
+    let tB=diagPT||'';
+    let nB=(rawN!==''&&!rawN.startsWith('not_assigned'))? (neoadj?`${prefix}pN${rawN}`:`pN${rawN}`) : '';
+    let mB=rawM!==''?`pM${rawM}`:'';
+    const bracketParts=[tB,nB,mB].filter(Boolean).join('');
+    if(bracketParts) tnmBracket=` (${bracketParts})`;
+  }
+
+  const diagLine=`DIAGNOSIS:\nAppendix, ${procedure}\n--- ${histoType||'___'}${tnmBracket}`;
+
+  // Gross
+  let grossSection=`\nGROSS DESCRIPTION:\n${grossDesc}\n${cassTxt}`;
+
+  // Rep sections
+  let repSection='';
+  if(repSec.trim()){
+    repSection=`\nRepresentative sections are taken and labeled as follows:\n${repSec}`;
+  } else {
+    repSection=`\nRepresentative sections are taken and labeled as follows:`;
+  }
+
+  // Micro
+  let microLines=[];
+  microLines.push(`Histologic Type: ${histoType||'___'}`);
+  microLines.push(`Tumor Size: Greatest dimension: ${tumorSizeStr}`);
+  microLines.push(`Histologic Grade: ${grade}`);
+  microLines.push(depositsStr);
+  if(extLines.length>0){
+    microLines.push(`Tumor Extension:`);
+    extLines.forEach(l=>microLines.push(l));
+  } else {
+    microLines.push(`Tumor Extension: (not specified)`);
+  }
+  microLines.push(marginStr||'Margin: (not specified)');
+  microLines.push(`Lymphovascular Invasion: ${lvi}`);
+  microLines.push(`Perineural Invasion: ${pni}`);
+  microLines.push(lnStr);
+  if(treatStr) microLines.push(treatStr.trim());
+  if(addF.trim()) microLines.push(`Additional Pathologic Findings: ${addF}`);
+
+  let microSection='\nMICROSCOPIC DESCRIPTION:\n'+microLines.join('\n');
+
+  // pTNM section
+  let tnmSection=`\n${distMetStr}`;
+  tnmSection+=`\n${tnmLine}`;
+  tnmSection+=`\n${descStr}`;
+
+  // MMR IHC
+  let mmrSection='';
+  if(mmrLines.length>0){
+    mmrSection='\nIHC Testing for Mismatch Repair (MMR) Proteins:\n'+mmrLines.join('\n');
+  }
+
+  // Note
+  let noteSection='';
+  if(note.trim()) noteSection=`\nNote:\n${note}`;
+
+  let finalNote='\nThis case has been reviewed by two pathologists.';
+
+  const report=diagLine+grossSection+repSection+microSection+tnmSection+mmrSection+noteSection+finalNote;
+  return report;
+}
+
+function updateReport(){
+  updateVisibility();
+  updateLNTotals();
+  const report=buildReport();
+  document.getElementById('reportOutput').value=report;
+}
+
+function copyReport(){
+  const txt=document.getElementById('reportOutput').value;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy Report'; btn.classList.remove('copied'); },2000);
+  });
+}
+
+// init LN row
+addLNRow();
+updateReport();
+</script>
+</body>
+</html>

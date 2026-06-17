@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intrahepatic Cholangiocarcinoma — Pathology Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --accent: #4f9cf9;
+    --accent2: #6ee7b7;
+    --text: #e2e8f0;
+    --text-dim: #8899aa;
+    --text-muted: #556070;
+    --note-bg: #1a2035;
+    --note-border: #2d4a7a;
+    --note-text: #7ab3f0;
+    --warn: #f59e0b;
+    --red: #f87171;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  #header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  #header h1 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    flex: 1;
+  }
+  #header h1 span { color: var(--text-dim); font-weight: 300; }
+  .hdr-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all .15s;
+  }
+  #btn-generate { background: var(--accent); color: #0f1117; }
+  #btn-generate:hover { background: #6aaffe; }
+  #btn-copy { background: var(--surface2); color: var(--accent2); border: 1px solid var(--border); }
+  #btn-copy:hover { background: var(--border); }
+  #btn-clear { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+  #btn-clear:hover { background: var(--border); }
+
+  /* ── Main layout ── */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Form panel ── */
+  #form-panel {
+    width: 50%;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    padding: 0;
+  }
+  #form-panel::-webkit-scrollbar { width: 6px; }
+  #form-panel::-webkit-scrollbar-track { background: var(--bg); }
+  #form-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Section ── */
+  .section {
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 20px 8px;
+    background: var(--surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  .section-header:hover { color: var(--text-dim); }
+  .section-header .chevron { color: var(--text-muted); font-size: 10px; transition: transform .2s; }
+  .section-header.collapsed .chevron { transform: rotate(-90deg); }
+  .section-body { padding: 14px 20px 16px; }
+  .section-body.hidden { display: none; }
+
+  /* ── Form controls ── */
+  .field { margin-bottom: 10px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-weight: 400;
+  }
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+  /* Size row */
+  .size-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .size-row input {
+    width: 64px;
+    text-align: center;
+  }
+  .size-sep {
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  /* Radio / checkbox groups */
+  .radio-group, .check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .radio-group label, .check-group label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    margin-bottom: 0;
+    line-height: 1.4;
+  }
+  .radio-group input[type="radio"],
+  .check-group input[type="checkbox"] {
+    width: auto;
+    margin-top: 1px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
+  .inline-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .inline-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+  .inline-row input[type="radio"],
+  .inline-row input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--accent);
+  }
+
+  /* CAP note */
+  .cap-note {
+    background: var(--note-bg);
+    border-left: 3px solid var(--note-border);
+    color: var(--note-text);
+    font-size: 11px;
+    padding: 7px 10px;
+    border-radius: 0 4px 4px 0;
+    margin-top: 6px;
+    line-height: 1.5;
+    font-family: var(--mono);
+  }
+
+  /* Sub-field indent */
+  .sub-field {
+    margin-left: 20px;
+    margin-top: 6px;
+  }
+  .sub-field.hidden { display: none; }
+
+  /* Two-col grid */
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ── Preview panel ── */
+  #preview-panel {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #preview-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 20px 8px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #report-out {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    color: var(--text);
+  }
+  #report-out::-webkit-scrollbar { width: 6px; }
+  #report-out::-webkit-scrollbar-track { background: var(--bg); }
+  #report-out::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  #report-out .placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 11px;
+  }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent2);
+    color: #0f1117;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+  }
+  .copy-toast.show { opacity: 1; }
+
+  /* Inline text field (for mixed inputs) */
+  .inline-input {
+    display: inline-block;
+    width: 80px;
+    vertical-align: middle;
+  }
+  .wide-input { width: 160px; }
+
+  /* LN station rows */
+  .ln-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .ln-row label { color: var(--text); margin: 0; flex: 1; font-size: 12px; }
+  .ln-row input { width: 52px; }
+
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <h1>Intrahepatic Cholangiocarcinoma <span>— Pathology Report Generator</span></h1>
+  <button class="hdr-btn" id="btn-generate">▶ Generate</button>
+  <button class="hdr-btn" id="btn-copy">⎘ Copy</button>
+  <button class="hdr-btn" id="btn-clear">✕ Clear</button>
+</div>
+
+<div id="main">
+<!-- ════════════════ FORM ════════════════ -->
+<div id="form-panel">
+
+  <!-- DIAGNOSIS META -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="chevron">▾</span> Diagnosis Info
+    </div>
+    <div class="section-body">
+      <div class="grid2">
+        <div class="field">
+          <label>Liver Location</label>
+          <div class="inline-row" style="margin-bottom:6px;">
+            <label><input type="checkbox" id="lobe-right"> Right lobe</label>
+            <label><input type="checkbox" id="lobe-left"> Left lobe</label>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);white-space:nowrap;">S</span>
+            <input type="text" id="liver-seg" placeholder="e.g. 4b/5" style="width:120px;">
+          </div>
+          <input type="text" id="liver-free" placeholder="Free text (e.g. posterior segment)">
+        </div>
+        <div class="field">
+          <label>TNM Descriptors</label>
+          <div class="inline-row">
+            <label><input type="checkbox" id="desc-y"> y (post-therapy)</label>
+            <label><input type="checkbox" id="desc-r"> r (retreatment)</label>
+            <label><input type="checkbox" id="desc-a"> a (autopsy)</label>
+            <label><input type="checkbox" id="desc-m"> m (multiple)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROSS -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="chevron">▾</span> Gross Description
+    </div>
+    <div class="section-body">
+
+      <!-- 1. Procedure -->
+      <div class="field">
+        <label>1. Procedure</label>
+        <div class="radio-group" id="procedure-group">
+          <label><input type="radio" name="procedure" value="Wedge resection"> Wedge resection</label>
+          <label><input type="radio" name="procedure" value="Segmentectomy"> Segmentectomy</label>
+          <label><input type="radio" name="procedure" value="Partial hepatectomy"> Partial hepatectomy</label>
+          <label><input type="radio" name="procedure" value="Total hepatectomy"> Total hepatectomy</label>
+          <label><input type="radio" name="procedure" value="Other"> Other: <input type="text" id="procedure-other" placeholder="specify" style="width:140px;margin-left:6px;display:inline-block;"></label>
+        </div>
+      </div>
+
+      <!-- 2. Focality -->
+      <div class="field">
+        <label>2. Tumor Focality</label>
+        <div class="inline-row">
+          <label><input type="radio" name="focality" value="Solitary"> Solitary</label>
+          <label><input type="radio" name="focality" value="Multiple"> Multiple
+            <span style="margin-left:6px;">No.:&nbsp;<input type="number" id="focality-num" min="2" max="99" style="width:52px;display:inline-block;"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 3. Site -->
+      <div class="field">
+        <label>3. Tumor Site</label>
+        <input type="text" id="tumor-site" placeholder="e.g. right lobe, segment 6">
+      </div>
+
+      <!-- 4. Size -->
+      <div class="field">
+        <label>4. Tumor Size (cm)</label>
+        <div class="size-row">
+          <input type="number" class="size-dim" id="gross-size-1" min="0" step="0.1" placeholder="—">
+          <span class="size-sep">x</span>
+          <input type="number" class="size-dim" id="gross-size-2" min="0" step="0.1" placeholder="—">
+          <span class="size-sep">x</span>
+          <input type="number" class="size-dim" id="gross-size-3" min="0" step="0.1" placeholder="—">
+          <span class="size-sep" style="margin-left:4px;">cm</span>
+        </div>
+      </div>
+
+      <!-- 5. Non-tumorous -->
+      <div class="field">
+        <label>5. Non-tumorous Parenchyma</label>
+        <div class="inline-row">
+          <label><input type="radio" name="nontumorous" value="Cirrhotic"> Cirrhotic</label>
+          <label><input type="radio" name="nontumorous" value="Not cirrhotic"> Not cirrhotic</label>
+        </div>
+      </div>
+
+      <!-- 6. Gallbladder -->
+      <div class="field">
+        <label>7. Gallbladder</label>
+        <div class="inline-row" style="margin-bottom:6px;">
+          <label><input type="checkbox" id="gb-present"> Gallbladder present</label>
+        </div>
+        <div id="gb-fields" class="sub-field hidden">
+          <div class="grid2" style="margin-bottom:6px;">
+            <div class="field">
+              <label>Size (cm)</label>
+              <div class="size-row">
+                <input type="number" class="size-dim" id="gb-s1" min="0" step="0.1" placeholder="—" style="width:52px;">
+                <span class="size-sep">x</span>
+                <input type="number" class="size-dim" id="gb-s2" min="0" step="0.1" placeholder="—" style="width:52px;">
+                <span class="size-sep">x</span>
+                <input type="number" class="size-dim" id="gb-s3" min="0" step="0.1" placeholder="—" style="width:52px;">
+              </div>
+            </div>
+            <div class="field">
+              <label>Wall Thickness (cm)</label>
+              <input type="number" id="gb-wall" min="0" step="0.1" placeholder="—" style="width:80px;">
+            </div>
+          </div>
+          <div class="field">
+            <label>Gallstone</label>
+            <div class="inline-row" style="margin-bottom:6px;">
+              <label><input type="radio" name="gallstone" value="not_identified" id="gs-none"> Not identified</label>
+              <label><input type="radio" name="gallstone" value="present" id="gs-present"> Present</label>
+            </div>
+            <div id="gs-detail" class="sub-field hidden" style="margin-left:0;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                <label style="margin:0;color:var(--text-dim);font-size:11px;">Pieces:</label>
+                <input type="number" id="gs-pieces" min="1" step="1" placeholder="—" style="width:60px;">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                <label style="margin:0;color:var(--text-dim);font-size:11px;">Color:</label>
+                <label style="margin:0;font-size:12px;color:var(--text);"><input type="radio" name="gs-color" value="blackish" style="width:auto;accent-color:var(--accent);"> Blackish</label>
+                <label style="margin:0;font-size:12px;color:var(--text);"><input type="radio" name="gs-color" value="tan" style="width:auto;accent-color:var(--accent);"> Tan</label>
+                <label style="margin:0;font-size:12px;color:var(--text);"><input type="radio" name="gs-color" value="dark greenish" style="width:auto;accent-color:var(--accent);"> Dark greenish</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <label style="margin:0;color:var(--text-dim);font-size:11px;" id="gs-size-label">Max dimension (cm):</label>
+                <input type="number" id="gs-size" min="0" step="0.1" placeholder="—" style="width:70px;">
+                <span style="color:var(--text-muted);font-family:var(--mono);font-size:12px;">cm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REPRESENTATIVE SECTIONS -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="chevron">▾</span> Representative Sections
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Representative sections are taken and labeled as follows:</label>
+        <textarea id="rep-sections" placeholder="e.g.&#10;A: tumor with closest margin&#10;B–D: tumor&#10;E: non-tumorous liver&#10;F: gallbladder"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- MICROSCOPIC -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="chevron">▾</span> Microscopic Description
+    </div>
+    <div class="section-body">
+
+      <!-- Histologic Type -->
+      <div class="field">
+        <label>Histologic Type</label>
+        <div class="radio-group" id="histo-type-group">
+          <label><input type="radio" name="histotype" value="Large duct intrahepatic cholangiocarcinoma"> Large duct intrahepatic cholangiocarcinoma</label>
+          <label><input type="radio" name="histotype" value="Small duct intrahepatic cholangiocarcinoma"> Small duct intrahepatic cholangiocarcinoma</label>
+          <label><input type="radio" name="histotype" value="Cholangiocarcinoma, NOS"> Cholangiocarcinoma, NOS</label>
+          <label><input type="radio" name="histotype" value="Combined hepatocellular-cholangiocarcinoma"> Combined hepatocellular-cholangiocarcinoma</label>
+          <label><input type="radio" name="histotype" value="Intraductal papillary neoplasm with associated invasive carcinoma"> Intraductal papillary neoplasm with associated invasive carcinoma</label>
+          <label><input type="radio" name="histotype" value="Intraductal tubulopapillary neoplasm with associated invasive carcinoma"> Intraductal tubulopapillary neoplasm with associated invasive carcinoma</label>
+          <label><input type="radio" name="histotype" value="Mucinous cystic neoplasm with associated invasive carcinoma"> Mucinous cystic neoplasm with associated invasive carcinoma</label>
+          <label><input type="radio" name="histotype" value="Undifferentiated carcinoma, NOS"> Undifferentiated carcinoma, NOS</label>
+          <label><input type="radio" name="histotype" value="Large cell neuroendocrine carcinoma"> Large cell neuroendocrine carcinoma</label>
+          <label><input type="radio" name="histotype" value="Small cell neuroendocrine carcinoma"> Small cell neuroendocrine carcinoma</label>
+          <label><input type="radio" name="histotype" value="High-grade neuroendocrine carcinoma"> High-grade neuroendocrine carcinoma</label>
+          <label><input type="radio" name="histotype" value="Mixed neuroendocrine-non-neuroendocrine neoplasm (MiNEN)">
+            Mixed neuroendocrine-non-neuroendocrine neoplasm (MiNEN):&nbsp;
+            <input type="text" id="minen-spec" placeholder="specify component" style="width:180px;display:inline-block;">
+          </label>
+        </div>
+      </div>
+
+      <!-- Grade -->
+      <div class="field">
+        <label>Histologic Grade</label>
+        <div class="radio-group">
+          <label><input type="radio" name="grade" value="G1: Well differentiated"> G1: Well differentiated</label>
+          <label><input type="radio" name="grade" value="G2: Moderately differentiated"> G2: Moderately differentiated</label>
+          <label><input type="radio" name="grade" value="G3: Poorly differentiated"> G3: Poorly differentiated</label>
+        </div>
+      </div>
+
+      <!-- Micro tumor size -->
+      <div class="field">
+        <label>Tumor Size (greatest dimension, cm)</label>
+        <div class="size-row">
+          <input type="number" id="micro-size" min="0" step="0.1" placeholder="—" style="width:80px;">
+          <span class="size-sep">cm</span>
+        </div>
+      </div>
+
+      <!-- Growth pattern -->
+      <div class="field">
+        <label>Tumor Growth Pattern</label>
+        <div class="radio-group">
+          <label><input type="radio" name="growth" value="Mass-forming"> Mass-forming</label>
+          <label><input type="radio" name="growth" value="Periductal infiltrating"> Periductal infiltrating</label>
+          <label><input type="radio" name="growth" value="Mixed mass-forming and periductal infiltrating"> Mixed mass-forming and periductal infiltrating</label>
+        </div>
+      </div>
+
+      <!-- Tumor extension -->
+      <div class="field">
+        <label>Tumor Extension</label>
+        <div class="radio-group">
+          <label><input type="radio" name="extension" value="Confined to hepatic parenchyma"> Confined to hepatic parenchyma</label>
+          <label><input type="radio" name="extension" value="Involves visceral peritoneal surface"> Involves visceral peritoneal surface</label>
+          <label><input type="radio" name="extension" value="Directly invades gallbladder"> Directly invades gallbladder</label>
+          <label><input type="radio" name="extension" value="Directly invades adjacent structure(s) and organ(s) other than gallbladder"> Directly invades adjacent structure(s) and organ(s) other than gallbladder</label>
+        </div>
+      </div>
+
+      <!-- Margins -->
+      <div class="field">
+        <label>Margin Status for Invasive Carcinoma</label>
+        <div style="margin-top:4px;">
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Parenchymal margin</div>
+          <div class="radio-group" style="margin-left:10px;">
+            <label><input type="radio" name="paren-margin" value="uninvolved"> Uninvolved —
+              distance:&nbsp;<input type="number" id="pm-dist" min="0" step="0.1" style="width:60px;display:inline-block;">&nbsp;mm</label>
+            <label><input type="radio" name="paren-margin" value="involved"> Involved</label>
+            <label><input type="radio" name="paren-margin" value="<1mm"> &lt;1 mm</label>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Bile duct margin</div>
+          <div class="radio-group" style="margin-left:10px;">
+            <label><input type="radio" name="bd-margin" value="uninvolved"> Uninvolved —
+              distance:&nbsp;<input type="number" id="bd-dist" min="0" step="0.1" style="width:60px;display:inline-block;">&nbsp;mm</label>
+            <label><input type="radio" name="bd-margin" value="involved"> Involved</label>
+            <label><input type="radio" name="bd-margin" value="<1mm"> &lt;1 mm</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- HG intraepithelial neoplasia margin -->
+      <div class="field">
+        <label>Margin Status for High-grade Intraepithelial Neoplasia</label>
+        <div class="radio-group">
+          <label><input type="radio" name="hgin-margin" value="Negative"> Negative</label>
+          <label><input type="radio" name="hgin-margin" value="Present at bile duct margin"> Present at bile duct margin</label>
+        </div>
+      </div>
+
+      <!-- LVI -->
+      <div class="field">
+        <label>Lymphatic and/or Vascular Invasion</label>
+        <div class="inline-row">
+          <label><input type="radio" name="lvi" value="Not identified"> Not identified</label>
+          <label><input type="radio" name="lvi" value="Present"> Present</label>
+        </div>
+      </div>
+
+      <!-- PNI -->
+      <div class="field">
+        <label>Perineural Invasion</label>
+        <div class="inline-row">
+          <label><input type="radio" name="pni" value="Not identified"> Not identified</label>
+          <label><input type="radio" name="pni" value="Present"> Present</label>
+        </div>
+      </div>
+
+      <!-- LN -->
+      <div class="field">
+        <label>Regional Lymph Nodes</label>
+        <div class="radio-group">
+          <label><input type="radio" name="ln-status" value="none" id="ln-none"> No lymph nodes submitted or found</label>
+          <label><input type="radio" name="ln-status" value="count" id="ln-count"> Lymph node count:&nbsp;
+            <input type="number" id="ln-pos" min="0" style="width:48px;display:inline-block;" placeholder="pos">&nbsp;/&nbsp;<input type="number" id="ln-total" min="0" style="width:48px;display:inline-block;" placeholder="total">
+          </label>
+        </div>
+      </div>
+
+      <!-- Treatment effect -->
+      <div class="field">
+        <label>Treatment Effect</label>
+        <div class="radio-group">
+          <label><input type="radio" name="treatment" value="No known presurgical therapy"> No known presurgical therapy</label>
+          <label><input type="radio" name="treatment" value="Present, with no viable cancer cells (complete response, score 0)"> Present — no viable cancer cells (complete response, score 0)</label>
+          <label><input type="radio" name="treatment" value="Present, with single cells or rare small groups of cancer cells (near complete response, score 1)"> Present — single cells or rare small groups (near complete response, score 1)</label>
+          <label><input type="radio" name="treatment" value="Present, with residual cancer showing evident tumor regression, but more than single cells or rare small groups of cancer cells (partial response, score 2)"> Present — residual cancer with evident regression (partial response, score 2)</label>
+          <label><input type="radio" name="treatment" value="Present, NOS"> Present, NOS</label>
+          <label><input type="radio" name="treatment" value="Absent, with extensive residual cancer and no evident tumor regression (poor or no response, score 3)"> Absent — extensive residual cancer, no regression (poor/no response, score 3)</label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ADDITIONAL FINDINGS -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="chevron">▾</span> Additional Pathologic Findings
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Background Liver Findings</label>
+        <div class="check-group">
+          <label><input type="checkbox" id="apf-none"> None identified</label>
+          <label><input type="checkbox" id="apf-lgdn"> Low-grade dysplastic nodule</label>
+          <label><input type="checkbox" id="apf-hgdn"> High-grade dysplastic nodule</label>
+          <label><input type="checkbox" id="apf-steat"> Steatosis</label>
+          <label><input type="checkbox" id="apf-nash"> Steatohepatitis</label>
+          <label><input type="checkbox" id="apf-hep"> Chronic hepatitis — etiology:&nbsp;
+            <input type="text" id="apf-hep-etio" placeholder="e.g. HBV, HCV" style="width:160px;display:inline-block;"></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Fibrosis (Ishak Score) <span style="color:var(--text-muted)">[Masson's trichrome]</span></label>
+        <div class="radio-group">
+          <label><input type="radio" name="ishak" value="0: No fibrosis"> 0: No fibrosis</label>
+          <label><input type="radio" name="ishak" value="1: Fibrous expansion of some portal areas, with or without short fibrous septa"> 1: Fibrous expansion of some portal areas ± short fibrous septa</label>
+          <label><input type="radio" name="ishak" value="2: Fibrous expansion of most portal areas, with or without short fibrous septa"> 2: Fibrous expansion of most portal areas ± short fibrous septa</label>
+          <label><input type="radio" name="ishak" value="3: Fibrous expansion of most portal areas with occasional portal to portal bridging"> 3: Fibrous expansion of most portal areas with occasional portal-to-portal bridging</label>
+          <label><input type="radio" name="ishak" value="4: Fibrous expansion of portal areas with marked bridging (portal to portal as well as portal to central)"> 4: Marked bridging (portal-to-portal and portal-to-central)</label>
+          <label><input type="radio" name="ishak" value="5: Marked bridging with occasional nodules (incomplete cirrhosis)"> 5: Marked bridging with occasional nodules (incomplete cirrhosis)</label>
+          <label><input type="radio" name="ishak" value="6: Cirrhosis (probable or definite)"> 6: Cirrhosis (probable or definite)</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Gallbladder (microscopic)</label>
+        <div class="inline-row">
+          <label><input type="radio" name="gb-micro" value="No pathologic change"> No pathologic change</label>
+          <label><input type="radio" name="gb-micro" value="Chronic cholecystitis with cholelithiasis"> Chronic cholecystitis with cholelithiasis</label>
+          <label><input type="radio" name="gb-micro" value="Not submitted"> Not submitted</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TNM -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span class="chevron">▾</span> pTNM Staging (AJCC 8th Edition)
+    </div>
+    <div class="section-body">
+      <div class="cap-note">CAP Protocol BileDuctIH 4.3.0.0 / AJCC 8th Edition</div>
+      <div class="grid2" style="margin-top:12px;">
+        <div class="field">
+          <label>pT</label>
+          <select id="pT">
+            <option value="">— select —</option>
+            <option value="pT_na">pT not assigned (cannot be determined)</option>
+            <option value="pT0">pT0: No evidence of primary tumor</option>
+            <option value="pTis">pTis: Carcinoma in situ (intraductal tumor)</option>
+            <option value="pT1a">pT1a: Solitary tumor ≤5 cm without vascular invasion</option>
+            <option value="pT1b">pT1b: Solitary tumor >5 cm without vascular invasion</option>
+            <option value="pT1">pT1: Solitary tumor without vascular invasion (subcategory cannot be determined)</option>
+            <option value="pT2">pT2: Solitary tumor with intrahepatic vascular invasion, or multiple tumors with or without vascular invasion</option>
+            <option value="pT3">pT3: Tumor perforating the visceral peritoneum</option>
+            <option value="pT4">pT4: Tumor involving local extrahepatic structures by direct invasion</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>pN</label>
+          <select id="pN">
+            <option value="">— select —</option>
+            <option value="pN_na_none">pN not assigned (no nodes submitted or found)</option>
+            <option value="pN_na_unk">pN not assigned (cannot be determined)</option>
+            <option value="pN0">pN0: No regional lymph node metastasis</option>
+            <option value="pN1">pN1: Regional lymph node metastasis present</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- ════════ END FORM ════════ -->
+
+<!-- Preview panel -->
+<div id="preview-panel">
+  <div id="preview-label">▸ Report Preview</div>
+  <div id="report-out"><span class="placeholder">Press ▶ Generate to build the report…</span></div>
+</div>
+</div>
+
+<div class="copy-toast" id="copy-toast">Copied to clipboard ✓</div>
+
+<script>
+// ── Section toggle ──────────────────────────────────────────
+function toggleSection(hdr) {
+  hdr.classList.toggle('collapsed');
+  hdr.nextElementSibling.classList.toggle('hidden');
+}
+
+// ── Tab key for size inputs ──────────────────────────────────
+document.querySelectorAll('.size-dim').forEach((inp, idx, arr) => {
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const next = arr[idx + 1];
+      if (next) next.focus();
+    }
+  });
+});
+
+// ── Gallbladder toggle ──────────────────────────────────────
+document.getElementById('gb-present').addEventListener('change', function() {
+  document.getElementById('gb-fields').classList.toggle('hidden', !this.checked);
+});
+
+// ── Gallstone detail toggle ─────────────────────────────────
+document.querySelectorAll('input[name="gallstone"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    document.getElementById('gs-detail').classList.toggle('hidden', this.value !== 'present');
+  });
+});
+
+// ── Clear ───────────────────────────────────────────────────
+document.getElementById('btn-clear').addEventListener('click', () => {
+  document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => el.checked = false);
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.getElementById('gb-fields').classList.add('hidden');
+  document.getElementById('gs-detail').classList.add('hidden');
+  document.getElementById('micro-size')._manuallySet = false;
+  document.getElementById('report-out').innerHTML = '<span class="placeholder">Press ▶ Generate to build the report…</span>';
+});
+
+// ── Helpers ─────────────────────────────────────────────────
+function r(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+function ck(id) { return document.getElementById(id)?.checked || false; }
+function sizeStr(a, b, c) {
+  if (!a && !b && !c) return null;
+  const parts = [a, b, c].map(x => x || '—');
+  return parts.join(' x ');
+}
+
+// ── Generate ─────────────────────────────────────────────────
+document.getElementById('btn-generate').addEventListener('click', generate);
+
+function generate() {
+  const isY = ck('desc-y');
+  const isR = ck('desc-r');
+  const isA = ck('desc-a');
+  const isM = ck('desc-m');
+
+  const prefix = (isY ? 'y' : '') + (isR ? 'r' : '') + (isA ? 'a' : '');
+
+  // Procedure
+  let proc = r('procedure');
+  if (proc === 'Other') proc = v('procedure-other') || 'Other';
+
+  // Tumor Site (synced — single source)
+  const tumorSite = v('tumor-site');
+
+  // ── Gross → Micro size sync ──────────────────────────────
+  const gs1 = v('gross-size-1');
+  const gs2 = v('gross-size-2');
+  const gs3 = v('gross-size-3');
+  const grossMaxDim = gs1 || '';  // first dimension = greatest
+
+  // Micro size: use manual override if set, else sync from gross dim 1
+  let microSize = v('micro-size');
+  if (!microSize && grossMaxDim) microSize = grossMaxDim;
+
+  // ── pT / pN ──────────────────────────────────────────────
+  const pTraw = v('pT');
+  const pNraw = v('pN');
+
+  // Extract code portion (before colon)
+  function extractCode(raw) {
+    if (!raw) return '';
+    return raw.split(':')[0].trim();
+  }
+  const pTcode = extractCode(pTraw);  // e.g. "pT1a", "pT_na", "pT0"
+  const pNcode = extractCode(pNraw);  // e.g. "pN0", "pN_na_none"
+
+  // ── LN → auto-set pN ─────────────────────────────────────
+  const lnStatus = r('ln-status');
+  const lnPos = v('ln-pos');
+  const lnTotal = v('ln-total');
+
+  // Determine effective pN from LN inputs if pN not manually set
+  let effectivePNcode = pNcode;
+  if (!pNcode) {
+    if (lnStatus === 'none') effectivePNcode = 'pN_na_none';
+    else if (lnStatus === 'count') {
+      const pos = lnPos !== '' ? parseInt(lnPos) : null;
+      if (pos === 0) effectivePNcode = 'pN0';
+      else if (pos > 0) effectivePNcode = 'pN1';
+    }
+  }
+  // Also auto-update the select element visually
+  (function() {
+    const sel = document.getElementById('pN');
+    if (!pNcode && effectivePNcode) {
+      sel.value = effectivePNcode;
+    }
+  })();
+
+  // Display codes with prefix
+  // "pT_na" and "pN_na_*" are "not assigned" — output differently
+  function pTDisplay(code, pfx) {
+    if (!code) return '';
+    if (code === 'pT_na') return 'pT not assigned';
+    return pfx + code;
+  }
+  function pNDisplay(code, pfx) {
+    if (!code) return '';
+    if (code === 'pN_na_none') return 'pN not assigned';
+    if (code === 'pN_na_unk') return 'pN not assigned';
+    return pfx + code;
+  }
+  // For combined pTNM string (e.g. ypT1aN0)
+  function pNCombineSuffix(code, pfx) {
+    if (!code) return '';
+    if (code === 'pN_na_none' || code === 'pN_na_unk') return '';
+    // strip leading 'p': N0, N1
+    const stripped = code.replace(/^p/, '');
+    return pfx + stripped;
+  }
+
+  const pTdisp = pTDisplay(pTcode, prefix);
+  const pNdisp = pNDisplay(effectivePNcode, prefix);
+
+  // Combined pTNM for report line
+  let pTNMcombined = '';
+  if (pTcode === 'pT_na') {
+    pTNMcombined = 'pT not assigned';
+    if (effectivePNcode && effectivePNcode !== 'pN_na_none' && effectivePNcode !== 'pN_na_unk') {
+      pTNMcombined += ', ' + pNdisp;
+    }
+  } else if (pTdisp && pNdisp) {
+    const nSuffix = pNCombineSuffix(effectivePNcode, prefix);
+    pTNMcombined = nSuffix ? pTdisp + nSuffix : pTdisp + ', ' + pNdisp;
+  } else {
+    pTNMcombined = pTdisp || pNdisp;
+  }
+
+  // ── LN diagnosis line ────────────────────────────────────
+  let lnDiagLine = '';
+  if (lnStatus === 'count') {
+    const pos = lnPos !== '' ? parseInt(lnPos) : null;
+    const tot = lnTotal !== '' ? parseInt(lnTotal) : null;
+    if (pos !== null && tot !== null) {
+      const dispN = pNdisp || (pos === 0 ? 'pN0' : 'pN1');
+      if (pos === 0) {
+        lnDiagLine = `Lymph nodes, regional, dissection --- No metastasis (0/${tot}, ${dispN})`;
+      } else {
+        lnDiagLine = `Lymph nodes, regional, dissection --- Carcinoma, metastatic (${pos}/${tot}, ${dispN})`;
+      }
+    }
+  }
+  // If lnStatus === 'none': no LN diagnosis line
+
+  // ── Histologic type ──────────────────────────────────────
+  let histotype = r('histotype');
+  if (histotype === 'Mixed neuroendocrine-non-neuroendocrine neoplasm (MiNEN)') {
+    const spec = v('minen-spec');
+    if (spec) histotype += ` (${spec})`;
+  }
+
+  // ── Liver location ───────────────────────────────────────
+  const lobeRight = ck('lobe-right');
+  const lobeLeft = ck('lobe-left');
+  const seg = v('liver-seg');
+  const liverFree = v('liver-free');
+
+  const locationParts = [];
+  if (lobeRight) locationParts.push('right lobe');
+  if (lobeLeft) locationParts.push('left lobe');
+  if (seg) locationParts.push('S' + seg);
+  if (liverFree) locationParts.push(liverFree);
+  const liverLocation = locationParts.length ? ', ' + locationParts.join(', ') : '';
+  const gs = sizeStr(gs1, gs2, gs3);
+
+  // ── Gallstone string ─────────────────────────────────────
+  let gallstoneStr = '';
+  const gsStatus = r('gallstone');
+  if (gsStatus === 'not_identified') {
+    gallstoneStr = 'Not identified';
+  } else if (gsStatus === 'present') {
+    const pieces = parseInt(v('gs-pieces')) || 1;
+    const color = r('gs-color') || '___';
+    const gsSize = v('gs-size');
+    if (pieces === 1) {
+      gallstoneStr = `1 piece, ${color}, ${gsSize || '___'} cm in maximum dimension`;
+    } else {
+      gallstoneStr = `${pieces} pieces, ${color}, up to ${gsSize || '___'} cm in maximum dimension`;
+    }
+  }
+
+  // ── Build report ─────────────────────────────────────────
+  const lines = [];
+
+  // DIAGNOSIS
+  lines.push('DIAGNOSIS:');
+  lines.push(`Liver${liverLocation}, ${proc || '___'} --- ${histotype || 'Intrahepatic cholangiocarcinoma'} (${pTdisp || 'pT_'})`);
+  if (lnDiagLine) lines.push(lnDiagLine);
+  lines.push('');
+
+  // GROSS
+  lines.push('Gross Description:');
+  lines.push(`Procedure: ${proc || '___'}`);
+
+  const foc = r('focality');
+  const focNum = v('focality-num');
+  if (foc === 'Multiple' && focNum) {
+    lines.push(`Tumor Focality: Multiple (number: ${focNum})`);
+  } else {
+    lines.push(`Tumor Focality: ${foc || '___'}`);
+  }
+
+  lines.push(`Tumor Site: ${tumorSite || '___'}`);
+  lines.push(`Tumor Size: ${gs ? gs + ' cm' : '___ x ___ x ___ cm'}`);
+
+  const nt = r('nontumorous');
+  lines.push(`Non-tumorous Part: ${nt || '___'}`);
+
+  if (ck('gb-present')) {
+    const gbs = sizeStr(v('gb-s1'), v('gb-s2'), v('gb-s3'));
+    const gbw = v('gb-wall');
+    lines.push(`Gallbladder: size: ${gbs ? gbs + ' cm' : '___'}; wall thickness: ${gbw ? gbw + ' cm' : '___'}`);
+    if (gallstoneStr) lines.push(`    Gallstone: ${gallstoneStr}`);
+  }
+
+  lines.push('');
+
+  // REPRESENTATIVE SECTIONS
+  const repSec = v('rep-sections');
+  lines.push('Representative sections are taken and labeled as follows:');
+  if (repSec) {
+    repSec.split('\n').forEach(l => lines.push(l));
+  }
+  lines.push('');
+
+  // MICROSCOPIC
+  lines.push('Microscopic Description:');
+  lines.push(`Histologic Type: ${histotype || '___'}`);
+
+  const grade = r('grade');
+  lines.push(`Histologic Grade: ${grade || '___'}`);
+
+  lines.push(`Tumor Size: ${microSize ? microSize + ' cm' : '___'} in greatest dimension`);
+
+  const gp = r('growth');
+  lines.push(`Tumor Growth Pattern: ${gp || '___'}`);
+
+  const ext = r('extension');
+  lines.push(`Tumor Extension: ${ext || '___'}`);
+
+  // Margins — structured block
+  lines.push('Margin status for invasive carcinoma:');
+
+  const pm = r('paren-margin');
+  let pmStr = '';
+  if (pm === 'uninvolved') {
+    const d = v('pm-dist');
+    pmStr = `Uninvolved${d ? ', ' + d + ' mm in distance' : ''}`;
+  } else if (pm === 'involved') {
+    pmStr = 'Involved';
+  } else if (pm === '<1mm') {
+    pmStr = '<1 mm';
+  }
+  lines.push(`- Parenchymal margin: ${pmStr || '___'}`);
+
+  const bdm = r('bd-margin');
+  let bdmStr = '';
+  if (bdm === 'uninvolved') {
+    const d = v('bd-dist');
+    bdmStr = `Uninvolved${d ? ', ' + d + ' mm in distance' : ''}`;
+  } else if (bdm === 'involved') {
+    bdmStr = 'Involved';
+  } else if (bdm === '<1mm') {
+    bdmStr = '<1 mm';
+  }
+  lines.push(`- Bile duct margin: ${bdmStr || '___'}`);
+
+  const hgm = r('hgin-margin');
+  lines.push('Margin status for high-grade intraepithelial neoplasia:');
+  lines.push(`- ${hgm || '___'}`);
+
+  const lvi = r('lvi');
+  lines.push(`Lymphatic and/or Vascular Invasion: ${lvi || '___'}`);
+
+  const pni = r('pni');
+  lines.push(`Perineural Invasion: ${pni || '___'}`);
+
+  // LN microscopic line
+  if (lnStatus === 'none') {
+    lines.push('Regional Lymph Nodes: No lymph nodes submitted or found');
+  } else if (lnStatus === 'count') {
+    const pos = lnPos || '___';
+    const tot = lnTotal || '___';
+    lines.push(`Regional Lymph Nodes: ${pos}/${tot}`);
+  }
+
+  const treat = r('treatment');
+  lines.push(`Treatment Effect: ${treat || '___'}`);
+
+  // ADDITIONAL (no blank line before)
+  lines.push('Additional Pathologic Findings:');
+  const apfParts = [];
+  if (ck('apf-none')) apfParts.push('None identified');
+  if (ck('apf-lgdn')) apfParts.push('Low-grade dysplastic nodule');
+  if (ck('apf-hgdn')) apfParts.push('High-grade dysplastic nodule');
+  if (ck('apf-steat')) apfParts.push('Steatosis');
+  if (ck('apf-nash')) apfParts.push('Steatohepatitis');
+  if (ck('apf-hep')) {
+    const etio = v('apf-hep-etio');
+    apfParts.push('Chronic hepatitis' + (etio ? ' (' + etio + ')' : ''));
+  }
+  lines.push(apfParts.length ? apfParts.join(' / ') : '___');
+
+  const ishak = r('ishak');
+  if (ishak) lines.push(`Fibrosis (Ishak score): ${ishak} [demonstrated by Masson's trichrome]`);
+
+  const gbMicro = r('gb-micro');
+  // Gallbladder micro line — no trailing blank line after
+  if (gbMicro) lines.push(`Gallbladder: ${gbMicro}`);
+
+  lines.push('');
+
+  // pTNM
+  lines.push(`pTNM: ${pTNMcombined || '___'} (AJCC cancer staging system, 8th edition)`);
+
+  // TNM descriptors
+  const descParts = [];
+  if (isY) descParts.push('y (post-therapy)');
+  if (isR) descParts.push('r (retreatment)');
+  if (isA) descParts.push('a (autopsy)');
+  if (isM) descParts.push('m (multiple)');
+  lines.push(`TNM Descriptors: ${descParts.length ? descParts.join('; ') : 'not applicable'}`);
+
+  lines.push('');
+  lines.push('(This case has been peer reviewed by two doctors.)');
+
+  document.getElementById('report-out').textContent = lines.join('\n');
+}
+
+// ── Copy ─────────────────────────────────────────────────────
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const text = document.getElementById('report-out').textContent;
+  if (!text || text.includes('Press ▶')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const t = document.getElementById('copy-toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  });
+});
+
+// ── Gross size-1 → Micro size auto-sync ─────────────────────
+document.getElementById('gross-size-1').addEventListener('input', function() {
+  const microField = document.getElementById('micro-size');
+  // Only auto-fill if micro field is empty (user hasn't manually set it)
+  if (!microField._manuallySet) {
+    microField.value = this.value;
+  }
+});
+document.getElementById('micro-size').addEventListener('input', function() {
+  this._manuallySet = this.value !== '';
+});
+
+// ── Auto-sync: procedure → diagnosis procedure ────────────────
+// (sync is implicit because generate() reads both from same source)
+
+</script>
+</body>
+</html>

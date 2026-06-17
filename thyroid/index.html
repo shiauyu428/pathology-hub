@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thyroid Pathology Report Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f0f2f5;
+    --panel: #ffffff;
+    --border: #d4d8e2;
+    --accent: #1d5bd4;
+    --accent2: #0a7c52;
+    --text: #111827;
+    --text-dim: #6b7280;
+    --text-label: #374151;
+    --input-bg: #ffffff;
+    --input-border: #c9cdd6;
+    --input-focus: #1d5bd4;
+    --section-head: #e8ebf2;
+    --danger: #dc2626;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  header span {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* LEFT PANEL — key fix: height 100%, overflow-y scroll */
+  .form-panel {
+    width: 52%;
+    height: 100%;
+    overflow-y: scroll;
+    padding: 14px 16px 30px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-panel::-webkit-scrollbar { width: 6px; }
+  .form-panel::-webkit-scrollbar-track { background: #e8ebf2; }
+  .form-panel::-webkit-scrollbar-thumb { background: #b0b7c4; border-radius: 3px; }
+
+  .section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .section-header {
+    background: var(--section-head);
+    padding: 7px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .section-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .field-label {
+    font-size: 11px;
+    color: var(--text-label);
+    min-width: 140px;
+    padding-top: 6px;
+    flex-shrink: 0;
+    line-height: 1.3;
+  }
+
+  .field-label.narrow { min-width: 110px; }
+
+  .field-input { flex: 1; min-width: 0; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    padding: 5px 8px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    border-color: var(--input-focus);
+  }
+
+  select option { background: #1e2128; }
+
+  textarea {
+    resize: vertical;
+    min-height: 54px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .size-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .size-group input { width: 52px; text-align: center; }
+
+  .size-sep {
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .check-group, .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .check-item input[type="checkbox"],
+  .check-item input[type="radio"] {
+    width: 13px;
+    height: 13px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .subsection {
+    background: #f5f7fb;
+    border: 1px solid #dde1ea;
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+
+  .subsection-title {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .ln-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .ln-table th {
+    text-align: left;
+    color: var(--text-dim);
+    font-weight: 500;
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+  }
+  .ln-table td { padding: 3px 4px; vertical-align: middle; }
+  .ln-table input { width: 46px; text-align: center; }
+  .ln-table select { font-size: 11px; padding: 4px 4px; }
+
+  .ln-add-btn {
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 4px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .ln-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .ln-del-btn {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 4px;
+    opacity: 0.6;
+  }
+  .ln-del-btn:hover { opacity: 1; }
+
+  /* RIGHT PANEL */
+  .report-panel {
+    width: 48%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .report-toolbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .report-toolbar span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .copy-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .copy-btn:hover { opacity: 0.85; }
+  .copy-btn.copied { background: var(--accent2); }
+
+  .report-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 18px;
+    background: #fafbfc;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .report-output::-webkit-scrollbar { width: 5px; }
+  .report-output::-webkit-scrollbar-track { background: transparent; }
+  .report-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .hidden { display: none !important; }
+
+  .badge {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .badge.green { background: var(--accent2); color: #ffffff; }
+
+  .inline-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⬡ THYROID PATHOLOGY REPORT</h1>
+  <span>CAP Protocol 4.4.0.0 · AJCC 8th Edition</span>
+</header>
+
+<div class="main">
+
+<!-- ══════════════ LEFT FORM PANEL ══════════════ -->
+<div class="form-panel">
+
+  <!-- DIAGNOSIS -->
+  <div class="section">
+    <div class="section-header"><span class="badge">Dx</span> DIAGNOSIS</div>
+    <div class="section-body">
+
+      <div class="subsection">
+        <div class="subsection-title">Specimen 1 — Thyroid</div>
+        <div class="field-row">
+          <div class="field-label narrow">Laterality</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="dx_lat" value="left" onchange="sync()"> Left lobe</label>
+              <label class="check-item"><input type="radio" name="dx_lat" value="right" onchange="sync()"> Right lobe</label>
+              <label class="check-item"><input type="radio" name="dx_lat" value="bilateral" onchange="sync()"> Bilateral</label>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">Procedure</div>
+          <div class="field-input">
+            <select id="dx_proc" onchange="sync()">
+              <option value="">-- select --</option>
+              <option value="lobectomy">Lobectomy</option>
+              <option value="total thyroidectomy">Total thyroidectomy</option>
+              <option value="subtotal thyroidectomy">Subtotal thyroidectomy</option>
+              <option value="hemithyroidectomy">Hemithyroidectomy</option>
+              <option value="completion thyroidectomy">Completion thyroidectomy</option>
+              <option value="excision">Excision</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">Histologic type</div>
+          <div class="field-input">
+            <select id="dx_hist" onchange="toggleOther('dx_hist','dx_hist_other_row'); sync()">
+              <option value="Papillary carcinoma, classic subtype">Papillary carcinoma, classic subtype</option>
+              <option value="Papillary carcinoma, encapsulated classic subtype">Papillary carcinoma, encapsulated classic subtype</option>
+              <option value="Papillary carcinoma, infiltrative follicular subtype">Papillary carcinoma, infiltrative follicular subtype</option>
+              <option value="Papillary carcinoma, tall cell subtype">Papillary carcinoma, tall cell subtype</option>
+              <option value="Papillary carcinoma, hobnail subtype">Papillary carcinoma, hobnail subtype</option>
+              <option value="Papillary carcinoma, columnar cell subtype">Papillary carcinoma, columnar cell subtype</option>
+              <option value="Papillary carcinoma, solid subtype">Papillary carcinoma, solid subtype</option>
+              <option value="Papillary carcinoma, diffuse sclerosing subtype">Papillary carcinoma, diffuse sclerosing subtype</option>
+              <option value="Minimally invasive follicular carcinoma">Minimally invasive follicular carcinoma</option>
+              <option value="Encapsulated angioinvasive follicular carcinoma">Encapsulated angioinvasive follicular carcinoma</option>
+              <option value="Widely invasive follicular carcinoma">Widely invasive follicular carcinoma</option>
+              <option value="Minimally invasive oncocytic carcinoma">Minimally invasive oncocytic carcinoma</option>
+              <option value="Encapsulated angioinvasive oncocytic carcinoma">Encapsulated angioinvasive oncocytic carcinoma</option>
+              <option value="Widely invasive oncocytic carcinoma">Widely invasive oncocytic carcinoma</option>
+              <option value="Poorly differentiated thyroid carcinoma">Poorly differentiated thyroid carcinoma</option>
+              <option value="Anaplastic thyroid carcinoma">Anaplastic thyroid carcinoma</option>
+              <option value="Medullary thyroid carcinoma">Medullary thyroid carcinoma</option>
+              <option value="other">Other (free type)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row hidden" id="dx_hist_other_row">
+          <div class="field-label narrow">Specify type</div>
+          <div class="field-input"><input type="text" id="dx_hist_other" placeholder="free type" oninput="sync()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">pT stage</div>
+          <div class="field-input">
+            <select id="dx_pT" onchange="sync()">
+              <option value="">-- select --</option>
+              <option value="pT0">pT0 — No evidence of primary tumor</option>
+              <option value="pT1a">pT1a — &le;1 cm, limited to thyroid</option>
+              <option value="pT1b">pT1b — &gt;1 cm and &le;2 cm, limited to thyroid</option>
+              <option value="pT1">pT1 — subcategory cannot be determined</option>
+              <option value="pT2">pT2 — &gt;2 cm and &le;4 cm, limited to thyroid</option>
+              <option value="pT3a">pT3a — &gt;4 cm, limited to thyroid</option>
+              <option value="pT3b">pT3b — Gross ETE invading strap muscles only</option>
+              <option value="pT3">pT3 — subcategory cannot be determined</option>
+              <option value="pT4a">pT4a — Gross ETE into subcutaneous tissue, larynx, trachea, esophagus, or RLN</option>
+              <option value="pT4b">pT4b — Gross ETE into prevertebral fascia or encasing carotid/mediastinal vessels</option>
+              <option value="pT4">pT4 — subcategory cannot be determined</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Specimen 2 — Thyroid (optional)</div>
+        <label class="check-item"><input type="checkbox" id="spec2_dx_enable" onchange="toggleSpec2Dx(); sync()"> Include second thyroid specimen</label>
+        <div id="spec2_dx_fields" class="hidden">
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:6px;">
+            <div class="field-row">
+              <div class="field-label narrow">Laterality</div>
+              <div class="field-input">
+                <div class="radio-group">
+                  <label class="check-item"><input type="radio" name="dx2_lat" value="left" onchange="sync()"> Left lobe</label>
+                  <label class="check-item"><input type="radio" name="dx2_lat" value="right" onchange="sync()"> Right lobe</label>
+                </div>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label narrow">Procedure</div>
+              <div class="field-input">
+                <select id="dx2_proc" onchange="sync()">
+                  <option value="">-- select --</option>
+                  <option value="lobectomy">Lobectomy</option>
+                  <option value="total thyroidectomy">Total thyroidectomy</option>
+                  <option value="excision">Excision</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label narrow">Diagnosis</div>
+              <div class="field-input">
+                <select id="dx2_hist" onchange="toggleOther('dx2_hist','dx2_hist_other_row'); toggleDx2pT(); sync()">
+                  <option value="Papillary carcinoma, classic subtype">Papillary carcinoma, classic subtype</option>
+                  <option value="Papillary carcinoma, encapsulated classic subtype">Papillary carcinoma, encapsulated classic subtype</option>
+                  <option value="Papillary carcinoma, infiltrative follicular subtype">Papillary carcinoma, infiltrative follicular subtype</option>
+                  <option value="Minimally invasive follicular carcinoma">Minimally invasive follicular carcinoma</option>
+                  <option value="other">Other carcinoma (free type)</option>
+                  <option value="__free__">Free of tumor</option>
+                  <option value="__nodular__">Nodular goiter (thyroid follicular nodular disease)</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row hidden" id="dx2_hist_other_row">
+              <div class="field-label narrow">Specify type</div>
+              <div class="field-input"><input type="text" id="dx2_hist_other" placeholder="free type" oninput="sync()"></div>
+            </div>
+            <div class="field-row" id="dx2_pT_row">
+              <div class="field-label narrow">pT stage</div>
+              <div class="field-input">
+                <select id="dx2_pT" onchange="sync()">
+                  <option value="">-- select --</option>
+                  <option value="pT1a">pT1a</option><option value="pT1b">pT1b</option>
+                  <option value="pT2">pT2</option><option value="pT3a">pT3a</option>
+                  <option value="pT3b">pT3b</option><option value="pT4a">pT4a</option>
+                  <option value="pT4b">pT4b</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Lymph Node — Auto-tallied from Microscopic</div>
+        <div id="dx_ln_summary" style="font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;white-space:pre-wrap;">(LN data auto-populated from Microscopic section)</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GROSS -->
+  <div class="section">
+    <div class="section-header"><span class="badge green">G</span> GROSS DESCRIPTION</div>
+    <div class="section-body">
+
+      <!-- Spec 1 -->
+      <div class="subsection">
+        <div class="subsection-title">Specimen 1 — Thyroid</div>
+        <div class="field-row">
+          <div class="field-label narrow">Condition</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="g1_cond" value="in fresh state" onchange="sync()" checked> Fresh</label>
+              <label class="check-item"><input type="radio" name="g1_cond" value="fixed in formalin" onchange="sync()"> Formalin-fixed</label>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">Thyroid size (cm)</div>
+          <div class="field-input">
+            <div class="size-group">
+              <input type="number" class="size-dim" id="g1_s1" placeholder="—" min="0" step="0.1" oninput="sync()">
+              <span class="size-sep">x</span>
+              <input type="number" class="size-dim" id="g1_s2" placeholder="—" min="0" step="0.1" oninput="sync()">
+              <span class="size-sep">x</span>
+              <input type="number" class="size-dim" id="g1_s3" placeholder="—" min="0" step="0.1" oninput="sync()">
+              <span class="size-sep">cm</span>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">Weight (g)</div>
+          <div class="field-input">
+            <div class="size-group">
+              <input type="number" id="g1_wt" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:70px">
+              <span class="size-sep">g</span>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">Tumor number</div>
+          <div class="field-input">
+            <div class="size-group">
+              <input type="number" id="g1_tnum" placeholder="1" min="1" step="1" oninput="updateTumorSizes(1); sync()" style="width:52px">
+              <span class="size-sep">tumor(s)</span>
+            </div>
+          </div>
+        </div>
+        <div class="field-row hidden" id="g1_agg_row">
+          <div class="field-label narrow">Aggregate</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="g1_agg" value="up to" onchange="sync()" checked> up to</label>
+              <label class="check-item"><input type="radio" name="g1_agg" value="in aggregates" onchange="sync()"> in aggregates</label>
+            </div>
+          </div>
+        </div>
+        <div id="g1_tumor_sizes"></div>
+        <div class="field-row">
+          <div class="field-label narrow">Gross ETE</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="g1_ete" value="Absent" onchange="sync()" checked> Absent</label>
+              <label class="check-item"><input type="radio" name="g1_ete" value="Present" onchange="sync()"> Present</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spec 2 Gross -->
+      <div class="subsection">
+        <div class="subsection-title">Specimen 2 — Thyroid (optional)</div>
+        <label class="check-item"><input type="checkbox" id="spec2_gross_enable" onchange="toggleSpec2Gross(); sync()"> Include second thyroid specimen</label>
+        <div id="spec2_gross_fields" class="hidden">
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:8px;">
+            <div class="field-row">
+              <div class="field-label narrow">Condition</div>
+              <div class="field-input">
+                <div class="radio-group">
+                  <label class="check-item"><input type="radio" name="g2_cond" value="in fresh state" onchange="sync()" checked> Fresh</label>
+                  <label class="check-item"><input type="radio" name="g2_cond" value="fixed in formalin" onchange="sync()"> Formalin-fixed</label>
+                </div>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label narrow">Thyroid size (cm)</div>
+              <div class="field-input">
+                <div class="size-group">
+                  <input type="number" class="size-dim" id="g2_s1" placeholder="—" min="0" step="0.1" oninput="sync()">
+                  <span class="size-sep">x</span>
+                  <input type="number" class="size-dim" id="g2_s2" placeholder="—" min="0" step="0.1" oninput="sync()">
+                  <span class="size-sep">x</span>
+                  <input type="number" class="size-dim" id="g2_s3" placeholder="—" min="0" step="0.1" oninput="sync()">
+                  <span class="size-sep">cm</span>
+                </div>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label narrow">Weight (g)</div>
+              <div class="field-input">
+                <div class="size-group">
+                  <input type="number" id="g2_wt" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:70px">
+                  <span class="size-sep">g</span>
+                </div>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label narrow">Has tumor</div>
+              <div class="field-input">
+                <label class="check-item"><input type="checkbox" id="g2_has_tumor" onchange="toggleSpec2Tumor(); sync()"> Tumor present in specimen 2</label>
+              </div>
+            </div>
+            <div id="g2_tumor_block" class="hidden">
+              <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px;">
+                <div class="field-row">
+                  <div class="field-label narrow">Tumor number</div>
+                  <div class="field-input">
+                    <div class="size-group">
+                      <input type="number" id="g2_tnum" placeholder="1" min="1" step="1" oninput="updateTumorSizes(2); sync()" style="width:52px">
+                      <span class="size-sep">tumor(s)</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="field-row hidden" id="g2_agg_row">
+                  <div class="field-label narrow">Aggregate</div>
+                  <div class="field-input">
+                    <div class="radio-group">
+                      <label class="check-item"><input type="radio" name="g2_agg" value="up to" onchange="sync()" checked> up to</label>
+                      <label class="check-item"><input type="radio" name="g2_agg" value="in aggregates" onchange="sync()"> in aggregates</label>
+                    </div>
+                  </div>
+                </div>
+                <div id="g2_tumor_sizes"></div>
+                <div class="field-row">
+                  <div class="field-label narrow">Gross ETE</div>
+                  <div class="field-input">
+                    <div class="radio-group">
+                      <label class="check-item"><input type="radio" name="g2_ete" value="Absent" onchange="sync()" checked> Absent</label>
+                      <label class="check-item"><input type="radio" name="g2_ete" value="Present" onchange="sync()"> Present</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spec 3 LN -->
+      <div class="subsection">
+        <div class="subsection-title">Specimen 3 — Lymph Node Dissection</div>
+        <label class="check-item"><input type="checkbox" id="spec3_enable" onchange="toggleSpec3(); sync()"> Include LN dissection gross</label>
+        <div id="spec3_fields" class="hidden" style="margin-top:8px;">
+          <div class="field-row">
+            <div class="field-label narrow">Fragments</div>
+            <div class="field-input">
+              <div class="size-group">
+                <input type="number" id="g3_frags" placeholder="—" min="1" step="1" oninput="sync()" style="width:52px">
+                <span class="size-sep">fragment(s)</span>
+              </div>
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:4px;">
+            <div class="field-label narrow">Size (cm)</div>
+            <div class="field-input">
+              <div class="size-group">
+                <input type="number" class="size-dim" id="g3_s1" placeholder="—" min="0" step="0.1" oninput="sync()">
+                <span class="size-sep">x</span>
+                <input type="number" class="size-dim" id="g3_s2" placeholder="—" min="0" step="0.1" oninput="sync()">
+                <span class="size-sep">x</span>
+                <input type="number" class="size-dim" id="g3_s3" placeholder="—" min="0" step="0.1" oninput="sync()">
+                <span class="size-sep">cm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REPRESENTATIVE SECTIONS -->
+  <div class="section">
+    <div class="section-header"><span class="badge">RS</span> REPRESENTATIVE SECTIONS</div>
+    <div class="section-body">
+      <textarea id="rep_sections" rows="4" placeholder="Type or paste representative sections labeling here..." oninput="sync()"></textarea>
+    </div>
+  </div>
+
+  <!-- MICROSCOPIC -->
+  <div class="section">
+    <div class="section-header"><span class="badge">M</span> MICROSCOPIC DESCRIPTION</div>
+    <div class="section-body">
+
+      <div class="subsection">
+        <div class="subsection-title">Tumor Characteristics</div>
+
+        <div class="field-row">
+          <div class="field-label">Tumor site</div>
+          <div class="field-input">
+            <div class="check-group">
+              <label class="check-item"><input type="checkbox" id="m_site_right" onchange="sync()"> Right lobe</label>
+              <label class="check-item"><input type="checkbox" id="m_site_left" onchange="sync()"> Left lobe</label>
+              <label class="check-item"><input type="checkbox" id="m_site_bilateral" onchange="sync()"> Bilateral lobes</label>
+              <label class="check-item"><input type="checkbox" id="m_site_isthmus" onchange="sync()"> Isthmus</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Histologic type</div>
+          <div class="field-input">
+            <select id="m_hist" onchange="toggleOther('m_hist','m_hist_other_row'); sync()">
+              <option value="Papillary carcinoma, classic subtype">Papillary carcinoma, classic subtype</option>
+              <option value="Papillary carcinoma, encapsulated classic subtype">Papillary carcinoma, encapsulated classic subtype</option>
+              <option value="Papillary carcinoma, infiltrative follicular subtype">Papillary carcinoma, infiltrative follicular subtype</option>
+              <option value="Papillary carcinoma, tall cell subtype">Papillary carcinoma, tall cell subtype</option>
+              <option value="Papillary carcinoma, hobnail subtype">Papillary carcinoma, hobnail subtype</option>
+              <option value="Papillary carcinoma, columnar cell subtype">Papillary carcinoma, columnar cell subtype</option>
+              <option value="Papillary carcinoma, solid subtype">Papillary carcinoma, solid subtype</option>
+              <option value="Papillary carcinoma, diffuse sclerosing subtype">Papillary carcinoma, diffuse sclerosing subtype</option>
+              <option value="Minimally invasive follicular carcinoma">Minimally invasive follicular carcinoma</option>
+              <option value="Encapsulated angioinvasive follicular carcinoma">Encapsulated angioinvasive follicular carcinoma</option>
+              <option value="Widely invasive follicular carcinoma">Widely invasive follicular carcinoma</option>
+              <option value="Minimally invasive oncocytic carcinoma">Minimally invasive oncocytic carcinoma</option>
+              <option value="Encapsulated angioinvasive oncocytic carcinoma">Encapsulated angioinvasive oncocytic carcinoma</option>
+              <option value="Widely invasive oncocytic carcinoma">Widely invasive oncocytic carcinoma</option>
+              <option value="Poorly differentiated thyroid carcinoma">Poorly differentiated thyroid carcinoma</option>
+              <option value="Anaplastic thyroid carcinoma">Anaplastic thyroid carcinoma</option>
+              <option value="Medullary thyroid carcinoma">Medullary thyroid carcinoma</option>
+              <option value="other">Other (free type)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row hidden" id="m_hist_other_row">
+          <div class="field-label">Specify</div>
+          <div class="field-input"><input type="text" id="m_hist_other" placeholder="free type" oninput="sync()"></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Histologic grade</div>
+          <div class="field-input">
+            <select id="m_grade" onchange="sync()">
+              <option value="Not applicable">Not applicable</option>
+              <option value="I (well differentiated)">I (well differentiated)</option>
+              <option value="II (moderately differentiated)">II (moderately differentiated)</option>
+              <option value="III (poorly differentiated)">III (poorly differentiated)</option>
+              <option value="IV (undifferentiated)">IV (undifferentiated)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Number of tumor</div>
+          <div class="field-input">
+            <input type="number" id="m_tnum" placeholder="1" min="1" step="1" oninput="sync()" style="width:70px">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Tumor dimension (cm)</div>
+          <div class="field-input">
+            <div class="size-group">
+              <input type="number" id="m_tdim" placeholder="auto" min="0" step="0.1" oninput="sync()" style="width:70px">
+              <span class="size-sep">cm</span>
+              <span class="inline-hint">← auto from Gross</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Encapsulation</div>
+          <div class="field-input">
+            <select id="m_encap" onchange="sync()">
+              <option value="Non-encapsulated with infiltrative borders">Non-encapsulated with infiltrative borders</option>
+              <option value="Encapsulated, complete">Encapsulated, complete</option>
+              <option value="Encapsulated, incomplete">Encapsulated, incomplete</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Capsular invasion</div>
+          <div class="field-input">
+            <select id="m_capinv" onchange="sync()">
+              <option value="Absent">Absent</option>
+              <option value="Minimal">Minimal</option>
+              <option value="Extensive">Extensive</option>
+              <option value="Not applicable in this tumor">Not applicable in this tumor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Extrathyroidal ext.</div>
+          <div class="field-input">
+            <select id="m_ete" onchange="sync()">
+              <option value="Absent">Absent</option>
+              <option value="Microscopic adipose tissue extension (not upstaging)">Microscopic adipose tissue extension (not upstaging)</option>
+              <option value="Invading only strap muscles (pT3b)">Invading only strap muscles (pT3b)</option>
+              <option value="Invading subcutaneous soft tissues, larynx, trachea, esophagus or recurrent laryngeal nerve (pT4a)">Invading subcutaneous/larynx/trachea/esophagus/RLN (pT4a)</option>
+              <option value="Invading prevertebral fascia or encasing carotid artery or mediastinal vessels (pT4b)">Invading prevertebral fascia/carotid/mediastinal vessels (pT4b)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Angioinvasion</div>
+          <div class="field-input">
+            <select id="m_angio" onchange="sync()">
+              <option value="Not identified">Not identified</option>
+              <option value="Present, focal (less than 4 vessels)">Present, focal (less than 4 vessels)</option>
+              <option value="Present, extensive (4 or more vessels)">Present, extensive (4 or more vessels)</option>
+              <option value="Present, extent not specified">Present, extent not specified</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Lymphatic invasion</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="m_lymph" value="Not identified" onchange="sync()" checked> Not identified</label>
+              <label class="check-item"><input type="radio" name="m_lymph" value="Present" onchange="sync()"> Present</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Perineural invasion</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="m_pni" value="Absent" onchange="sync()" checked> Absent</label>
+              <label class="check-item"><input type="radio" name="m_pni" value="Present, intratumoral" onchange="sync()"> Present, intratumoral</label>
+              <label class="check-item"><input type="radio" name="m_pni" value="Present, extratumoral" onchange="sync()"> Present, extratumoral</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Mitotic rate
+            <button onclick="showMitoInfo()" title="Criteria reference" style="background:var(--accent);border:none;border-radius:3px;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;cursor:pointer;margin-left:4px;font-family:'IBM Plex Mono',monospace;">ⓘ</button>
+          </div>
+          <div class="field-input">
+            <div class="size-group">
+              <label class="check-item" style="margin-right:6px;"><input type="checkbox" id="m_mito_lessthan1" onchange="toggleMitoInput(); sync()"> &lt;1</label>
+              <input type="number" id="m_mito_val" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:60px;">
+              <span class="size-sep">mitoses per 2 mm2</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">IHC study</div>
+          <div class="field-input">
+            <input type="text" id="m_ihc" placeholder="e.g. TTF-1(+), PAX8(+), BRAF(+)" oninput="sync()">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">Other findings</div>
+          <div class="field-input">
+            <div class="check-group" style="margin-bottom:5px;">
+              <label class="check-item"><input type="checkbox" id="m_nodular" onchange="sync()"> Nodular goiter (thyroid follicular nodular disease)</label>
+              <label class="check-item"><input type="checkbox" id="m_thyroiditis" onchange="sync()"> Lymphocytic thyroiditis</label>
+            </div>
+            <input type="text" id="m_other_text" placeholder="Additional findings (free type)" oninput="sync()">
+          </div>
+        </div>
+
+        <!-- Margin: single (default) -->
+        <div class="field-row" id="margin_single_row">
+          <div class="field-label">Surgical margin</div>
+          <div class="field-input">
+            <div class="radio-group">
+              <label class="check-item"><input type="radio" name="m_margin" value="free" onchange="sync()" checked> Free of tumor</label>
+              <label class="check-item"><input type="radio" name="m_margin" value="close" onchange="sync()"> &lt;1 mm</label>
+              <label class="check-item"><input type="radio" name="m_margin" value="involved" onchange="sync()"> Involved by tumor</label>
+            </div>
+          </div>
+        </div>
+        <!-- Margin: bilateral (shown when Bilateral lobes selected) -->
+        <div id="margin_bilateral_block" class="hidden">
+          <div class="field-row">
+            <div class="field-label">Left margin</div>
+            <div class="field-input">
+              <div class="radio-group">
+                <label class="check-item"><input type="radio" name="m_margin_left" value="free" onchange="sync()" checked> Free of tumor</label>
+                <label class="check-item"><input type="radio" name="m_margin_left" value="close" onchange="sync()"> &lt;1 mm</label>
+                <label class="check-item"><input type="radio" name="m_margin_left" value="involved" onchange="sync()"> Involved by tumor</label>
+              </div>
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:4px;">
+            <div class="field-label">Right margin</div>
+            <div class="field-input">
+              <div class="radio-group">
+                <label class="check-item"><input type="radio" name="m_margin_right" value="free" onchange="sync()" checked> Free of tumor</label>
+                <label class="check-item"><input type="radio" name="m_margin_right" value="close" onchange="sync()"> &lt;1 mm</label>
+                <label class="check-item"><input type="radio" name="m_margin_right" value="involved" onchange="sync()"> Involved by tumor</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LN -->
+      <div class="subsection">
+        <div class="subsection-title">Lymph Nodes</div>
+        <table class="ln-table">
+          <thead>
+            <tr>
+              <th>Side</th><th>Level</th><th>Pos</th><th>Total</th><th>ENE</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="ln_tbody"></tbody>
+        </table>
+        <button class="ln-add-btn" onclick="addLNRow()">+ Add LN group</button>
+        <div class="field-row" style="margin-top:8px;">
+          <div class="field-label narrow">IHC confirm</div>
+          <div class="field-input">
+            <label class="check-item"><input type="checkbox" id="ln_ihc" onchange="sync()"> Confirmed by AE1/AE3</label>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label narrow">Largest deposit</div>
+          <div class="field-input">
+            <div class="size-group">
+              <input type="number" id="ln_largest" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:60px">
+              <span class="size-sep">cm</span>
+              <span class="inline-hint">(leave blank if N/A)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parathyroid -->
+      <div class="subsection">
+        <div class="subsection-title">Parathyroid Gland</div>
+        <div class="radio-group">
+          <label class="check-item"><input type="radio" name="m_para" value="present" onchange="toggleParaCount(); sync()" checked> Present</label>
+          <label class="check-item"><input type="radio" name="m_para" value="Absent" onchange="toggleParaCount(); sync()"> Absent</label>
+          <label class="check-item"><input type="radio" name="m_para" value="not mentioned" onchange="toggleParaCount(); sync()"> Not mentioned</label>
+        </div>
+        <div id="para_count_row" style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+          <span style="font-size:11px;color:var(--text-label);">Count:</span>
+          <input type="number" id="para_count" min="1" step="1" value="1" oninput="sync()" style="width:52px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:4px;color:var(--text);font-size:12px;padding:4px 8px;outline:none;">
+          <span style="font-size:11px;color:var(--text-dim);">gland(s), unremarkable</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- pTNM -->
+  <div class="section">
+    <div class="section-header"><span class="badge">TNM</span> pTNM STAGING</div>
+    <div class="section-body">
+      <div class="field-row">
+        <div class="field-label">pT</div>
+        <div class="field-input">
+          <div id="tnm_pT_display" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);padding:5px 8px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:4px;">
+            (auto from Diagnosis Specimen 1)
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">pN <span class="inline-hint">auto + editable</span></div>
+        <div class="field-input">
+          <select id="tnm_pN" onchange="sync()">
+            <option value="">-- select --</option>
+            <option value="pNX">pNX — Cannot be assessed</option>
+            <option value="pN0">pN0 — No regional lymph node metastasis</option>
+            <option value="pN0a">pN0a — One or more histologically confirmed benign lymph nodes</option>
+            <option value="pN1a">pN1a — Metastasis to Level VI or VII (central compartment)</option>
+            <option value="pN1b">pN1b — Metastasis to lateral neck (Levels I–V) or retropharyngeal</option>
+            <option value="pN1">pN1 — Regional node metastasis (subcategory undetermined)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">TNM Descriptors</div>
+        <div class="field-input">
+          <div class="check-group">
+            <label class="check-item"><input type="checkbox" id="desc_y" onchange="sync()"> y (posttreatment)</label>
+            <label class="check-item"><input type="checkbox" id="desc_r" onchange="sync()"> r (recurrent)</label>
+            <label class="check-item"><input type="checkbox" id="desc_m" onchange="sync()"> m (multiple)</label>
+            <label class="check-item"><input type="checkbox" id="desc_a" onchange="sync()"> a (autopsy)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end form-panel -->
+
+<!-- ══════════════ RIGHT REPORT PANEL ══════════════ -->
+<div class="report-panel">
+  <div class="report-toolbar">
+    <span>REPORT OUTPUT</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyReport()">Copy</button>
+  </div>
+  <div class="report-output" id="reportOutput"></div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+// ═══════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════
+function getRadio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+function isChecked(id) {
+  const el = document.getElementById(id);
+  return el ? el.checked : false;
+}
+function capFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function fmt3(a, b, c) {
+  if (!a && !b && !c) return '';
+  return [a||'?', b||'?', c||'?'].join(' x ') + ' cm';
+}
+
+// ═══════════════════════════════════════
+// TOGGLES
+// ═══════════════════════════════════════
+function toggleOther(selectId, rowId) {
+  document.getElementById(rowId).classList.toggle('hidden', getVal(selectId) !== 'other');
+}
+function toggleSpec2Dx() {
+  document.getElementById('spec2_dx_fields').classList.toggle('hidden', !isChecked('spec2_dx_enable'));
+}
+function toggleSpec2Gross() {
+  document.getElementById('spec2_gross_fields').classList.toggle('hidden', !isChecked('spec2_gross_enable'));
+}
+function toggleSpec2Tumor() {
+  document.getElementById('g2_tumor_block').classList.toggle('hidden', !isChecked('g2_has_tumor'));
+}
+function toggleSpec3() {
+  document.getElementById('spec3_fields').classList.toggle('hidden', !isChecked('spec3_enable'));
+}
+// Hide pT row in Spec 2 Dx when non-carcinoma option selected
+function toggleDx2pT() {
+  const v = getVal('dx2_hist');
+  const nonCarcinoma = v === '__free__' || v === '__nodular__';
+  document.getElementById('dx2_pT_row').classList.toggle('hidden', nonCarcinoma);
+  // also hide other-type row unless 'other' carcinoma
+  document.getElementById('dx2_hist_other_row').classList.toggle('hidden', v !== 'other');
+}
+
+// ═══════════════════════════════════════
+// TUMOR SIZE INPUTS
+// ═══════════════════════════════════════
+function updateTumorSizes(sn) {
+  const numEl = document.getElementById(`g${sn}_tnum`);
+  const n = Math.max(1, parseInt(numEl?.value) || 1);
+  const container = document.getElementById(`g${sn}_tumor_sizes`);
+  const aggRow = document.getElementById(`g${sn}_agg_row`);
+  if (aggRow) aggRow.classList.toggle('hidden', n <= 1);
+
+  // preserve values
+  const existing = {};
+  container.querySelectorAll('.tsrow').forEach(r => {
+    existing[r.dataset.i] = Array.from(r.querySelectorAll('input')).map(x => x.value);
+  });
+
+  container.innerHTML = '';
+  for (let i = 1; i <= n; i++) {
+    const p = existing[i] || ['','',''];
+    const row = document.createElement('div');
+    row.className = 'field-row tsrow';
+    row.dataset.i = i;
+    row.style.marginTop = '4px';
+    row.innerHTML = `
+      <div class="field-label narrow">Tumor ${i} size (cm)</div>
+      <div class="field-input">
+        <div class="size-group">
+          <input type="number" class="size-dim tsdim-${sn}" placeholder="—" min="0" step="0.1" value="${p[0]}" oninput="autoSyncDim(); sync()">
+          <span class="size-sep">x</span>
+          <input type="number" class="size-dim tsdim-${sn}" placeholder="—" min="0" step="0.1" value="${p[1]}" oninput="autoSyncDim(); sync()">
+          <span class="size-sep">x</span>
+          <input type="number" class="size-dim tsdim-${sn}" placeholder="—" min="0" step="0.1" value="${p[2]}" oninput="autoSyncDim(); sync()">
+          <span class="size-sep">cm</span>
+        </div>
+      </div>`;
+    container.appendChild(row);
+  }
+}
+
+// Auto-sync: find greatest dimension across all Spec 1 tumor size inputs
+function autoSyncDim() {
+  const inputs = document.querySelectorAll('.tsdim-1');
+  let maxVal = null;
+  inputs.forEach(inp => {
+    const v = parseFloat(inp.value);
+    if (!isNaN(v) && v > 0 && (maxVal === null || v > maxVal)) maxVal = v;
+  });
+  const el = document.getElementById('m_tdim');
+  if (el) el.value = maxVal !== null ? maxVal : '';
+}
+
+function getTumorSizesText(sn) {
+  const numEl = document.getElementById(`g${sn}_tnum`);
+  const n = Math.max(1, parseInt(numEl?.value) || 1);
+  const container = document.getElementById(`g${sn}_tumor_sizes`);
+  if (!container) return '';
+
+  const rows = container.querySelectorAll('.tsrow');
+  const sizes = [];
+  rows.forEach(r => {
+    const ins = r.querySelectorAll('input');
+    const a = ins[0]?.value, b = ins[1]?.value, c = ins[2]?.value;
+    if (a || b || c) sizes.push(fmt3(a, b, c));
+  });
+
+  if (!sizes.length) return '';
+  if (n === 1) return `x1, ${sizes[0]}`;
+  const agg = getRadio(`g${sn}_agg`) || 'up to';
+  return `x${n}, ${agg} ${sizes[0]}`;
+}
+
+// ═══════════════════════════════════════
+// LN
+// ═══════════════════════════════════════
+let lnRows = [], lnId = 0;
+
+function addLNRow() {
+  const id = ++lnId;
+  lnRows.push(id);
+  const tbody = document.getElementById('ln_tbody');
+  const tr = document.createElement('tr');
+  tr.id = `lnr_${id}`;
+  tr.innerHTML = `
+    <td><select id="lns_${id}" onchange="sync()" style="width:68px;font-size:11px;padding:3px">
+      <option>Right</option><option>Left</option><option>Bilateral</option>
+    </select></td>
+    <td><select id="lnl_${id}" onchange="sync()" style="width:80px;font-size:11px;padding:3px">
+      <option>Level VI</option><option>Level VII</option>
+      <option>Level I</option><option>Level II</option><option>Level III</option>
+      <option>Level IV</option><option>Level V</option><option>Regional</option>
+    </select></td>
+    <td><input type="number" id="lnp_${id}" min="0" step="1" value="0" oninput="sync()" style="width:42px;text-align:center"></td>
+    <td><input type="number" id="lnt_${id}" min="0" step="1" placeholder="—" oninput="sync()" style="width:42px;text-align:center"></td>
+    <td><select id="lne_${id}" onchange="sync()" style="width:68px;font-size:11px;padding:3px">
+      <option>Absent</option><option>Present</option>
+    </select></td>
+    <td><button class="ln-del-btn" onclick="removeLN(${id})">✕</button></td>`;
+  tbody.appendChild(tr);
+  sync();
+}
+
+function removeLN(id) {
+  lnRows = lnRows.filter(r => r !== id);
+  document.getElementById(`lnr_${id}`)?.remove();
+  sync();
+}
+
+function getLNData() {
+  return lnRows.map(id => {
+    const tot = parseInt(document.getElementById(`lnt_${id}`)?.value) || 0;
+    if (!tot) return null;
+    return {
+      side: getVal(`lns_${id}`),
+      level: getVal(`lnl_${id}`),
+      pos: parseInt(document.getElementById(`lnp_${id}`)?.value) || 0,
+      tot,
+      ene: getVal(`lne_${id}`)
+    };
+  }).filter(Boolean);
+}
+
+// ═══════════════════════════════════════
+// REPORT
+// ═══════════════════════════════════════
+function sync() {
+  // Auto-sync pT display from Diagnosis Spec 1
+  const pt1val = getVal('dx_pT');
+  const dispEl = document.getElementById('tnm_pT_display');
+  if (dispEl) {
+    dispEl.textContent = pt1val ? pt1val : '(not selected in Diagnosis)';
+  }
+
+  // Toggle bilateral vs single margin
+  const isBilateral = isChecked('m_site_bilateral');
+  document.getElementById('margin_single_row').classList.toggle('hidden', isBilateral);
+  document.getElementById('margin_bilateral_block').classList.toggle('hidden', !isBilateral);
+  if (!isBilateral) toggleMarginDist();
+  else toggleMarginDistBilat();
+
+  // Auto-suggest pN based on LN data
+  autoSuggestPN();
+
+  document.getElementById('reportOutput').textContent = buildReport();
+  updateDxLNSummary();
+}
+
+function autoSuggestPN() {
+  const data = getLNData();
+  const sel = document.getElementById('tnm_pN');
+  if (!sel) return;
+
+  if (data.length === 0) {
+    // no LN submitted — leave as is (user picks)
+    return;
+  }
+
+  const totalPos = data.reduce((s,r) => s+r.pos, 0);
+  if (totalPos === 0) {
+    // all negative
+    sel.value = 'pN0a';
+    return;
+  }
+
+  // Check levels involved
+  const posRows = data.filter(r => r.pos > 0);
+  const levels = posRows.map(r => r.level);
+  const hasCentral = levels.some(l => l === 'Level VI' || l === 'Level VII');
+  const hasLateral = levels.some(l => ['Level I','Level II','Level III','Level IV','Level V'].includes(l));
+
+  if (hasCentral && !hasLateral) {
+    sel.value = 'pN1a';
+  } else if (hasLateral) {
+    sel.value = 'pN1b';
+  } else {
+    // Regional or mixed
+    sel.value = 'pN1';
+  }
+}
+
+function updateDxLNSummary() {
+  const data = getLNData();
+  const el = document.getElementById('dx_ln_summary');
+  if (!data.length) { el.textContent = '(No LN groups entered)'; return; }
+  const lines = data.map(r => `${r.side} ${r.level}: ${r.pos}/${r.tot}`);
+  const tp = data.reduce((s,r)=>s+r.pos,0), tt = data.reduce((s,r)=>s+r.tot,0);
+  const ihc = isChecked('ln_ihc') ? ' (Confirmed by AE1/AE3)' : '';
+  lines.push(`Total: ${tp}/${tt}${ihc}`);
+  el.textContent = lines.join('\n');
+}
+
+function buildReport() {
+  const L = [];
+  const descY = isChecked('desc_y'), descR = isChecked('desc_r'),
+        descM = isChecked('desc_m'), descA = isChecked('desc_a');
+  const prefix = (descY?'y':'')+(descR?'r':'')+(descA?'a':'');
+
+  // ── DIAGNOSIS
+  L.push('DIAGNOSIS:');
+  const lat1=getRadio('dx_lat'), proc1=getVal('dx_proc');
+  const hist1=dxH(1), pt1=getVal('dx_pT');
+  const loc1=mkLoc(lat1,proc1);
+  const mSuffix = isChecked('desc_m') ? '(m)' : '';
+  const pt1disp = pt1 ? ` [${prefix}${pt1}${mSuffix}]` : '';
+  L.push(`Thyroid${loc1?', '+loc1:''} --- ${hist1}${pt1disp}`);
+
+  if (isChecked('spec2_dx_enable')) {
+    const lat2=getRadio('dx2_lat'), proc2=getVal('dx2_proc');
+    const hist2=dxH(2), pt2=getVal('dx2_pT');
+    const dx2v = getVal('dx2_hist');
+    const loc2=mkLoc(lat2,proc2);
+    const isNonCarcinoma = dx2v === '__free__' || dx2v === '__nodular__';
+    const pt2disp = (!isNonCarcinoma && pt2) ? ` [${prefix}${pt2}${mSuffix}]` : '';
+    L.push(`Thyroid${loc2?', '+loc2:''} --- ${hist2}${pt2disp}`);
+  }
+
+  const lnData=getLNData();
+  const ihcC=isChecked('ln_ihc')?' (Confirmed by AE1/AE3)':'';
+  // Get pN code for diagnosis line
+  const tpNraw=getVal('tnm_pN');
+  const pNcode=tpNraw?tpNraw.split(' ')[0]:''; // e.g. "pN1a"
+  lnData.forEach(r=>{
+    const frac=`${r.pos}/${r.tot}`;
+    let status;
+    if(r.pos===0){
+      status=`Free of metastasis (${frac})`;
+    } else {
+      const pNpart=pNcode?`, ${pNcode}`:'';
+      status=`Carcinoma, metastatic (${frac}${pNpart})`;
+    }
+    const sd=r.side==='Bilateral'?'bilateral':r.side.toLowerCase();
+    L.push(`Lymph nodes, ${sd}, ${r.level} dissection --- ${status}${r.pos>0?ihcC:''}`);
+  });
+  L.push('');
+
+  // ── GROSS
+  L.push('GROSS DESCRIPTION:');
+
+  // Spec 1
+  {
+    L.push('Specimen 1:');
+    const cond1=getRadio('g1_cond')||'in fresh state';
+    const pl1=proc1?capFirst(proc1):'';
+    const ls1=lat1?latL(lat1)+' thyroid':'';
+    const pp1=[pl1, ls1?'of the '+ls1:''].filter(Boolean).join(' ');
+    L.push(`Procedure and specimen type: ${pp1||'(not specified)'}, ${cond1}`);
+
+    const sz1=fmt3(getVal('g1_s1'),getVal('g1_s2'),getVal('g1_s3'));
+    const wt1=getVal('g1_wt');
+    if(sz1||wt1) L.push(`Size and weight of the thyroid: ${sz1||'?'}${wt1?' and '+wt1+' g':''}`);
+
+    const t1=getTumorSizesText(1);
+    if(t1) L.push(`Tumor number and size: ${t1}`);
+    L.push(`Gross extrathyroidal extension invading strap muscles or beyond: ${getRadio('g1_ete')||'Absent'}`);
+    L.push('');
+  }
+
+  // Spec 2
+  if(isChecked('spec2_gross_enable')){
+    L.push('Specimen 2:');
+    const proc2=getVal('dx2_proc'), lat2=getRadio('dx2_lat');
+    const cond2=getRadio('g2_cond')||'in fresh state';
+    const pl2=proc2?capFirst(proc2):'';
+    const ls2=lat2?latL(lat2)+' thyroid':'';
+    const pp2=[pl2, ls2?'of the '+ls2:''].filter(Boolean).join(' ');
+    L.push(`Procedure and specimen type: ${pp2||'(not specified)'}, ${cond2}`);
+
+    const sz2=fmt3(getVal('g2_s1'),getVal('g2_s2'),getVal('g2_s3'));
+    const wt2=getVal('g2_wt');
+    if(sz2||wt2) L.push(`Size and weight of the thyroid: ${sz2||'?'}${wt2?' and '+wt2+' g':''}`);
+
+    if(isChecked('g2_has_tumor')){
+      const t2=getTumorSizesText(2);
+      if(t2) L.push(`Tumor number and size: ${t2}`);
+      L.push(`Gross extrathyroidal extension invading strap muscles or beyond: ${getRadio('g2_ete')||'Absent'}`);
+    }
+    L.push('');
+  }
+
+  // Spec 3
+  if(isChecked('spec3_enable')){
+    const sNo=isChecked('spec2_gross_enable')?'3':'2';
+    const frags=parseInt(getVal('g3_frags'))||0;
+    const g3s1=getVal('g3_s1'),g3s2=getVal('g3_s2'),g3s3=getVal('g3_s3');
+    const g3sz=fmt3(g3s1,g3s2,g3s3);
+    const fragWord=frags===1?'tissue fragment':'tissue fragments';
+    const inTotal=frags>1?' in total':'';
+    L.push(`Specimen ${sNo} Lymph node dissection: ${frags||'?'} ${fragWord}, ${g3sz||'?'}${inTotal}.`);
+    L.push('');
+  }
+
+  // ── REPRESENTATIVE SECTIONS
+  L.push('Representative sections are taken and labeled as follows:');
+  const rep=getVal('rep_sections');
+  if(rep) L.push(rep);
+  L.push('');
+
+  // ── MICROSCOPIC
+  L.push('MICROSCOPIC DESCRIPTION:');
+
+  const sites=[];
+  if(isChecked('m_site_right')) sites.push('Right lobe');
+  if(isChecked('m_site_left')) sites.push('Left lobe');
+  if(isChecked('m_site_bilateral')) sites.push('Bilateral lobes');
+  if(isChecked('m_site_isthmus')) sites.push('Isthmus');
+  if(sites.length) L.push(`Tumor site: ${sites.join(', ')}`);
+
+  const mhr=getVal('m_hist');
+  const mhl=mhr==='other'?(getVal('m_hist_other')||'(specify)'):mhr;
+  L.push(`Histologic type: ${mhl}`);
+  L.push(`Histologic grade: ${getVal('m_grade')}`);
+
+  const mtn=getVal('m_tnum')||'1';
+  L.push(`Number of tumor: ${mtn}`);
+
+  const mtd=getVal('m_tdim');
+  if(mtd){
+    const multi=parseInt(mtn)||1;
+    L.push(`Tumor dimension: ${multi>1?'up to '+mtd+' cm':mtd+' cm'}`);
+  }
+
+  L.push(`Encapsulation: ${getVal('m_encap')}`);
+  L.push(`Capsular invasion: ${getVal('m_capinv')}`);
+  L.push(`Extrathyroidal extension: ${getVal('m_ete')}`);
+  L.push(`Angioinvasion (Vascular Invasion): ${getVal('m_angio')}`);
+  L.push(`Lymphatic invasion: ${getRadio('m_lymph')}`);
+  L.push(`Perineural invasion: ${getRadio('m_pni')}`);
+
+  const mit=getMitoText(); if(mit) L.push(`Mitotic rate: ${mit}`);
+  const ihc=getVal('m_ihc'); if(ihc) L.push(`Immunohistochemical study: ${ihc}`);
+
+  const oth=[];
+  if(isChecked('m_nodular')) oth.push('Nodular goiter (thyroid follicular nodular disease)');
+  if(isChecked('m_thyroiditis')) oth.push('Lymphocytic thyroiditis');
+  const ott=getVal('m_other_text'); if(ott) oth.push(ott);
+  if(oth.length) L.push(`Other findings: ${oth.join(', ')}`);
+
+  const isBilat = isChecked('m_site_bilateral');
+  function marginLabel(v, distId) {
+    if (v === 'close') return '<1 mm';
+    if (v === 'involved') return 'Involved by tumor';
+    // free
+    const dist = distId ? getVal(distId) : '';
+    return dist ? `Free, ${dist} cm in distance` : 'Free of tumor';
+  }
+  if (isBilat) {
+    const ml = marginLabel(getRadio('m_margin_left'), 'margin_dist_left');
+    const mr = marginLabel(getRadio('m_margin_right'), 'margin_dist_right');
+    L.push(`Surgical margin: Left: ${ml}; Right: ${mr}`);
+  } else {
+    const mv = getRadio('m_margin');
+    L.push(`Surgical margin: ${marginLabel(mv, 'margin_dist')}`);
+  }
+
+  if(lnData.length){
+    const tp=lnData.reduce((s,r)=>s+r.pos,0), tt=lnData.reduce((s,r)=>s+r.tot,0);
+    const ihcS=isChecked('ln_ihc')?' (Confirmed by AE1/AE3)':'';
+    L.push(`Lymph node (${tp}/${tt})${ihcS}:`);
+    lnData.forEach(r=>{
+      const sd=r.side==='Bilateral'?'bilateral':r.side;
+      L.push(`- ${sd} ${r.level}: ${r.pos}/${r.tot}; Extranodal extension: ${r.ene}`);
+    });
+    const lg=getVal('ln_largest'); if(lg) L.push(`- Size of largest metastatic deposit: ${lg} cm`);
+  } else {
+    L.push('Lymph node: Not applicable (no regional lymph nodes submitted or found)');
+  }
+
+  const para=getRadio('m_para');
+  if(para==='present'){
+    const cnt=getVal('para_count')||'1';
+    L.push(`Parathyroid gland: Present, x${cnt}, unremarkable`);
+  } else if(para==='Absent'){
+    L.push('Parathyroid gland: Absent');
+  }
+  L.push('');
+
+  // ── pTNM
+  const tpT = getVal('dx_pT');   // auto from Diagnosis Spec 1
+  const tpN = getVal('tnm_pN');
+  if(tpT||tpN){
+    const mSfx = isChecked('desc_m') ? '(m)' : '';
+    const pTf = tpT ? `${prefix}${tpT}${mSfx}` : '';
+    const pNraw = tpN ? tpN.split(' ')[0] : '';
+    const pNf = pNraw ? pNraw.replace('pN','N') : '';
+    L.push(`pTNM: ${pTf}${pNf} (AJCC cancer staging system, 8th edition)`);
+    const descs=[];
+    if(descY) descs.push('y (posttreatment)');
+    if(descR) descs.push('r (recurrent)');
+    if(descM) descs.push('m (multiple)');
+    if(descA) descs.push('a (autopsy)');
+    if(!descs.length) descs.push('Not applicable');
+    L.push(`TNM descriptors: ${descs.join(', ')}`);
+  }
+
+  L.push('');
+  L.push('(This case has been reviewed by two pathologists.)');
+  return L.join('\n');
+}
+
+function dxH(n) {
+  if (n === 1) {
+    const v = getVal('dx_hist');
+    return v === 'other' ? (getVal('dx_hist_other') || '') : v;
+  } else {
+    const v = getVal('dx2_hist');
+    if (v === '__free__') return 'Free of tumor';
+    if (v === '__nodular__') return 'Nodular goiter (thyroid follicular nodular disease)';
+    if (v === 'other') return getVal('dx2_hist_other') || '';
+    return v;
+  }
+}
+function latL(l) {
+  return l==='left'?'left':l==='right'?'right':l==='bilateral'?'bilateral':l;
+}
+function mkLoc(lat,proc) {
+  const p=[];
+  if(lat) p.push(latL(lat)+' lobe');
+  if(proc) p.push(proc);
+  return p.join(', ');
+}
+
+// ═══════════════════════════════════════
+// MARGIN DISTANCE TOGGLES
+// ═══════════════════════════════════════
+function toggleMarginDist() {
+  const v = getRadio('m_margin');
+  document.getElementById('margin_dist_row').style.display = v === 'free' ? 'flex' : 'none';
+  if (v !== 'free') document.getElementById('margin_dist').value = '';
+}
+
+function toggleMarginDistBilat() {
+  const lv = getRadio('m_margin_left');
+  const rv = getRadio('m_margin_right');
+  document.getElementById('margin_dist_left_row').style.display = lv === 'free' ? 'flex' : 'none';
+  document.getElementById('margin_dist_right_row').style.display = rv === 'free' ? 'flex' : 'none';
+  if (lv !== 'free') document.getElementById('margin_dist_left').value = '';
+  if (rv !== 'free') document.getElementById('margin_dist_right').value = '';
+}
+
+// ═══════════════════════════════════════
+// MITOSIS INPUT TOGGLE
+// ═══════════════════════════════════════
+function toggleMitoInput() {
+  const isLT1 = isChecked('m_mito_lessthan1');
+  const valEl = document.getElementById('m_mito_val');
+  if (isLT1) { valEl.value = ''; valEl.disabled = true; valEl.style.opacity = '0.4'; }
+  else { valEl.disabled = false; valEl.style.opacity = '1'; }
+  sync();
+}
+
+function getMitoText() {
+  if (isChecked('m_mito_lessthan1')) return '<1 mitoses per 2 mm2';
+  const v = getVal('m_mito_val');
+  if (!v) return '';
+  return `${v} mitoses per 2 mm2`;
+}
+
+function showMitoInfo() {
+  document.getElementById('mitoModal').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════
+// PARATHYROID COUNT TOGGLE
+// ═══════════════════════════════════════
+function toggleParaCount() {
+  const v = getRadio('m_para');
+  document.getElementById('para_count_row').style.display = v === 'present' ? 'flex' : 'none';
+}
+
+// ═══════════════════════════════════════
+// COPY
+// ═══════════════════════════════════════
+function copyReport() {
+  navigator.clipboard.writeText(document.getElementById('reportOutput').textContent).then(()=>{
+    const b=document.getElementById('copyBtn');
+    b.textContent='Copied!'; b.classList.add('copied');
+    setTimeout(()=>{ b.textContent='Copy'; b.classList.remove('copied'); },1800);
+  });
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+updateTumorSizes(1);
+updateTumorSizes(2);
+addLNRow();
+toggleParaCount();
+// init margin dist visibility
+document.getElementById('margin_dist_row').style.display = 'none';
+document.getElementById('margin_dist_left_row').style.display = 'none';
+document.getElementById('margin_dist_right_row').style.display = 'none';
+sync();
+</script>
+
+<!-- Info Modal -->
+<div id="mitoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#ffffff;border:1px solid #d4d8e2;border-radius:8px;padding:20px 24px;max-width:560px;width:90%;max-height:80vh;overflow-y:auto;position:relative;">
+    <button onclick="document.getElementById('mitoModal').style.display='none'" style="position:absolute;top:10px;right:14px;background:transparent;border:none;color:#6b7280;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#1d5bd4;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Reference Notes</div>
+    <div style="font-size:12px;line-height:1.7;color:#111827;">
+      <p style="margin-bottom:10px;"><strong style="color:#7dd3a8;">1. Criteria for Angioinvasion</strong><br>
+      Papillary thyroid carcinomas tend to spread via lymphatics. In addition to tumor deposits within lymphatic spaces, this form of spread may manifest as psammoma bodies alone within these spaces, which are the equivalent of lymphatic invasion for reporting purposes.</p>
+      <p><strong style="color:#7dd3a8;">2. Psammoma bodies in lymph nodes</strong><br>
+      Reporting of "psammoma bodies only" in lymph nodes is not well defined. While indolent, they do indicate capacity for lymphatic spread and are considered pN1a.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

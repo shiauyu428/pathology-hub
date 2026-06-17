@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breast Bx Pathology Report Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f3;padding:1rem}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:16px;font-weight:500;margin-bottom:1rem;color:#444}
+.section{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:1rem 1.25rem;margin-bottom:0.75rem}
+.section-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:0.5px solid #eee}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap}
+label.lbl{font-size:13px;color:#666;min-width:90px}
+input[type=number],input[type=text]{font-size:13px;padding:5px 8px;border:0.5px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;outline:none}
+input[type=number]:focus,input[type=text]:focus{border-color:#4a6fa5}
+input[type=number]{width:72px}
+.score-row{display:flex;gap:6px;align-items:center;margin-bottom:0.5rem}
+.score-label{font-size:13px;min-width:165px;color:#1a1a1a}
+.score-btns{display:flex;gap:4px}
+.sbtn{padding:4px 12px;font-size:12px;border:0.5px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;color:#1a1a1a;transition:all 0.1s}
+.sbtn.active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.grade-badge{font-size:12px;font-weight:500;padding:4px 12px;border-radius:8px;background:#f0f0f0;color:#666;margin-left:8px}
+.grade-badge.g1{background:#dcfce7;color:#166534}
+.grade-badge.g2{background:#fef9c3;color:#854d0e}
+.grade-badge.g3{background:#fee2e2;color:#991b1b}
+.pill-group{display:flex;gap:4px;flex-wrap:wrap}
+.pill{padding:4px 11px;font-size:12px;border:0.5px solid #ccc;border-radius:20px;cursor:pointer;background:#fff;color:#1a1a1a;white-space:nowrap;transition:all 0.1s}
+.pill:hover{background:#f5f5f5}
+.pill.active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.pill.neg{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.pill.eq{background:#fef9c3;color:#854d0e;border-color:#fde68a}
+.sub-inputs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.sub-inputs input{font-size:12px;padding:3px 6px}
+.checkbox-row{display:flex;align-items:center;gap:8px;margin-bottom:0.5rem}
+.checkbox-row input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#3b82f6}
+.checkbox-row label{font-size:13px;cursor:pointer;color:#1a1a1a}
+.ihc-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:0.85rem}
+.ihc-num{font-size:13px;font-weight:500;min-width:22px;padding-top:5px;color:#666}
+.hidden{display:none!important}
+.output-area{background:#f8f8f6;border:0.5px solid #ddd;border-radius:10px;padding:1rem;font-family:'Courier New',monospace;font-size:12px;line-height:1.9;white-space:pre-wrap;color:#1a1a1a;min-height:200px}
+.btn-main{padding:8px 20px;font-size:13px;font-weight:500;border:0.5px solid #aaa;border-radius:8px;cursor:pointer;background:#fff;color:#1a1a1a;transition:all 0.1s}
+.btn-main:hover{background:#f0f0f0}
+.btn-copy{padding:7px 14px;font-size:12px;border:0.5px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;color:#666;transition:all 0.1s}
+.btn-copy:hover{background:#f5f5f5}
+.btns{display:flex;gap:8px;margin-bottom:0.75rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Breast Core Biopsy — Pathology Report Generator</h1>
+
+<div class="section">
+  <div class="section-title">基本資訊</div>
+  <div class="row"><label class="lbl">側別</label>
+    <div class="pill-group">
+      <button class="pill" onclick="setPill('side','right',this)">Right</button>
+      <button class="pill" onclick="setPill('side','left',this)">Left</button>
+    </div>
+    <input type="text" id="location_note" placeholder="e.g. 10'/3 cm" style="width:130px;margin-left:8px" oninput="gen()">
+  </div>
+  <div class="row"><label class="lbl">Pieces</label><input type="number" id="pieces" value="3" min="1" oninput="gen()"></div>
+  <div class="row"><label class="lbl">Length (cm)</label><input type="number" id="size" value="1.2" min="0.1" step="0.1" oninput="gen()"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">組織學類型（診斷同步）</div>
+  <div class="pill-group">
+    <button class="pill" id="ht_nst" onclick="setHistotype('nst',this)">NST (Ductal)</button>
+    <button class="pill" id="ht_ilc" onclick="setHistotype('ilc',this)">Invasive lobular carcinoma</button>
+    <button class="pill" id="ht_muci" onclick="setHistotype('muci',this)">Mucin-producing carcinoma</button>
+    <button class="pill" id="ht_apoc" onclick="setHistotype('apoc',this)">Invasive carcinoma with apocrine differentiation</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Nottingham Grade 評分</div>
+  <div class="score-row">
+    <span class="score-label">Tubule formation</span>
+    <div class="score-btns">
+      <button class="sbtn" onclick="setScore('tub',1,this)">1</button>
+      <button class="sbtn" onclick="setScore('tub',2,this)">2</button>
+      <button class="sbtn" onclick="setScore('tub',3,this)">3</button>
+    </div>
+  </div>
+  <div class="score-row">
+    <span class="score-label">Nuclear pleomorphism</span>
+    <div class="score-btns">
+      <button class="sbtn" onclick="setScore('nuc',1,this)">1</button>
+      <button class="sbtn" onclick="setScore('nuc',2,this)">2</button>
+      <button class="sbtn" onclick="setScore('nuc',3,this)">3</button>
+    </div>
+  </div>
+  <div class="score-row">
+    <span class="score-label">Mitotic count</span>
+    <div class="score-btns">
+      <button class="sbtn" onclick="setScore('mit',1,this)">1</button>
+      <button class="sbtn" onclick="setScore('mit',2,this)">2</button>
+      <button class="sbtn" onclick="setScore('mit',3,this)">3</button>
+    </div>
+    <span id="grade-badge" class="grade-badge">— 請選擇</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Ductal Carcinoma In Situ (DCIS)</div>
+  <div class="checkbox-row">
+    <input type="checkbox" id="dcis_present" onchange="toggleDCIS()">
+    <label for="dcis_present">Present</label>
+  </div>
+  <div id="dcis_detail" class="hidden">
+    <div class="row"><span style="font-size:13px;color:#666;min-width:100px">Nuclear grade</span>
+      <div class="pill-group">
+        <button class="pill" onclick="setPill('dcis_grade','low',this)">Low</button>
+        <button class="pill" onclick="setPill('dcis_grade','intermediate',this)">Intermediate</button>
+        <button class="pill" onclick="setPill('dcis_grade','high',this)">High</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px"><span style="font-size:13px;color:#666;min-width:100px">Pattern（多選）</span>
+      <div class="pill-group">
+        <button class="pill" onclick="toggleMulti('dcis_pat','solid',this)">Solid</button>
+        <button class="pill" onclick="toggleMulti('dcis_pat','cribriform',this)">Cribriform</button>
+        <button class="pill" onclick="toggleMulti('dcis_pat','micropapillary',this)">Micropapillary</button>
+        <button class="pill" onclick="toggleMulti('dcis_pat','papillary',this)">Papillary</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px"><span style="font-size:13px;color:#666;min-width:100px">Necrosis</span>
+      <div class="pill-group">
+        <button class="pill" onclick="setPill('dcis_nec','none',this)">Not identified</button>
+        <button class="pill" onclick="setPill('dcis_nec','focal',this)">Present, focal</button>
+        <button class="pill" onclick="setPill('dcis_nec','comedo',this)">Present, central (comedo)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">IHC — 固定項目 (1–4)</div>
+
+  <div class="ihc-row">
+    <span class="ihc-num">-</span>
+    <div>
+      <div style="font-size:13px;margin-bottom:5px;font-weight:500">ER (Ab)</div>
+      <div class="pill-group">
+        <button class="pill" onclick="setER('pos',this)">Positive</button>
+        <button class="pill" onclick="setER('low',this)">Low Positive (1–10%)</button>
+        <button class="pill" onclick="setER('neg',this)">Negative</button>
+      </div>
+      <div id="er_detail" class="sub-inputs hidden">
+        <input type="number" id="er_pct" placeholder="%" min="1" max="100" style="width:62px" oninput="gen()">
+        <span style="font-size:12px;color:#666">%</span>
+        <div class="pill-group">
+          <button class="pill" onclick="setPill('er_int','weak',this)">Weak</button>
+          <button class="pill" onclick="setPill('er_int','moderate',this)">Moderate</button>
+          <button class="pill" onclick="setPill('er_int','strong',this)">Strong</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ihc-row">
+    <span class="ihc-num">-</span>
+    <div>
+      <div style="font-size:13px;margin-bottom:5px;font-weight:500">PR (Ab)</div>
+      <div class="pill-group">
+        <button class="pill" onclick="setPR('pos',this)">Positive</button>
+        <button class="pill" onclick="setPR('neg',this)">Negative</button>
+      </div>
+      <div id="pr_detail" class="sub-inputs hidden">
+        <input type="number" id="pr_pct" placeholder="%" min="1" max="100" style="width:62px" oninput="gen()">
+        <span style="font-size:12px;color:#666">%</span>
+        <div class="pill-group">
+          <button class="pill" onclick="setPill('pr_int','weak',this)">Weak</button>
+          <button class="pill" onclick="setPill('pr_int','moderate',this)">Moderate</button>
+          <button class="pill" onclick="setPill('pr_int','strong',this)">Strong</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ihc-row">
+    <span class="ihc-num">-</span>
+    <div>
+      <div style="font-size:13px;margin-bottom:5px;font-weight:500">Her-2/neu (Ab)</div>
+      <div class="pill-group">
+        <button class="pill" onclick="setHer2('pos',this)">Positive (3+)</button>
+        <button class="pill" onclick="setHer2('eq',this)">Equivocal (2+)</button>
+        <button class="pill" onclick="setHer2('neg',this)">Negative</button>
+      </div>
+      <div id="her2_neg_detail" class="sub-inputs hidden" style="margin-top:6px">
+        <span style="font-size:12px;color:#666">Score:</span>
+        <div class="pill-group">
+          <button class="pill" onclick="setPill('her2_neg_score','1+',this)">1+</button>
+          <button class="pill" onclick="setPill('her2_neg_score','0',this)">0</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ihc-row">
+    <span class="ihc-num">-</span>
+    <div>
+      <div style="font-size:13px;margin-bottom:5px;font-weight:500">Ki-67</div>
+      <div class="sub-inputs">
+        <input type="number" id="ki67" placeholder="%" min="0" max="100" style="width:65px" oninput="gen()">
+        <span style="font-size:12px;color:#666">%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">IHC — 選填項目 (5+)</div>
+  <div class="checkbox-row">
+    <input type="checkbox" id="opt_p63" onchange="gen()">
+    <label for="opt_p63">- P63 — absence of myoepithelial cells at invasive periphery</label>
+  </div>
+  <div class="checkbox-row">
+    <input type="checkbox" id="opt_ecad" onchange="gen()">
+    <label for="opt_ecad">- E-cadherin</label>
+    <div class="pill-group" id="ecad_pills" style="margin-left:8px">
+      <button class="pill" onclick="setPill('ecad','pos',this)">Positive (membranous)</button>
+      <button class="pill" onclick="setPill('ecad','loss',this)">Loss</button>
+    </div>
+  </div>
+  <div class="checkbox-row">
+    <input type="checkbox" id="opt_p120" onchange="gen()">
+    <label for="opt_p120">- P120</label>
+    <div class="pill-group" id="p120_pills" style="margin-left:8px">
+      <button class="pill" onclick="setPill('p120','pos',this)">Positive (membranous)</button>
+      <button class="pill" onclick="setPill('p120','loss',this)">Loss</button>
+    </div>
+  </div>
+</div>
+
+<div class="btns">
+  <button class="btn-main" onclick="gen()">▶ 產生報告</button>
+  <button class="btn-copy" onclick="copyReport()">複製</button>
+  <button class="btn-copy" onclick="resetAll()">重設</button>
+</div>
+
+<div class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+    <div class="section-title" style="margin-bottom:0">報告預覽</div>
+  </div>
+  <div class="output-area" id="output">— 請填寫上方欄位後點選「▶ 產生報告」—</div>
+</div>
+
+</div>
+<script>
+const S={side:null,histotype:null,tub:null,nuc:null,mit:null,dcis:false,dcis_grade:null,dcis_pat:[],dcis_nec:null,er:null,er_int:null,pr:null,pr_int:null,her2:null,her2_neg_score:null,ecad:null,p120:null};
+
+function setPill(key,val,el){
+  S[key]=val;
+  el.closest('.pill-group').querySelectorAll('.pill').forEach(b=>b.classList.remove('active','neg','eq'));
+  el.classList.add('active');
+  gen();
+}
+
+function toggleMulti(key,val,el){
+  if(!S[key])S[key]=[];
+  const i=S[key].indexOf(val);
+  if(i>=0){S[key].splice(i,1);el.classList.remove('active');}
+  else{S[key].push(val);el.classList.add('active');}
+  gen();
+}
+
+function setHistotype(type,el){
+  S.histotype=type;
+  document.querySelectorAll('#ht_nst,#ht_ilc,#ht_muci,#ht_apoc').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(type==='ilc'){
+    document.getElementById('opt_ecad').checked=true;
+    S.ecad='loss';
+    document.querySelectorAll('#ecad_pills .pill').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#ecad_pills .pill').forEach(b=>{if(b.textContent.includes('Loss'))b.classList.add('active');});
+    document.getElementById('opt_p120').checked=true;
+    S.p120='loss';
+    document.querySelectorAll('#p120_pills .pill').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#p120_pills .pill').forEach(b=>{if(b.textContent.includes('Loss'))b.classList.add('active');});
+  }
+  gen();
+}
+
+function setScore(key,val,el){
+  S[key]=val;
+  el.closest('.score-row').querySelectorAll('.sbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  updateGrade();gen();
+}
+
+function updateGrade(){
+  const total=(S.tub||0)+(S.nuc||0)+(S.mit||0);
+  const badge=document.getElementById('grade-badge');
+  if(!S.tub||!S.nuc||!S.mit){badge.textContent='— 請選擇';badge.className='grade-badge';return;}
+  if(total<=5){badge.textContent='Grade I  score '+total;badge.className='grade-badge g1';}
+  else if(total<=7){badge.textContent='Grade II  score '+total;badge.className='grade-badge g2';}
+  else{badge.textContent='Grade III  score '+total;badge.className='grade-badge g3';}
+}
+
+function toggleDCIS(){
+  S.dcis=document.getElementById('dcis_present').checked;
+  document.getElementById('dcis_detail').classList.toggle('hidden',!S.dcis);
+  gen();
+}
+
+function setER(val,el){
+  S.er=val;
+  el.closest('.pill-group').querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('er_detail').classList.toggle('hidden',val!=='pos');
+  gen();
+}
+
+function setPR(val,el){
+  S.pr=val;
+  el.closest('.pill-group').querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pr_detail').classList.toggle('hidden',val!=='pos');
+  gen();
+}
+
+function setHer2(val,el){
+  S.her2=val;
+  el.closest('.pill-group').querySelectorAll('.pill').forEach(b=>b.classList.remove('active','neg','eq'));
+  if(val==='neg')el.classList.add('neg');
+  else if(val==='eq')el.classList.add('eq');
+  else el.classList.add('active');
+  document.getElementById('her2_neg_detail').classList.toggle('hidden',val!=='neg');
+  if(val!=='neg')S.her2_neg_score=null;
+  gen();
+}
+
+function gen(){
+  const sideBase=S.side||'right / left';
+  const locNote=document.getElementById('location_note').value.trim();
+  const side=locNote?`${sideBase}/${locNote}`:sideBase;
+  const pieces=document.getElementById('pieces').value||'_';
+  const size=document.getElementById('size').value||'_';
+  const histoMap={
+    nst:'Invasive carcinoma of no special type (ductal).',
+    ilc:'Invasive lobular carcinoma.',
+    muci:'Mucin-producing carcinoma.',
+    apoc:'Invasive carcinoma with apocrine differentiation.'
+  };
+  const diagMap={
+    nst:'Invasive carcinoma of no special type',
+    ilc:'Invasive lobular carcinoma',
+    muci:'Mucin-producing carcinoma',
+    apoc:'Invasive carcinoma with apocrine differentiation'
+  };
+  const extraMicro={
+    muci:`Section shows islands of tumor cells floating within lakes of extracellular mucin. The tumor cells exhibit mild cytologic atypia with relatively uniform nuclei and small amounts of eosinophilic cytoplasm.\nThe overall features suggest a mucin-producing carcinoma, which can be either pure mucinous or mixed ductal-mucinous carcinoma. A definite diagnosis can only be made on the subsequent larger specimen.`,
+    apoc:`Section shows an infiltrating tumor comprised of large epithelial cells with abundant eosinophilic and granular cytoplasm, well defined cell borders, enlarged nuclei and prominent nucleoli. The tumor cells are strongly positive for AR, and negative for ER and PR, suggestive of apocrine differentiation. A definite subtype can only be made on the subsequent larger specimen.`
+  };
+  const ht=S.histotype;
+  const histoText=ht?histoMap[ht]:'___';
+  const diagText=ht?diagMap[ht]:'___';
+  const total=(S.tub||0)+(S.nuc||0)+(S.mit||0);
+  let gradeText='Grade ___ (score ___)';
+  if(S.tub&&S.nuc&&S.mit){
+    if(total<=5)gradeText=`Grade I (score ${total})`;
+    else if(total<=7)gradeText=`Grade II (score ${total})`;
+    else gradeText=`Grade III (score ${total})`;
+  }
+  const tubText=S.tub?`score ${S.tub}`:'score _';
+  const nucText=S.nuc?`score ${S.nuc}`:'score _';
+  const mitText=S.mit?`score ${S.mit}`:'score _';
+
+  let dcisText='';
+  if(S.dcis){
+    const dg=S.dcis_grade||'___';
+    const patArr=S.dcis_pat&&S.dcis_pat.length>0?S.dcis_pat:null;
+    let pats='___';
+    if(patArr){
+      const lower=patArr.map((v,i)=>i===0?v:v.toLowerCase());
+      if(lower.length===1)pats=lower[0];
+      else pats=lower.slice(0,-1).join(', ')+' and '+lower[lower.length-1];
+    }
+    let nec='';
+    if(S.dcis_nec==='none')nec='Necrosis: Not identified';
+    else if(S.dcis_nec==='focal')nec='Necrosis: Present, focal (small foci or single cell necrosis)';
+    else if(S.dcis_nec==='comedo')nec='Necrosis: Present, central (expansive "comedo" necrosis)';
+    else nec='Necrosis: ___';
+    dcisText=`Ductal carcinoma in situ: Present, ${dg} nuclear grade, ${pats} patterns.\n  ${nec}.\n`;
+  }
+
+  const erPct=document.getElementById('er_pct').value;
+  const erInt=S.er_int||'___';
+  let erText='- ER (Ab): ___';
+  if(S.er==='pos')erText=`- ER (Ab): Positive (${erPct||'__'}%, ${erInt})`;
+  else if(S.er==='low')erText='- ER (Ab): Low Positive (1-10% of cells with nuclear positivity)';
+  else if(S.er==='neg')erText='- ER (Ab): Negative';
+
+  const prPct=document.getElementById('pr_pct').value;
+  const prInt=S.pr_int||'___';
+  let prText='- PR (Ab): ___';
+  if(S.pr==='pos')prText=`- PR (Ab): Positive (${prPct||'__'}%, ${prInt})`;
+  else if(S.pr==='neg')prText='- PR (Ab): Negative';
+
+  let her2Text='- Her-2/neu (Ab): ___';
+  if(S.her2==='pos')her2Text='- Her-2/neu (Ab): Positive (3+)';
+  else if(S.her2==='eq')her2Text='- Her-2/neu (Ab): Equivocal (2+)';
+  else if(S.her2==='neg'){
+    const sc=S.her2_neg_score||'1+/0';
+    her2Text=`- Her-2/neu (Ab): Negative (${sc})`;
+  }
+
+  const ki67=document.getElementById('ki67').value;
+  const ki67Text=`- Ki-67: ${ki67||'__'}%`;
+
+  let optLines='';
+  if(document.getElementById('opt_p63').checked){
+    optLines+=`- P63 immunostaining demonstrates the absence of myoepithelial cells at the periphery of invasive focus.\n`;
+  }
+  if(document.getElementById('opt_ecad').checked){
+    let ecadVal=S.ecad;
+    if(!ecadVal&&ht==='ilc')ecadVal='loss';
+    let ecadLine='___';
+    if(ecadVal==='pos')ecadLine='Positive in membranous staining.';
+    else if(ecadVal==='loss')ecadLine='Loss';
+    optLines+=`- E-cadherin: ${ecadLine}\n`;
+  }
+  if(document.getElementById('opt_p120').checked){
+    let p120Val=S.p120;
+    if(!p120Val&&ht==='ilc')p120Val='loss';
+    let p120Line='___';
+    if(p120Val==='pos')p120Line='Positive in membranous staining.';
+    else if(p120Val==='loss')p120Line='Loss';
+    optLines+=`- P120: ${p120Line}\n`;
+  }
+
+  const extraText=extraMicro[ht]||'';
+
+  const report=`Pathological diagnosis:
+Breast, ${side}, core biopsy --- ${diagText}
+
+Gross description:
+Received are ${pieces} pieces of tissue measuring up to ${size} x 0.1 x 0.1 cm.
+
+All tissue is submitted in one cassette.
+
+Microscopic description:
+${extraText?extraText+'\n\n':''}Histologic type: ${histoText}
+Histologic grade (Nottingham histologic score):
+  ${gradeText}
+- Tubule formation: ${tubText}
+- Nuclear pleomorphism: ${nucText}
+- Mitotic count: ${mitText}
+${dcisText}
+IMMUNOHISTOCHEMICAL STUDY:
+${erText}
+${prText}
+${her2Text}
+${ki67Text}
+${optLines}
+(This case has been reviewed by two pathologists.)`;
+
+  document.getElementById('output').textContent=report;
+}
+
+function copyReport(){
+  const text=document.getElementById('output').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=event.target;const orig=btn.textContent;
+    btn.textContent='已複製 ✓';
+    setTimeout(()=>btn.textContent=orig,1500);
+  });
+}
+
+function resetAll(){
+  Object.keys(S).forEach(k=>{if(Array.isArray(S[k]))S[k]=[];else if(k==='dcis')S[k]=false;else S[k]=null;});
+  document.querySelectorAll('.pill,.sbtn').forEach(b=>b.classList.remove('active','neg','eq'));
+  document.getElementById('dcis_present').checked=false;
+  document.getElementById('dcis_detail').classList.add('hidden');
+  document.getElementById('opt_p63').checked=false;
+  document.getElementById('opt_ecad').checked=false;
+  document.getElementById('opt_p120').checked=false;
+  document.getElementById('er_detail').classList.add('hidden');
+  document.getElementById('pr_detail').classList.add('hidden');
+  document.getElementById('location_note').value='';
+  document.getElementById('pr_pct').value='';
+  document.getElementById('ki67').value='';
+  document.getElementById('pieces').value='3';
+  document.getElementById('size').value='1.2';
+  document.getElementById('grade-badge').textContent='— 請選擇';
+  document.getElementById('grade-badge').className='grade-badge';
+  document.getElementById('output').textContent='— 請填寫上方欄位後點選「▶ 產生報告」—';
+}
+
+gen();
+</script>
+</body>
+</html>
