@@ -1,22 +1,19 @@
 #!/bin/bash
-# 一鍵更新：從 Path-Report.enex 提取所有 APP 並推送到 GitHub
-
+# 一鍵更新：從 Path-Report.enex 提取所有報告生成 APP 並推送到 GitHub
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENEX="$SCRIPT_DIR/../病理報告系統/Path-Report.enex"
 TOKEN_FILE="$SCRIPT_DIR/.github_token"
 
-echo "🔄 病理工具一鍵更新"
+echo "🔄 病理報告生成系統 — 一鍵更新"
 echo "================================"
 
-# 確認 enex 存在
 if [ ! -f "$ENEX" ]; then
-  echo "❌ 找不到 Path-Report.enex：$ENEX"
+  echo "❌ 找不到 Path-Report.enex"
   exit 1
 fi
 
-# 讀取 GitHub token
 if [ ! -f "$TOKEN_FILE" ]; then
   echo "首次設定：請輸入 GitHub Personal Access Token"
   read -s -p "Token: " TOKEN
@@ -27,15 +24,17 @@ if [ ! -f "$TOKEN_FILE" ]; then
 fi
 TOKEN=$(cat "$TOKEN_FILE")
 
-# 提取所有 HTML
 echo ""
-echo "📦 從 Path-Report.enex 提取 APP..."
+echo "📦 從 Path-Report.enex 偵測並提取 APP..."
 python3 << PYEOF
 import xml.etree.ElementTree as ET
-import base64, re, os
+import base64, re, os, hashlib
 
 enex_path = """$ENEX"""
 hub_path = """$SCRIPT_DIR"""
+
+# Pathology Form Database 不包含
+SKIP_TITLES = {'Pathology Form Database'}
 
 folder_map = {
     'Ovary': 'ovary',
@@ -54,32 +53,51 @@ folder_map = {
     'Breast DCIS': 'breast-dcis',
     'Skin SCC': 'skin-scc',
     '乳癌': 'breast',
-    'Pathology Form Database': 'evernote-forms',
 }
 
 tree = ET.parse(enex_path)
 root = tree.getroot()
 resources = root.findall('.//resource')
 
-count = 0
+updated = 0
+skipped = 0
+
 for i, res in enumerate(resources):
     data_el = res.find('data')
     mime_el = res.find('mime')
     if data_el is None or mime_el is None or mime_el.text != 'text/html':
         continue
+
     raw = data_el.text.replace('\n','').replace(' ','')
     html = base64.b64decode(raw).decode('utf-8', errors='replace')
     title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE)
     title = title_match.group(1) if title_match else f'resource_{i}'
+
+    if title in SKIP_TITLES:
+        print(f"  ⏭  略過：{title}")
+        continue
+
     folder = next((v for k, v in folder_map.items() if k in title), f'app-{i}')
     out_dir = os.path.join(hub_path, folder)
     os.makedirs(out_dir, exist_ok=True)
-    with open(os.path.join(out_dir, 'index.html'), 'w', encoding='utf-8') as f:
-        f.write(html)
-    print(f"  ✓ {folder}  —  {title}")
-    count += 1
+    out_path = os.path.join(out_dir, 'index.html')
 
-print(f"\n共更新 {count} 個 APP")
+    new_hash = hashlib.md5(html.encode()).hexdigest()
+    old_hash = ''
+    if os.path.exists(out_path):
+        with open(out_path, 'rb') as f:
+            old_hash = hashlib.md5(f.read()).hexdigest()
+
+    if new_hash == old_hash:
+        print(f"  ✓ 無變更：{folder}")
+        skipped += 1
+    else:
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+        print(f"  🆕 已更新：{folder}  —  {title}")
+        updated += 1
+
+print(f"\n共更新 {updated} 個 APP，{skipped} 個無變更")
 PYEOF
 
 # Git commit & push
@@ -100,5 +118,4 @@ fi
 
 git remote set-url origin "https://github.com/shiauyu428/pathology-hub.git"
 echo ""
-echo "🌐 網站：https://shiauyu428.github.io/pathology-hub/"
-echo "（GitHub Pages 約 1-2 分鐘後生效）"
+echo "🌐 https://shiauyu428.github.io/pathology-hub/"
