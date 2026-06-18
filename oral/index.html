@@ -221,11 +221,28 @@
             <option value="selective neck dissection">Selective</option>
             <option value="supraomohyoid neck dissection">Supraomohyoid</option>
             <option value="lower neck dissection">Lower neck</option>
+            <option value="dissection">— (dissection only)</option>
           </select>
         </div>
-        <div class="fn-row" style="gap:6px;flex-wrap:wrap">
+        <div class="fn-row" style="gap:6px;flex-wrap:wrap;align-items:flex-start">
           <span class="fn-label">Levels included:</span>
-          <label style="font-size:11px"><input type="checkbox" id="neckLvlRI" checked onchange="updateLnRows()"> I</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlRII" checked onchange="updateLnRows()"> II</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlRIII" checked onchange="updateLnRows()"> III</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlRIV" checked onchange="updateLnRows()"> IV</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlRV" checked onchange="updateLnRows()"> V</label> 
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlRI" checked onchange="updateLnRows()"> I</label>
+            <span id="neckSubRI" style="display:inline-flex;gap:4px;align-items:center;background:#f0ede8;border-radius:2px;padding:1px 5px">
+              <span style="font-size:10px;color:var(--muted)">↳</span>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlRIa" onchange="updateLnRows()"> Ia</label>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlRIb" onchange="updateLnRows()"> Ib</label>
+            </span>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlRII" checked onchange="updateLnRows()"> II</label>
+            <span id="neckSubRII" style="display:inline-flex;gap:4px;align-items:center;background:#f0ede8;border-radius:2px;padding:1px 5px">
+              <span style="font-size:10px;color:var(--muted)">↳</span>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlRIIa" onchange="updateLnRows()"> IIa</label>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlRIIb" onchange="updateLnRows()"> IIb</label>
+            </span>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlRIII" checked onchange="updateLnRows()"> III</label>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlRIV" checked onchange="updateLnRows()"> IV</label>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlRV" checked onchange="updateLnRows()"> V</label>
+          </div>
         </div>
       </div>
     </div>
@@ -245,11 +262,28 @@
             <option value="selective neck dissection">Selective</option>
             <option value="supraomohyoid neck dissection">Supraomohyoid</option>
             <option value="lower neck dissection">Lower neck</option>
+            <option value="dissection">— (dissection only)</option>
           </select>
         </div>
-        <div class="fn-row" style="gap:6px;flex-wrap:wrap">
+        <div class="fn-row" style="gap:6px;flex-wrap:wrap;align-items:flex-start">
           <span class="fn-label">Levels included:</span>
-          <label style="font-size:11px"><input type="checkbox" id="neckLvlLI" checked onchange="updateLnRows()"> I</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlLII" checked onchange="updateLnRows()"> II</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlLIII" checked onchange="updateLnRows()"> III</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlLIV" checked onchange="updateLnRows()"> IV</label> <label style="font-size:11px"><input type="checkbox" id="neckLvlLV" checked onchange="updateLnRows()"> V</label> 
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlLI" checked onchange="updateLnRows()"> I</label>
+            <span id="neckSubLI" style="display:inline-flex;gap:4px;align-items:center;background:#f0ede8;border-radius:2px;padding:1px 5px">
+              <span style="font-size:10px;color:var(--muted)">↳</span>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlLIa" onchange="updateLnRows()"> Ia</label>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlLIb" onchange="updateLnRows()"> Ib</label>
+            </span>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlLII" checked onchange="updateLnRows()"> II</label>
+            <span id="neckSubLII" style="display:inline-flex;gap:4px;align-items:center;background:#f0ede8;border-radius:2px;padding:1px 5px">
+              <span style="font-size:10px;color:var(--muted)">↳</span>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlLIIa" onchange="updateLnRows()"> IIa</label>
+              <label style="font-size:11px"><input type="checkbox" id="neckLvlLIIb" onchange="updateLnRows()"> IIb</label>
+            </span>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlLIII" checked onchange="updateLnRows()"> III</label>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlLIV" checked onchange="updateLnRows()"> IV</label>
+            <label style="font-size:11px"><input type="checkbox" id="neckLvlLV" checked onchange="updateLnRows()"> V</label>
+          </div>
         </div>
       </div>
     </div>
@@ -296,6 +330,10 @@
         <span>cm</span>
       </div>
     </div>
+    <div class="fn-row" style="margin-top:-4px">
+      <span class="fn-label"></span>
+      <label style="font-size:11px;color:var(--muted)"><input type="checkbox" id="includeStructures"> 輸出 "including the following structures"</label>
+    </div>
 
     <!-- Right neck tissue -->
     <div id="grossNeckRSection" style="display:none">
@@ -335,7 +373,36 @@
             <input type="number" id="neckRI_z" placeholder="0" step="0.1" style="width:46px">
             <span style="font-size:11px;color:var(--muted)">cm</span>
           </div>
-        </div>        <div id="grossNeckRLvlII" style="display:none">
+        </div>
+        <div id="grossNeckRLvlIa" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level Ia:</span>
+            <input type="number" id="neckRIa_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckRIa_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIa_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIa_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckRLvlIb" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level Ib:</span>
+            <input type="number" id="neckRIb_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckRIb_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIb_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIb_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckRLvlII" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--accent2);min-width:60px">Level II:</span>
             <input type="number" id="neckRII_pieces" min="1" value="1" style="width:44px" placeholder="n" oninput="updateLnRows()">
@@ -348,7 +415,36 @@
             <input type="number" id="neckRII_z" placeholder="0" step="0.1" style="width:46px">
             <span style="font-size:11px;color:var(--muted)">cm</span>
           </div>
-        </div>        <div id="grossNeckRLvlIII" style="display:none">
+        </div>
+        <div id="grossNeckRLvlIIa" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level IIa:</span>
+            <input type="number" id="neckRIIa_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckRIIa_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIIa_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIIa_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckRLvlIIb" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level IIb:</span>
+            <input type="number" id="neckRIIb_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckRIIb_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIIb_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckRIIb_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckRLvlIII" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--accent2);min-width:60px">Level III:</span>
             <input type="number" id="neckRIII_pieces" min="1" value="1" style="width:44px" placeholder="n" oninput="updateLnRows()">
@@ -429,7 +525,36 @@
             <input type="number" id="neckLI_z" placeholder="0" step="0.1" style="width:46px">
             <span style="font-size:11px;color:var(--muted)">cm</span>
           </div>
-        </div>        <div id="grossNeckLLvlII" style="display:none">
+        </div>
+        <div id="grossNeckLLvlIa" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level Ia:</span>
+            <input type="number" id="neckLIa_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckLIa_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIa_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIa_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckLLvlIb" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level Ib:</span>
+            <input type="number" id="neckLIb_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckLIb_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIb_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIb_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckLLvlII" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--accent2);min-width:60px">Level II:</span>
             <input type="number" id="neckLII_pieces" min="1" value="1" style="width:44px" placeholder="n" oninput="updateLnRows()">
@@ -442,7 +567,36 @@
             <input type="number" id="neckLII_z" placeholder="0" step="0.1" style="width:46px">
             <span style="font-size:11px;color:var(--muted)">cm</span>
           </div>
-        </div>        <div id="grossNeckLLvlIII" style="display:none">
+        </div>
+        <div id="grossNeckLLvlIIa" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level IIa:</span>
+            <input type="number" id="neckLIIa_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckLIIa_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIIa_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIIa_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckLLvlIIb" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--accent2);min-width:60px">Level IIb:</span>
+            <input type="number" id="neckLIIb_pieces" min="1" value="1" style="width:44px" placeholder="n">
+            <span style="font-size:11px;color:var(--muted)">piece(s)</span>
+            <span style="font-size:11px;color:var(--muted)">size:</span>
+            <input type="number" id="neckLIIb_x" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIIb_y" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">x</span>
+            <input type="number" id="neckLIIb_z" placeholder="0" step="0.1" style="width:46px">
+            <span style="font-size:11px;color:var(--muted)">cm</span>
+          </div>
+        </div>
+        <div id="grossNeckLLvlIII" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;margin:4px 0 2px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--accent2);min-width:60px">Level III:</span>
             <input type="number" id="neckLIII_pieces" min="1" value="1" style="width:44px" placeholder="n" oninput="updateLnRows()">
@@ -544,13 +698,13 @@
         <label><input type="checkbox" id="oriMaxilla"> Maxilla</label>
         <label id="oriNeckRLabel" style="display:none">
           <input type="checkbox" id="oriNeckR"> Right neck level
-          <select id="neckLvlRFrom" style="width:62px;margin-left:4px"><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V">V</option></select> ~
-          <select id="neckLvlRTo" style="width:62px"><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V" selected>V</option></select> LN
+          <select id="neckLvlRFrom" style="width:68px;margin-left:4px"><option value="Ia">Ia</option><option value="Ib">Ib</option><option value="I" selected>I</option><option value="IIa">IIa</option><option value="IIb">IIb</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V">V</option></select> -
+          <select id="neckLvlRTo" style="width:68px"><option value="Ia">Ia</option><option value="Ib">Ib</option><option value="I">I</option><option value="IIa">IIa</option><option value="IIb">IIb</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V" selected>V</option></select> LN
         </label>
         <label id="oriNeckLLabel" style="display:none">
           <input type="checkbox" id="oriNeckL"> Left neck level
-          <select id="neckLvlLFrom" style="width:62px;margin-left:4px"><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V">V</option></select> ~
-          <select id="neckLvlLTo" style="width:62px"><option value="I">I</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V" selected>V</option></select> LN
+          <select id="neckLvlLFrom" style="width:68px;margin-left:4px"><option value="Ia">Ia</option><option value="Ib">Ib</option><option value="I" selected>I</option><option value="IIa">IIa</option><option value="IIb">IIb</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V">V</option></select> -
+          <select id="neckLvlLTo" style="width:68px"><option value="Ia">Ia</option><option value="Ib">Ib</option><option value="I">I</option><option value="IIa">IIa</option><option value="IIb">IIb</option><option value="II">II</option><option value="III">III</option><option value="IV">IV</option><option value="V" selected>V</option></select> LN
         </label>
         <label>
           <input type="checkbox" id="oriFree"> Free typing:
@@ -581,6 +735,8 @@
     <div style="font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:8px">GROSS MARGIN</div>
     <div class="hl-auto">⚡ Gross margin → Microscopic margin 自動同步</div>
     <div class="margin-grid" id="grossMarginGrid"></div>
+    <div id="customMarginsSection" style="margin-top:4px"></div>
+    <button type="button" onclick="addCustomMargin()" style="margin-top:2px;margin-bottom:8px;background:none;border:1px dashed var(--border-strong);color:var(--accent2);padding:3px 10px;border-radius:2px;font-size:11px;cursor:pointer;">+ Add custom margin</button>
 
     <div id="grossMandMarginRow" style="display:none">
       <div class="fn-row" style="margin-top:8px">
@@ -600,6 +756,11 @@
       </div>
     </div>
 
+    <div class="divider"></div>
+    <div style="font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:6px">OTHER SPECIMENS <span style="color:var(--muted);font-weight:400;font-size:10px">(選填)</span></div>
+    <div id="otherSpecimensContainer"></div>
+    <button type="button" onclick="addOtherSpecimen()" style="background:none;border:1px dashed var(--border-strong);color:var(--accent2);padding:3px 10px;border-radius:2px;font-size:11px;cursor:pointer;">+ Add specimen</button>
+
   </div>
 </div>
 
@@ -608,7 +769,7 @@
   <div class="section-header">📋 Representative Sections</div>
   <div class="section-body">
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Representative sections are taken and labeled as follows:</div>
-    <textarea id="repSections" placeholder="A1: ..., A2: ..." style="width:100%;height:80px;resize:vertical"></textarea>
+    <textarea id="repSections" placeholder="A1: ..., A2: ..." style="width:100%;height:200px;resize:vertical"></textarea>
   </div>
 </div>
 
@@ -637,6 +798,12 @@
       <span class="fn-label">DOI:</span>
       <input type="number" id="doiMm" placeholder="0" step="0.1" tabindex="41">
       <span style="color:var(--muted)">mm</span>
+    </div>
+
+    <div class="fn-row">
+      <span class="fn-label" style="color:var(--muted);font-size:11px">Extension note:</span>
+      <input type="text" id="doiNote" placeholder="e.g. Tumor invades pterygoid plates." style="width:280px">
+      <span style="color:var(--muted);font-size:10px">(選填)</span>
     </div>
 
     <div class="fn-row">
@@ -767,8 +934,16 @@
     <div class="ln-grid" id="lnInputGrid">
       <div class="ln-row" id="ln_Ir_row">Level I (R): <input type="number" id="l1r_pos" min="0" value="0" tabindex="50"> / <input type="number" id="l1r_tot" min="0" value="0" tabindex="51"></div>
       <div class="ln-row" id="ln_Il_row">Level I (L): <input type="number" id="l1l_pos" min="0" value="0" tabindex="52"> / <input type="number" id="l1l_tot" min="0" value="0" tabindex="53"></div>
+      <div class="ln-row" id="ln_Iar_row" style="display:none">Level Ia (R): <input type="number" id="l1ar_pos" min="0" value="0"> / <input type="number" id="l1ar_tot" min="0" value="0"></div>
+      <div class="ln-row" id="ln_Ial_row" style="display:none">Level Ia (L): <input type="number" id="l1al_pos" min="0" value="0"> / <input type="number" id="l1al_tot" min="0" value="0"></div>
+      <div class="ln-row" id="ln_Ibr_row" style="display:none">Level Ib (R): <input type="number" id="l1br_pos" min="0" value="0"> / <input type="number" id="l1br_tot" min="0" value="0"></div>
+      <div class="ln-row" id="ln_Ibl_row" style="display:none">Level Ib (L): <input type="number" id="l1bl_pos" min="0" value="0"> / <input type="number" id="l1bl_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_IIr_row">Level II (R): <input type="number" id="l2r_pos" min="0" value="0" tabindex="54"> / <input type="number" id="l2r_tot" min="0" value="0" tabindex="55"></div>
       <div class="ln-row" id="ln_IIl_row">Level II (L): <input type="number" id="l2l_pos" min="0" value="0" tabindex="56"> / <input type="number" id="l2l_tot" min="0" value="0" tabindex="57"></div>
+      <div class="ln-row" id="ln_IIar_row" style="display:none">Level IIa (R): <input type="number" id="l2ar_pos" min="0" value="0"> / <input type="number" id="l2ar_tot" min="0" value="0"></div>
+      <div class="ln-row" id="ln_IIal_row" style="display:none">Level IIa (L): <input type="number" id="l2al_pos" min="0" value="0"> / <input type="number" id="l2al_tot" min="0" value="0"></div>
+      <div class="ln-row" id="ln_IIbr_row" style="display:none">Level IIb (R): <input type="number" id="l2br_pos" min="0" value="0"> / <input type="number" id="l2br_tot" min="0" value="0"></div>
+      <div class="ln-row" id="ln_IIbl_row" style="display:none">Level IIb (L): <input type="number" id="l2bl_pos" min="0" value="0"> / <input type="number" id="l2bl_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_IIIr_row">Level III (R): <input type="number" id="l3r_pos" min="0" value="0" tabindex="58"> / <input type="number" id="l3r_tot" min="0" value="0" tabindex="59"></div>
       <div class="ln-row" id="ln_IIIl_row">Level III (L): <input type="number" id="l3l_pos" min="0" value="0" tabindex="60"> / <input type="number" id="l3l_tot" min="0" value="0" tabindex="61"></div>
       <div class="ln-row" id="ln_IVr_row">Level IV (R): <input type="number" id="l4r_pos" min="0" value="0" tabindex="62"> / <input type="number" id="l4r_tot" min="0" value="0" tabindex="63"></div>
@@ -843,6 +1018,10 @@
     </div>
 
     <div class="divider"></div>
+    <div style="font-size:11px;color:var(--accent2);margin-bottom:4px;font-weight:600;">OTHER SPECIMENS — Additional findings <span style="color:var(--muted);font-weight:400;font-size:10px">(自動同步 Gross Other specimens)</span></div>
+    <div id="otherSpecMicroSync" style="margin-bottom:8px"><span style="color:var(--muted);font-size:11px">（Gross Other specimens 為空）</span></div>
+
+    <div class="divider"></div>
     <div style="font-size:11px;color:var(--accent2);margin-bottom:6px;font-weight:600;">Additional findings</div>
     <textarea id="comments" placeholder="Additional findings..." style="width:100%;height:60px;resize:vertical"></textarea>
 
@@ -901,28 +1080,6 @@ function renderMarginGrid(containerId, readonly) {
   MARGINS.forEach(dir => renderMarginDir(c, dir, true, readonly));
   MARGINS_DEFAULT_OFF.forEach(dir => renderMarginDir(c, dir, false, readonly));
 
-  if (!readonly) {
-    // Free typing margin row
-    const dirEl = document.createElement('div');
-    dirEl.className = 'margin-dir';
-    dirEl.innerHTML = `<label style="display:flex;align-items:center;gap:4px;justify-content:flex-end"><input type="checkbox" id="gross_custom_chk" onchange="toggleCustomMargin()"> <input type="text" id="gross_custom_name" placeholder="Custom..." style="width:70px;font-size:11px" oninput="syncMicroMargins()">:</label>`;
-    const optsEl = document.createElement('div');
-    optsEl.className = 'margin-opts';
-    optsEl.innerHTML = `
-      <div id="gross_custom_opts" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
-        <label><input type="radio" name="gross_custom" value="free" checked onchange="syncMicroMargins()"> Free</label>
-        <input type="number" id="gross_custom_mm" min="0" step="1" placeholder="mm" style="width:52px" oninput="syncMicroMargins()">
-        <span style="color:var(--muted);font-size:11px">mm</span>
-        <label><input type="radio" name="gross_custom" value="lt1" onchange="syncMicroMargins()"> &lt;1mm</label>
-        <label><input type="radio" name="gross_custom" value="involved" onchange="syncMicroMargins()"> Involved</label>
-      </div>`;
-    c.appendChild(dirEl);
-    c.appendChild(optsEl);
-
-    // Micro sync display for custom
-    const microRow = document.getElementById('microMarginGrid');
-    // Will be handled in syncMicroMargins
-  }
 }
 
 function toggleMarginDir(dir) {
@@ -932,14 +1089,117 @@ function toggleMarginDir(dir) {
   syncMicroMargins();
 }
 
-function toggleCustomMargin() {
-  const on = document.getElementById('gross_custom_chk').checked;
-  document.getElementById('gross_custom_opts').style.display = on ? 'flex' : 'none';
+// ===== CUSTOM MARGINS (multi) =====
+let customMarginCounter = 0;
+
+function addCustomMargin() {
+  const idx = ++customMarginCounter;
+  const c = document.getElementById('customMarginsSection');
+  const row = document.createElement('div');
+  row.id = `customMarginRow_${idx}`;
+  row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;';
+  row.innerHTML = `
+    <input type="text" id="custom_name_${idx}" placeholder="Margin name..." style="width:90px;font-size:11px" oninput="syncMicroMargins()">
+    <span style="color:var(--muted);font-size:11px">:</span>
+    <label style="font-size:11px"><input type="radio" name="gross_custom_${idx}" value="free" checked onchange="syncMicroMargins()"> Free</label>
+    <input type="number" id="custom_mm_${idx}" min="0" step="1" placeholder="mm" style="width:48px" oninput="syncMicroMargins()">
+    <span style="color:var(--muted);font-size:11px">mm</span>
+    <label style="font-size:11px"><input type="radio" name="gross_custom_${idx}" value="lt1" onchange="syncMicroMargins()"> &lt;1mm</label>
+    <label style="font-size:11px"><input type="radio" name="gross_custom_${idx}" value="involved" onchange="syncMicroMargins()"> Involved</label>
+    <button type="button" onclick="removeCustomMargin(${idx})" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:2px;padding:1px 6px;cursor:pointer;font-size:11px">✕</button>`;
+  c.appendChild(row);
+}
+
+function removeCustomMargin(idx) {
+  const row = document.getElementById(`customMarginRow_${idx}`);
+  if (row) row.remove();
   syncMicroMargins();
+}
+
+function getAllCustomMargins() {
+  const results = [];
+  const c = document.getElementById('customMarginsSection');
+  if (!c) return results;
+  c.querySelectorAll('[id^="customMarginRow_"]').forEach(row => {
+    const idx = row.id.replace('customMarginRow_', '');
+    const name = document.getElementById(`custom_name_${idx}`)?.value?.trim();
+    if (!name) return;
+    let val = 'free';
+    row.querySelectorAll(`input[name="gross_custom_${idx}"]`).forEach(r => { if (r.checked) val = r.value; });
+    const mm = document.getElementById(`custom_mm_${idx}`)?.value || '';
+    let grossText = '', microText = '';
+    if (val === 'free')     { grossText = `Free, ${mm || '___'} mm in distance.`; microText = `Free, ${mm || '___'} mm from invasive carcinoma`; }
+    else if (val === 'lt1') { grossText = '<1 mm'; microText = '<1 mm from invasive carcinoma'; }
+    else                    { grossText = 'Involved'; microText = 'Involved by invasive carcinoma'; }
+    results.push({ name, grossText, microText });
+  });
+  return results;
 }
 
 renderMarginGrid('grossMarginGrid', false);
 renderMarginGrid('microMarginGrid', true);
+
+// ===== OTHER SPECIMENS =====
+let otherSpecimenCounter = 0;
+
+function addOtherSpecimen() {
+  const idx = ++otherSpecimenCounter;
+  const c = document.getElementById('otherSpecimensContainer');
+  const row = document.createElement('div');
+  row.id = `otherSpecRow_${idx}`;
+  row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;';
+  row.innerHTML = `
+    <input type="text" id="otherSpec_name_${idx}" placeholder="Specimen name" style="width:140px;font-size:11px">
+    <span style="color:var(--muted);font-size:11px">:</span>
+    <input type="number" id="otherSpec_pieces_${idx}" min="1" value="1" style="width:44px" placeholder="n">
+    <span style="color:var(--muted);font-size:11px">piece(s), up to</span>
+    <input type="number" id="otherSpec_x_${idx}" placeholder="0" step="0.1" style="width:46px">
+    <span style="color:var(--muted);font-size:11px">x</span>
+    <input type="number" id="otherSpec_y_${idx}" placeholder="0" step="0.1" style="width:46px">
+    <span style="color:var(--muted);font-size:11px">x</span>
+    <input type="number" id="otherSpec_z_${idx}" placeholder="0" step="0.1" style="width:46px">
+    <span style="color:var(--muted);font-size:11px">cm</span>
+    <button type="button" onclick="removeOtherSpecimen(${idx})" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:2px;padding:1px 6px;cursor:pointer;font-size:11px">✕</button>`;
+  c.appendChild(row);
+  syncOtherSpecMicro();
+}
+
+function removeOtherSpecimen(idx) {
+  const row = document.getElementById(`otherSpecRow_${idx}`);
+  if (row) row.remove();
+  syncOtherSpecMicro();
+}
+
+function syncOtherSpecMicro() {
+  const container = document.getElementById('otherSpecMicroSync');
+  if (!container) return;
+  const rows = document.getElementById('otherSpecimensContainer')?.querySelectorAll('[id^="otherSpecRow_"]') || [];
+  if (!rows.length) {
+    container.innerHTML = '<span style="color:var(--muted);font-size:11px">（Gross Other specimens 為空）</span>';
+    return;
+  }
+  // Preserve existing text values before re-rendering
+  const saved = {};
+  container.querySelectorAll('[id^="otherSpecMicro_"]').forEach(el => { saved[el.id] = el.value; });
+  container.innerHTML = '';
+  rows.forEach(row => {
+    const idx = row.id.replace('otherSpecRow_', '');
+    const nameEl = document.getElementById(`otherSpec_name_${idx}`);
+    const name = nameEl?.value?.trim() || '(unnamed)';
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;';
+    div.innerHTML = `<span style="min-width:120px;font-size:12px;color:var(--accent2)">${name}:</span>
+      <input type="text" id="otherSpecMicro_${idx}" placeholder="free typing..." style="width:270px">`;
+    container.appendChild(div);
+    const inputEl = div.querySelector(`#otherSpecMicro_${idx}`);
+    if (saved[`otherSpecMicro_${idx}`]) inputEl.value = saved[`otherSpecMicro_${idx}`];
+    // Sync name label when gross name changes
+    if (nameEl) nameEl.addEventListener('input', () => {
+      const lbl = div.querySelector('span');
+      if (lbl) lbl.textContent = (nameEl.value.trim() || '(unnamed)') + ':';
+    });
+  });
+}
 
 // ===== DYSPLASIA MARGINS =====
 function renderDysplasiaGrid(containerId, readonly) {
@@ -1034,15 +1294,65 @@ function toggleNeckLByLevel() {
   updateLnRows();
 }
 
+function hasSubLevels(side, lv) {
+  if (lv === 'I')  return document.getElementById(`neckLvl${side}Ia`)?.checked || document.getElementById(`neckLvl${side}Ib`)?.checked;
+  if (lv === 'II') return document.getElementById(`neckLvl${side}IIa`)?.checked || document.getElementById(`neckLvl${side}IIb`)?.checked;
+  return false;
+}
+
+function getLnIds(side, procChecked) {
+  if (!procChecked) return [];
+  const s = side.toLowerCase();
+  const result = [];
+  ['I','II','III','IV','V'].forEach(lv => {
+    const chk = document.getElementById(`neckLvl${side}${lv}`);
+    if (!chk || chk.checked) {
+      if (lv === 'I' && hasSubLevels(side, 'I')) {
+        if (document.getElementById(`neckLvl${side}Ia`)?.checked) result.push(`l1a${s}`);
+        if (document.getElementById(`neckLvl${side}Ib`)?.checked) result.push(`l1b${s}`);
+      } else if (lv === 'II' && hasSubLevels(side, 'II')) {
+        if (document.getElementById(`neckLvl${side}IIa`)?.checked) result.push(`l2a${s}`);
+        if (document.getElementById(`neckLvl${side}IIb`)?.checked) result.push(`l2b${s}`);
+      } else {
+        const n = {I:'1',II:'2',III:'3',IV:'4',V:'5'}[lv];
+        result.push(`l${n}${s}`);
+      }
+    }
+  });
+  return result;
+}
+
 function updateLnRows() {
-  // Show/hide per-level detail rows based on level checkboxes
   ['R','L'].forEach(sid => {
-    ['I','II','III','IV','V'].forEach(r => {
-      const chk = document.getElementById(`neckLvl${sid}${r}`);
-      const row = document.getElementById(`grossNeck${sid}Lvl${r}`);
-      if (row && chk) row.style.display = (chk.checked && document.getElementById(`neck${sid}ByLevel`)?.checked) ? '' : 'none';
+    const byLevel = document.getElementById(`neck${sid}ByLevel`)?.checked;
+    // Show/hide sub-level spans (always visible when parent is checked)
+    ['I','II'].forEach(lv => {
+      const parentChk = document.getElementById(`neckLvl${sid}${lv}`);
+      const subSpan = document.getElementById(`neckSub${sid}${lv}`);
+      if (subSpan) subSpan.style.display = parentChk?.checked ? 'inline-flex' : 'none';
+    });
+    // Show/hide byLevel gross rows (standard levels)
+    ['I','II','III','IV','V'].forEach(lv => {
+      const parentChk = document.getElementById(`neckLvl${sid}${lv}`);
+      const row = document.getElementById(`grossNeck${sid}Lvl${lv}`);
+      const useSub = hasSubLevels(sid, lv);
+      // Standard row: show if byLevel on AND parent checked AND not using sub-levels
+      if (row && parentChk) row.style.display = (byLevel && parentChk.checked && !useSub) ? '' : 'none';
+    });
+    // Show/hide sub-level byLevel gross rows
+    [
+      {rowId:`grossNeck${sid}LvlIa`,  parentLv:'I',  subLv:'Ia'},
+      {rowId:`grossNeck${sid}LvlIb`,  parentLv:'I',  subLv:'Ib'},
+      {rowId:`grossNeck${sid}LvlIIa`, parentLv:'II', subLv:'IIa'},
+      {rowId:`grossNeck${sid}LvlIIb`, parentLv:'II', subLv:'IIb'},
+    ].forEach(({rowId, parentLv, subLv}) => {
+      const parentChk = document.getElementById(`neckLvl${sid}${parentLv}`);
+      const subChk = document.getElementById(`neckLvl${sid}${subLv}`);
+      const row = document.getElementById(rowId);
+      if (row) row.style.display = (byLevel && parentChk?.checked && subChk?.checked) ? '' : 'none';
     });
   });
+  syncLnRows();
 }
 
 function syncLnRows() {
@@ -1050,16 +1360,43 @@ function syncLnRows() {
   const hasL = document.getElementById('procNeckL').checked;
   const noLNR = document.getElementById('noLNR')?.checked;
   const noLNL = document.getElementById('noLNL')?.checked;
-  const rIds = ['ln_Ir_row','ln_IIr_row','ln_IIIr_row','ln_IVr_row','ln_Vr_row'];
-  const lIds = ['ln_Il_row','ln_IIl_row','ln_IIIl_row','ln_IVl_row','ln_Vl_row'];
   const lvls = ['I','II','III','IV','V'];
-  rIds.forEach((id,i) => {
-    const chk = document.getElementById(`neckLvlR${lvls[i]}`);
-    document.getElementById(id).style.display = (hasR && !noLNR && (!chk || chk.checked)) ? '' : 'none';
+
+  // Standard level rows — hide when sub-levels active
+  const rStdIds = ['ln_Ir_row','ln_IIr_row','ln_IIIr_row','ln_IVr_row','ln_Vr_row'];
+  const lStdIds = ['ln_Il_row','ln_IIl_row','ln_IIIl_row','ln_IVl_row','ln_Vl_row'];
+  rStdIds.forEach((id,i) => {
+    const lv = lvls[i];
+    const chk = document.getElementById(`neckLvlR${lv}`);
+    const useSub = hasSubLevels('R', lv);
+    document.getElementById(id).style.display = (hasR && !noLNR && (!chk || chk.checked) && !useSub) ? '' : 'none';
   });
-  lIds.forEach((id,i) => {
-    const chk = document.getElementById(`neckLvlL${lvls[i]}`);
-    document.getElementById(id).style.display = (hasL && !noLNL && (!chk || chk.checked)) ? '' : 'none';
+  lStdIds.forEach((id,i) => {
+    const lv = lvls[i];
+    const chk = document.getElementById(`neckLvlL${lv}`);
+    const useSub = hasSubLevels('L', lv);
+    document.getElementById(id).style.display = (hasL && !noLNL && (!chk || chk.checked) && !useSub) ? '' : 'none';
+  });
+
+  // Sub-level rows
+  const subMap = [
+    {row:'ln_Iar_row', side:'R', parentLv:'I',  subLv:'Ia'},
+    {row:'ln_Ibr_row', side:'R', parentLv:'I',  subLv:'Ib'},
+    {row:'ln_IIar_row',side:'R', parentLv:'II', subLv:'IIa'},
+    {row:'ln_IIbr_row',side:'R', parentLv:'II', subLv:'IIb'},
+    {row:'ln_Ial_row', side:'L', parentLv:'I',  subLv:'Ia'},
+    {row:'ln_Ibl_row', side:'L', parentLv:'I',  subLv:'Ib'},
+    {row:'ln_IIal_row',side:'L', parentLv:'II', subLv:'IIa'},
+    {row:'ln_IIbl_row',side:'L', parentLv:'II', subLv:'IIb'},
+  ];
+  subMap.forEach(({row,side,parentLv,subLv}) => {
+    const hasProc = side === 'R' ? hasR : hasL;
+    const noLN = side === 'R' ? noLNR : noLNL;
+    const parentChk = document.getElementById(`neckLvl${side}${parentLv}`);
+    const subChk = document.getElementById(`neckLvl${side}${subLv}`);
+    const show = hasProc && !noLN && (!parentChk || parentChk.checked) && subChk?.checked;
+    const el = document.getElementById(row);
+    if (el) el.style.display = show ? '' : 'none';
   });
   const lnBlock = document.getElementById('lnBlock');
   const lnDivider = document.getElementById('lnDivider');
@@ -1094,7 +1431,7 @@ function toggleNeckR() {
   });
   document.getElementById('oriNeckRLabel').style.display = on ? '' : 'none';
   updateSmgMicro();
-  syncLnRows();
+  updateLnRows();
 }
 
 function toggleNeckL() {
@@ -1104,7 +1441,7 @@ function toggleNeckL() {
   });
   document.getElementById('oriNeckLLabel').style.display = on ? '' : 'none';
   updateSmgMicro();
-  syncLnRows();
+  updateLnRows();
 }
 
 function updateSmgMicro() {
@@ -1185,24 +1522,33 @@ function neoAdjChange() {
 function computeLnSum() {
   const hasR = document.getElementById('procNeckR').checked;
   const hasL = document.getElementById('procNeckL').checked;
-  const lvls = ['I','II','III','IV','V'];
-  const lnMap = {I:'1',II:'2',III:'3',IV:'4',V:'5'};
-  const rIds = hasR ? lvls.filter(r => { const c=document.getElementById(`neckLvlR${r}`); return !c||c.checked; }).map(r=>`l${lnMap[r]}r`) : [];
-  const lIds = hasL ? lvls.filter(r => { const c=document.getElementById(`neckLvlL${r}`); return !c||c.checked; }).map(r=>`l${lnMap[r]}l`) : [];
-  let p = 0, t = 0;
-  [...rIds, ...lIds].forEach(id => {
-    p += parseInt(document.getElementById(id+'_pos')?.value || 0);
-    t += parseInt(document.getElementById(id+'_tot')?.value || 0);
+  const noLNR = document.getElementById('noLNR')?.checked;
+  const noLNL = document.getElementById('noLNL')?.checked;
+  const rIds = getLnIds('R', hasR && !noLNR);
+  const lIds = getLnIds('L', hasL && !noLNL);
+  let rp = 0, rt = 0, lp = 0, lt = 0;
+  rIds.forEach(id => {
+    rp += parseInt(document.getElementById(id+'_pos')?.value || 0);
+    rt += parseInt(document.getElementById(id+'_tot')?.value || 0);
+  });
+  lIds.forEach(id => {
+    lp += parseInt(document.getElementById(id+'_pos')?.value || 0);
+    lt += parseInt(document.getElementById(id+'_tot')?.value || 0);
   });
   const el = document.getElementById('lnSummaryAuto');
-  if (el) el.textContent = `LN 自動加總: ${p} / ${t}`;
-  // Fix 3: show ENE not-applicable hint when no positive LN
+  if (el) {
+    const parts = [];
+    if (hasR && !noLNR) parts.push(`Rt: ${rp}/${rt}`);
+    if (hasL && !noLNL) parts.push(`Lt: ${lp}/${lt}`);
+    el.textContent = parts.length ? `LN 加總 — ${parts.join('  |  ')}` : 'LN 總計將自動加總 ⟶';
+  }
+  const totalPos = rp + lp;
+  const totalTot = rt + lt;
   const hint = document.getElementById('eneNAHint');
-  if (hint) hint.style.display = (p === 0 && t > 0) ? '' : 'none';
+  if (hint) hint.style.display = (totalPos === 0 && totalTot > 0) ? '' : 'none';
 }
 document.querySelectorAll('.ln-row input[type="number"]').forEach(i => i.addEventListener('input', computeLnSum));
-computeLnSum();
-syncLnRows();
+updateLnRows(); // also calls syncLnRows → computeLnSum
 syncMicroTumorFields();
 
 // ===== HELPERS =====
@@ -1222,19 +1568,6 @@ function getGrossMarginText(dir) {
   return 'Involved';
 }
 
-function getCustomMarginText() {
-  if (!document.getElementById('gross_custom_chk')?.checked) return null;
-  const name = document.getElementById('gross_custom_name')?.value?.trim();
-  if (!name) return null;
-  let val = 'free';
-  document.querySelectorAll('input[name="gross_custom"]').forEach(r => { if (r.checked) val = r.value; });
-  const mm = document.getElementById('gross_custom_mm')?.value || '';
-  let result = '';
-  if (val === 'free') result = `Free, ${mm || '___'} mm in distance.`;
-  else if (val === 'lt1') result = '<1 mm';
-  else result = 'Involved';
-  return { name, text: result };
-}
 
 function getMicroMarginText(dir) {
   const chkEl = document.getElementById(`gross_${dir}_chk`);
@@ -1247,19 +1580,6 @@ function getMicroMarginText(dir) {
   return 'Involved by invasive carcinoma';
 }
 
-function getCustomMicroMarginText() {
-  if (!document.getElementById('gross_custom_chk')?.checked) return null;
-  const name = document.getElementById('gross_custom_name')?.value?.trim();
-  if (!name) return null;
-  let val = 'free';
-  document.querySelectorAll('input[name="gross_custom"]').forEach(r => { if (r.checked) val = r.value; });
-  const mm = document.getElementById('gross_custom_mm')?.value || '';
-  let result = '';
-  if (val === 'free') result = `Free, ${mm || '___'} mm from invasive carcinoma`;
-  else if (val === 'lt1') result = '<1 mm from invasive carcinoma';
-  else result = 'Involved by invasive carcinoma';
-  return { name, text: result };
-}
 
 function getBoneMarginText(name) {
   let val = 'Free';
@@ -1282,8 +1602,6 @@ function generateReport() {
   const tumorSite = tumorSiteRaw === '_' ? '_' : tumorSiteRaw.charAt(0).toUpperCase() + tumorSiteRaw.slice(1);
   const neckTypeR = document.getElementById('neckTypeR').value;
   const neckTypeL = document.getElementById('neckTypeL').value;
-  const mandSide  = document.getElementById('mandibleSide').value;
-  const maxSide   = document.getElementById('maxillaSide').value;
 
   const noLNR = procNeckR && document.getElementById('noLNR')?.checked;
   const noLNL = procNeckL && document.getElementById('noLNL')?.checked;
@@ -1295,24 +1613,21 @@ function generateReport() {
   const pTdx = pT.replace('pT', `${yPfx}pT`);
   const pNdx = pN === 'pNX' ? 'pN not assigned (no nodes submitted or found)' : pN.replace('pN', `${yPfx}pN`);
 
-  const lnMap2 = {I:'1',II:'2',III:'3',IV:'4',V:'5'};
-  const lvls2 = ['I','II','III','IV','V'];
-  const lnIdsR = procNeckR ? lvls2.filter(r=>{const c=document.getElementById(`neckLvlR${r}`);return !c||c.checked;}).map(r=>`l${lnMap2[r]}r`) : [];
-  const lnIdsL = procNeckL ? lvls2.filter(r=>{const c=document.getElementById(`neckLvlL${r}`);return !c||c.checked;}).map(r=>`l${lnMap2[r]}l`) : [];
-  let totalPos = 0, totalTot = 0;
-  [...lnIdsR, ...lnIdsL].forEach(id => {
-    totalPos += parseInt(document.getElementById(id+'_pos')?.value || 0);
-    totalTot += parseInt(document.getElementById(id+'_tot')?.value || 0);
-  });
-  const freeOfMet = totalPos === 0;
+  const lnIdsR = getLnIds('R', procNeckR);
+  const lnIdsL = getLnIds('L', procNeckL);
 
-  function neckDxLine(side, neckType, noLN) {
-    if (noLN) return `Lymph nodes, ${side} neck, ${neckType} --- No lymphoid tissue.`;
-    const status = freeOfMet
-      ? `Free of metastasis (${totalPos}/${totalTot}, ${pNdx})`
-      : `Carcinoma metastatic (${totalPos}/${totalTot}, ${pNdx})`;
-    return `Lymph nodes, ${side} neck, ${neckType} --- ${status}.`;
-  }
+  let rTotalPos = 0, rTotalTot = 0;
+  lnIdsR.forEach(id => {
+    rTotalPos += parseInt(document.getElementById(id+'_pos')?.value || 0);
+    rTotalTot += parseInt(document.getElementById(id+'_tot')?.value || 0);
+  });
+  let lTotalPos = 0, lTotalTot = 0;
+  lnIdsL.forEach(id => {
+    lTotalPos += parseInt(document.getElementById(id+'_pos')?.value || 0);
+    lTotalTot += parseInt(document.getElementById(id+'_tot')?.value || 0);
+  });
+  const totalPos = rTotalPos + lTotalPos;
+  const freeOfMet = totalPos === 0;
 
   const eneVal   = rad('ene');
   const eneLevel = document.getElementById('eneLevel').value || '_';
@@ -1352,53 +1667,100 @@ function generateReport() {
   if (procPartMax)  procParts.push('partial maxillectomy');
   const procStr = procParts.join(', ');
 
-  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  // LN level name from ID
+  function lvName(id) {
+    const m = id.match(/^l(\d+)([ab]?)([lr])$/);
+    if (!m) return id;
+    const numToRoman = {'1':'I','2':'II','3':'III','4':'IV','5':'V'};
+    const roman = numToRoman[m[1]] || m[1];
+    const sub = m[2] ? m[2] : '';
+    return `Level ${roman}${sub}`;
+  }
 
   let r = '';
 
   // PATHOLOGIC DIAGNOSIS
   r += `PATHOLOGIC DIAGNOSIS:\n`;
-  if (procWide)  r += `${tumorSite}, wide excision --- Squamous cell carcinoma (${pTdx}).\n`;
-  if (procGloss) r += `${tumorSite}, glossectomy --- Squamous cell carcinoma (${pTdx}).\n`;
-  if (procNeckR) r += neckDxLine('right', neckTypeR, noLNR) + '\n';
-  if (procNeckL) r += neckDxLine('left',  neckTypeL, noLNL) + '\n';
+  if (procWide) {
+    r += `${tumorSite}, wide excision\n`;
+    r += `-- Squamous cell carcinoma (${pTdx})\n`;
+  }
+  if (procGloss) {
+    r += `${tumorSite}, glossectomy\n`;
+    r += `-- Squamous cell carcinoma (${pTdx})\n`;
+  }
+  // pN goes on the last neck line that has an actual node count
+  const rHasCount = procNeckR && !noLNR;
+  const lHasCount = procNeckL && !noLNL;
+  const pnOnR = rHasCount && !lHasCount;
+  const pnOnL = lHasCount;
+
+  if (procNeckR) {
+    r += `Lymph nodes, right neck, ${neckTypeR}\n`;
+    if (noLNR) {
+      r += `-- No lymphoid tissue\n`;
+    } else {
+      const pnSuffix = pnOnR ? `, ${pNdx}` : '';
+      r += rTotalPos > 0
+        ? `-- Carcinoma, metastatic (${rTotalPos}/${rTotalTot}${pnSuffix})\n`
+        : `-- Free of metastasis (${rTotalPos}/${rTotalTot}${pnSuffix})\n`;
+    }
+  }
+  if (procNeckL) {
+    r += `Lymph nodes, left neck, ${neckTypeL}\n`;
+    if (noLNL) {
+      r += `-- No lymphoid tissue\n`;
+    } else {
+      const pnSuffix = pnOnL ? `, ${pNdx}` : '';
+      r += lTotalPos > 0
+        ? `-- Carcinoma, metastatic (${lTotalPos}/${lTotalTot}${pnSuffix})\n`
+        : `-- Free of metastasis (${lTotalPos}/${lTotalTot}${pnSuffix})\n`;
+    }
+  }
   if (procMand || procMargMand) {
     const st = document.querySelector('input[name="mandStatus"]:checked')?.value;
     const mandSideStr = chk('procMandible') ? document.getElementById('mandibleSide').value : document.getElementById('margMandSide').value;
     const mandProcStr = procMand ? 'mandibulectomy' : 'marginal mandibulectomy';
-    r += `Mandible, ${mandSideStr}, ${mandProcStr} --- ${st === 'free' ? 'Free of tumor' : 'Carcinoma, directly invaded'}.\n`;
+    r += `Mandible, ${mandSideStr}, ${mandProcStr}\n`;
+    r += `-- ${st === 'free' ? 'Free of tumor' : 'Carcinoma, directly invaded'}\n`;
   }
   if (procMax || procPartMax) {
     const st = document.querySelector('input[name="maxStatus"]:checked')?.value;
     const maxSideStr = chk('procMaxilla') ? document.getElementById('maxillaSide').value : document.getElementById('partMaxSide').value;
     const maxProcStr = procMax ? 'maxillectomy' : 'partial maxillectomy';
-    r += `Maxilla, ${maxSideStr}, ${maxProcStr} --- ${st === 'free' ? 'Free of tumor' : 'Carcinoma, directly invaded'}.\n`;
+    r += `Maxilla, ${maxSideStr}, ${maxProcStr}\n`;
+    r += `-- ${st === 'free' ? 'Free of tumor' : 'Carcinoma, directly invaded'}\n`;
   }
 
   // GROSS
   r += `\nGROSS DESCRIPTION:\n`;
   r += `Surgical procedure and type: ${procStr}, fixed in formalin.\n\n`;
-  r += `Specimen size: ${sz(getNum('specX'),getNum('specY'),getNum('specZ'))} cm`;
+  r += `Specimen size: ${sz(getNum('specX'),getNum('specY'),getNum('specZ'))} cm.\n`;
 
   const byLevelR = procNeckR && document.getElementById('neckRByLevel')?.checked;
   const byLevelL = procNeckL && document.getElementById('neckLByLevel')?.checked;
   const hasMandGross = procMand || procMargMand;
   const hasMaxGross  = procMax  || procPartMax;
-  const hasInlineNeck = (procNeckR && !byLevelR) || (procNeckL && !byLevelL);
-  const hasExtra = hasInlineNeck || hasMandGross || hasMaxGross;
 
-  if (hasExtra) {
-    r += `, including the following structures:\n`;
-    if (procNeckR && !byLevelR) {
-      r += `  Right neck dissection tissue: ${sz(getNum('neckRX'),getNum('neckRY'),getNum('neckRZ'))} cm`;
-      const sx = getNum('smgRX');
-      r += sx !== '_' ? `, including submandibular gland measuring ${sz(sx,getNum('smgRY'),getNum('smgRZ'))} cm.\n` : `.\n`;
-    }
-    if (procNeckL && !byLevelL) {
-      r += `  Left neck dissection tissue: ${sz(getNum('neckLX'),getNum('neckLY'),getNum('neckLZ'))} cm`;
-      const sx = getNum('smgLX');
-      r += sx !== '_' ? `, including submandibular gland measuring ${sz(sx,getNum('smgLY'),getNum('smgLZ'))} cm.\n` : `.\n`;
-    }
+  // Always output neck tissue sizes
+  if (procNeckR && !byLevelR) {
+    const nrx = getNum('neckRX'), nry = getNum('neckRY'), nrz = getNum('neckRZ');
+    const smgRx = getNum('smgRX');
+    let line = `Right dissection tissue: ${sz(nrx,nry,nrz)} cm`;
+    if (smgRx !== '_') line += `, including the submandibular gland measuring ${sz(smgRx,getNum('smgRY'),getNum('smgRZ'))} cm`;
+    r += line + '.\n';
+  }
+  if (procNeckL && !byLevelL) {
+    const nlx = getNum('neckLX'), nly = getNum('neckLY'), nlz = getNum('neckLZ');
+    const smgLx = getNum('smgLX');
+    let line = `Left dissection tissue: ${sz(nlx,nly,nlz)} cm`;
+    if (smgLx !== '_') line += `, including the submandibular gland measuring ${sz(smgLx,getNum('smgLY'),getNum('smgLZ'))} cm`;
+    r += line + '.\n';
+  }
+
+  // Bone structures (gated by includeStructures)
+  if ((hasMandGross || hasMaxGross) && chk('includeStructures')) {
+    r += `Including the following structures:\n`;
     if (hasMandGross) {
       const st = document.querySelector('input[name="mandStatus"]:checked')?.value;
       const mandTeeth = document.getElementById('mandTeeth')?.value;
@@ -1411,45 +1773,67 @@ function generateReport() {
       const maxTeethStr = maxTeeth ? `, with ${maxTeeth} attached ${parseInt(maxTeeth)===1?'tooth':'teeth'}` : '';
       r += `- Maxilla: ${sz(getNum('maxX'),getNum('maxY'),getNum('maxZ'))} cm${maxTeethStr}, ${st === 'free' ? 'free of tumor grossly' : 'carcinoma, directly invaded'}.\n`;
     }
-  } else {
-    r += `.\n`;
   }
 
-  // byLevel neck dissections → separate paragraphs at bottom of gross
+  // Effective gross levels (handles Ia/Ib/IIa/IIb)
+  function getEffectiveGrossLevels(side) {
+    const res = [];
+    ['I','II','III','IV','V'].forEach(lv => {
+      const el = document.getElementById(`neckLvl${side}${lv}`);
+      if (!el || !el.checked) return;
+      if (lv === 'I' && hasSubLevels(side, 'I')) {
+        if (document.getElementById(`neckLvl${side}Ia`)?.checked) res.push('Ia');
+        if (document.getElementById(`neckLvl${side}Ib`)?.checked) res.push('Ib');
+      } else if (lv === 'II' && hasSubLevels(side, 'II')) {
+        if (document.getElementById(`neckLvl${side}IIa`)?.checked) res.push('IIa');
+        if (document.getElementById(`neckLvl${side}IIb`)?.checked) res.push('IIb');
+      } else {
+        res.push(lv);
+      }
+    });
+    return res;
+  }
+
+  // byLevel neck dissections
   if (byLevelR) {
-    const lvlsR = ['I','II','III','IV','V'].filter(lv => document.getElementById(`neckLvlR${lv}`)?.checked);
+    const effR = getEffectiveGrossLevels('R');
     r += `\nRight neck dissection specimen, submitted in separate containers:\n`;
-    lvlsR.forEach(lv => {
+    effR.forEach(lv => {
       const pieces = parseInt(document.getElementById(`neckR${lv}_pieces`)?.value||'1');
       const x = getNum(`neckR${lv}_x`), y = getNum(`neckR${lv}_y`), z = getNum(`neckR${lv}_z`);
       r += `  - Level ${lv}: ${pieces} ${pieces===1?'piece':'pieces'}, ${sz(x,y,z)} cm\n`;
     });
   }
   if (byLevelL) {
-    const lvlsL = ['I','II','III','IV','V'].filter(lv => document.getElementById(`neckLvlL${lv}`)?.checked);
+    const effL = getEffectiveGrossLevels('L');
     r += `\nLeft neck dissection specimen, submitted in separate containers:\n`;
-    lvlsL.forEach(lv => {
+    effL.forEach(lv => {
       const pieces = parseInt(document.getElementById(`neckL${lv}_pieces`)?.value||'1');
       const x = getNum(`neckL${lv}_x`), y = getNum(`neckL${lv}_y`), z = getNum(`neckL${lv}_z`);
       r += `  - Level ${lv}: ${pieces} ${pieces===1?'piece':'pieces'}, ${sz(x,y,z)} cm\n`;
     });
   }
 
-  // Wide excision only sections
+  // Wide excision orientation & tumor
   if (procWide || procMand || procMax) {
     const oriItems = [];
-    if (chk('oriMain'))     oriItems.push('  main tumor');
-    if (chk('oriMandible')) oriItems.push('  mandible');
-    if (chk('oriMaxilla'))  oriItems.push('  maxilla');
+    if (chk('oriMain'))     oriItems.push('main tumor');
+    if (chk('oriMandible')) oriItems.push('mandible');
+    if (chk('oriMaxilla'))  oriItems.push('maxilla');
     if (procNeckR && chk('oriNeckR'))
-      oriItems.push(`  right neck level ${getNum('neckLvlRFrom')} ~ ${getNum('neckLvlRTo')} lymph nodes`);
+      oriItems.push(`right neck level ${getNum('neckLvlRFrom')}-${getNum('neckLvlRTo')} lymph nodes`);
     if (procNeckL && chk('oriNeckL'))
-      oriItems.push(`  left neck level ${getNum('neckLvlLFrom')} ~ ${getNum('neckLvlLTo')} lymph nodes`);
+      oriItems.push(`left neck level ${getNum('neckLvlLFrom')}-${getNum('neckLvlLTo')} lymph nodes`);
     if (chk('oriFree') && document.getElementById('oriFreeText').value)
-      oriItems.push(`  ${document.getElementById('oriFreeText').value}`);
+      oriItems.push(document.getElementById('oriFreeText').value);
     if (oriItems.length) {
-      r += `\nThe specimen is oriented by stitches, labeling\n`;
-      r += oriItems.join(',\n') + ',\nrespectively.\n';
+      let oriStr;
+      if (oriItems.length === 1) {
+        oriStr = oriItems[0];
+      } else {
+        oriStr = oriItems.slice(0,-1).join(', ') + ', and ' + oriItems[oriItems.length-1];
+      }
+      r += `\nThe specimen is oriented, labeling ${oriStr}.\n`;
     }
 
     r += `\nTumor site: ${tumorSite}\n`;
@@ -1462,10 +1846,25 @@ function generateReport() {
       if (!margText) return;
       r += `- ${dir}: ${margText}\n`;
     });
-    const customGross = getCustomMarginText();
-    if (customGross) r += `- ${customGross.name}: ${customGross.text}\n`;
+    getAllCustomMargins().forEach(cm => { r += `- ${cm.name}: ${cm.grossText}\n`; });
     if (procMand) r += `- Mandibular resection margin: ${getBoneMarginText('grossMandMargin')}\n`;
     if (procMax)  r += `- Maxillary resection margin: ${getBoneMarginText('grossMaxMargin')}\n`;
+  }
+
+  // OTHER SPECIMENS
+  const otherSpecRows = document.getElementById('otherSpecimensContainer')?.querySelectorAll('[id^="otherSpecRow_"]') || [];
+  if (otherSpecRows.length) {
+    r += `\nOther specimens:\n`;
+    otherSpecRows.forEach(row => {
+      const idx = row.id.replace('otherSpecRow_', '');
+      const name = document.getElementById(`otherSpec_name_${idx}`)?.value?.trim() || '_';
+      const pieces = parseInt(document.getElementById(`otherSpec_pieces_${idx}`)?.value || '1');
+      const x = document.getElementById(`otherSpec_x_${idx}`)?.value || '_';
+      const y = document.getElementById(`otherSpec_y_${idx}`)?.value || '_';
+      const z = document.getElementById(`otherSpec_z_${idx}`)?.value || '_';
+      const pieceStr = pieces === 1 ? `One piece, ${sz(x,y,z)} cm` : `${pieces} pieces, up to ${sz(x,y,z)} cm`;
+      r += `- ${name}: ${pieceStr}\n`;
+    });
   }
 
   // REPRESENTATIVE SECTIONS
@@ -1482,6 +1881,8 @@ function generateReport() {
     r += `Size of the tumor: ${getNum('microTumorMm')} mm in maximum dimension\n`;
     r += `Microscopic tumor extension:\n`;
     r += `- Depth of invasion (DOI): ${getNum('doiMm')} mm\n`;
+    const doiNote = document.getElementById('doiNote')?.value?.trim();
+    if (doiNote) r += `- ${doiNote}\n`;
     r += `Lymphovascular permeation: ${rad('lvi') || 'Absent'}\n`;
     r += `Perineural invasion: ${pniText}\n`;
     r += `Worst pattern of invasion (WPOI): ${rad('wpoi') || '_'}\n`;
@@ -1496,21 +1897,22 @@ function generateReport() {
       }
       r += line + `\n`;
     });
-    const customMicro = getCustomMicroMarginText();
-    if (customMicro) {
-      let line = `- ${customMicro.name}: ${customMicro.text}`;
-      r += line + `\n`;
-    }
+    getAllCustomMargins().forEach(cm => { r += `- ${cm.name}: ${cm.microText}\n`; });
     if (procMand) r += `- Mandibular resection margin: ${getBoneMarginText('microMandMargin')}\n`;
     if (procMax)  r += `- Maxillary resection margin: ${getBoneMarginText('microMaxMargin')}\n`;
-    if (procNeckR || procNeckL || procMand || procMax) {
-      const smgRFilled = document.getElementById('smgRX')?.value || document.getElementById('smgRY')?.value || document.getElementById('smgRZ')?.value;
-      const smgLFilled = document.getElementById('smgLX')?.value || document.getElementById('smgLY')?.value || document.getElementById('smgLZ')?.value;
-      if (procNeckR && smgRFilled) r += `Submandibular gland, right: ${rad('smgMicroR') || 'Free of tumor'}\n`;
-      if (procNeckL && smgLFilled) r += `Submandibular gland, left: ${rad('smgMicroL') || 'Free of tumor'}\n`;
-      if (procMand)  r += `Mandible: ${rad('mandMicro') || 'Free of cancer'}\n`;
-      if (procMax)   r += `Maxilla: ${rad('maxMicro') || 'Free of cancer'}\n`;
+  }
+  if (procNeckR || procNeckL || procMand || procMargMand || procMax || procPartMax) {
+    const smgRFilled = document.getElementById('smgRX')?.value || document.getElementById('smgRY')?.value || document.getElementById('smgRZ')?.value;
+    const smgLFilled = document.getElementById('smgLX')?.value || document.getElementById('smgLY')?.value || document.getElementById('smgLZ')?.value;
+    function smgText(radioName) {
+      const v = rad(radioName);
+      if (!v || v === 'Free of tumor') return 'Free of tumor';
+      return 'Invaded by carcinoma';
     }
+    if (procNeckR && smgRFilled) r += `Submandibular gland, right: ${smgText('smgMicroR')}\n`;
+    if (procNeckL && smgLFilled) r += `Submandibular gland, left: ${smgText('smgMicroL')}\n`;
+    if (procMand || procMargMand) r += `Mandible: ${rad('mandMicro') || 'Free of cancer'}\n`;
+    if (procMax || procPartMax)   r += `Maxilla: ${rad('maxMicro') || 'Free of cancer'}\n`;
   }
 
   if (procNeckR || procNeckL) {
@@ -1518,29 +1920,29 @@ function generateReport() {
     if (!allNoLN) {
       const ckLabel = chk('ckConfirmed') ? ' (confirmed by CK)' : '';
       r += `Lymph nodes (positive/ total):${ckLabel}\n`;
-      const rlvs = ['l1r','l2r','l3r','l4r','l5r'];
-      const llvs = ['l1l','l2l','l3l','l4l','l5l'];
-      ['I','II','III','IV','V'].forEach((lv, i) => {
-        let line = '';
-        const chkR = document.getElementById(`neckLvlR${lv}`);
-        const chkL = document.getElementById(`neckLvlL${lv}`);
-        if (procNeckR && !noLNR && (!chkR || chkR.checked)) {
-          const rp = document.getElementById(rlvs[i]+'_pos')?.value || '0';
-          const rt = document.getElementById(rlvs[i]+'_tot')?.value || '0';
-          line += `Level ${lv} (Right): ${rp}/${rt};`;
-        }
-        if (procNeckL && !noLNL && (!chkL || chkL.checked)) {
-          const lp = document.getElementById(llvs[i]+'_pos')?.value || '0';
-          const lt = document.getElementById(llvs[i]+'_tot')?.value || '0';
-          if (line) line += `  `;
-          line += `Level ${lv} (Left): ${lp}/${lt};`;
-        }
-        if (line) r += `- ${line}\n`;
-      });
+      // Right first
+      if (procNeckR && !noLNR) {
+        r += `Lymph node, Rt\n`;
+        lnIdsR.forEach(id => {
+          const pos = document.getElementById(id+'_pos')?.value || '0';
+          const tot = document.getElementById(id+'_tot')?.value || '0';
+          r += `- ${lvName(id)}: ${pos}/${tot}\n`;
+        });
+      }
+      // Left after
+      if (procNeckL && !noLNL) {
+        r += `Lymph node, Lt\n`;
+        lnIdsL.forEach(id => {
+          const pos = document.getElementById(id+'_pos')?.value || '0';
+          const tot = document.getElementById(id+'_tot')?.value || '0';
+          r += `- ${lvName(id)}: ${pos}/${tot}\n`;
+        });
+      }
       r += `- Extranodal extension: ${eneText}\n`;
       r += `- Size of largest metastatic deposit: ${deposit}\n`;
     }
   }
+
   const pTsummary = pT.replace('pT', `p${yPfx}T`);
   const pNsummary = pN.replace('pN', 'N');
   const hasWide = procWide || procGloss || procMand || procMargMand || procMax || procPartMax;
@@ -1552,6 +1954,19 @@ function generateReport() {
     r += ` (AJCC cancer staging system, 8th edition)\n`;
     r += `TNM descriptors: ${descText}\n`;
     r += `Treatment effect: ${treatEffect}\n`;
+  }
+
+  // Other specimens additional findings
+  const otherSpecMicroRows = document.getElementById('otherSpecimensContainer')?.querySelectorAll('[id^="otherSpecRow_"]') || [];
+  const otherSpecMicroLines = [];
+  otherSpecMicroRows.forEach(row => {
+    const idx = row.id.replace('otherSpecRow_', '');
+    const name = document.getElementById(`otherSpec_name_${idx}`)?.value?.trim() || '(unnamed)';
+    const note = document.getElementById(`otherSpecMicro_${idx}`)?.value?.trim() || '';
+    otherSpecMicroLines.push(`- ${name}: ${note}`);
+  });
+  if (otherSpecMicroLines.length) {
+    r += `Additional findings:\n${otherSpecMicroLines.join('\n')}\n`;
   }
 
   const comments = document.getElementById('comments').value;
