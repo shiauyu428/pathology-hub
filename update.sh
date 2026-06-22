@@ -72,6 +72,31 @@ if [ "$UPDATED" -eq 0 ]; then
   fi
 fi
 
+echo "📦 重新打包 all-in-one.html..."
+python3 << PYEOF
+import os, base64
+HUB = os.path.dirname(os.path.abspath("$SCRIPT_DIR/update.sh"))
+APPS = [
+    ("breast","Breast — Invasive"),("breast-dcis","Breast — DCIS"),("breast-bx","Breast Biopsy"),
+    ("lung","Lung"),("stomach","Stomach"),("colorectal","Colorectal"),("liver-hcc","Liver HCC"),
+    ("cholangiocarcinoma","Cholangiocarcinoma"),("appendix","Appendix"),("thyroid","Thyroid"),
+    ("prostate","Prostate Biopsy"),("ovary","Ovary"),("oral","Oral / H&N"),("skin-scc","Skin SCC"),
+    ("uterus-benign","Uterus Benign"),("gallbladder","Gallbladder"),
+]
+encoded = []
+for folder, label in APPS:
+    p = os.path.join("$SCRIPT_DIR", folder, "index.html")
+    if os.path.exists(p):
+        with open(p, "rb") as f: data = base64.b64encode(f.read()).decode()
+        encoded.append((folder, label, data))
+nav = "".join(f'<button{"  class=\"active\"" if i==0 else ""} onclick="show(\'{fld}\')" id="btn-{fld}">{lbl}</button>\n' for i,(fld,lbl,_) in enumerate(encoded))
+frames = "".join(f'<iframe id="fr-{fld}" src="data:text/html;base64,{d}" style="display:{"block" if i==0 else "none"}"></iframe>\n' for i,(fld,_,d) in enumerate(encoded))
+html = f"""<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>病理報告生成系統</title><style>*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;flex-direction:column;height:100vh;background:#1c2b3a}}#topbar{{background:#1c2b3a;padding:10px 16px;display:flex;align-items:center}}#topbar h1{{color:#fff;font-size:14px;font-weight:600}}#nav{{background:#243447;padding:6px 12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #1a2535}}button{{background:transparent;border:1px solid #3d5269;color:#8da0b3;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .15s}}button:hover{{background:#2d4256;color:#c5d5e5}}button.active{{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:500}}#content{{flex:1;overflow:hidden;background:#fff}}iframe{{width:100%;height:100%;border:none}}</style></head><body><div id="topbar"><h1>病理報告生成系統</h1></div><div id="nav">{nav}</div><div id="content">{frames}</div><script>function show(id){{document.querySelectorAll('iframe').forEach(f=>f.style.display='none');document.querySelectorAll('button').forEach(b=>b.classList.remove('active'));document.getElementById('fr-'+id).style.display='block';document.getElementById('btn-'+id).classList.add('active');}}</script></body></html>"""
+out = os.path.join("$SCRIPT_DIR", "pathology-all-in-one.html")
+with open(out, "w", encoding="utf-8") as f: f.write(html)
+print(f"  ✅ pathology-all-in-one.html ({os.path.getsize(out)//1024} KB)")
+PYEOF
+
 echo "🚀 推送到 GitHub..."
 git -C "$SCRIPT_DIR" remote set-url origin "https://shiauyu428:${TOKEN}@github.com/shiauyu428/pathology-hub.git"
 git -C "$SCRIPT_DIR" add -A
