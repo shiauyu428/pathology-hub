@@ -7,20 +7,20 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #161b27;
-    --surface2: #1e2535;
-    --border: #2a3347;
-    --accent: #4f9cf9;
-    --accent2: #6ee7b7;
-    --text: #e2e8f0;
-    --text-dim: #8899aa;
-    --text-muted: #556070;
-    --note-bg: #1a2035;
-    --note-border: #2d4a7a;
-    --note-text: #7ab3f0;
-    --warn: #f59e0b;
-    --red: #f87171;
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f5f7fa;
+    --border: #d4d8e2;
+    --accent: #1d5bd4;
+    --accent2: #0a7c52;
+    --text: #111827;
+    --text-dim: #6b7280;
+    --text-muted: #9ca3af;
+    --note-bg: #eff6ff;
+    --note-border: #93c5fd;
+    --note-text: #1d5bd4;
+    --warn: #b45309;
+    --red: #dc2626;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
   }
@@ -275,7 +275,7 @@
     bottom: 24px;
     right: 24px;
     background: var(--accent2);
-    color: #0f1117;
+    color: #ffffff;
     font-family: var(--mono);
     font-size: 11px;
     padding: 8px 16px;
@@ -363,6 +363,9 @@
       <!-- 1. Procedure -->
       <div class="field">
         <label>1. Procedure</label>
+        <div class="inline-row" style="margin-bottom:8px;">
+          <label><input type="checkbox" id="laparoscopic"> Laparoscopic</label>
+        </div>
         <div class="radio-group" id="procedure-group">
           <label><input type="radio" name="procedure" value="Wedge resection"> Wedge resection</label>
           <label><input type="radio" name="procedure" value="Segmentectomy"> Segmentectomy</label>
@@ -783,6 +786,7 @@ function generate() {
   // Procedure
   let proc = r('procedure');
   if (proc === 'Other') proc = v('procedure-other') || 'Other';
+  if (proc && ck('laparoscopic')) proc = 'Laparoscopic ' + proc.charAt(0).toLowerCase() + proc.slice(1);
 
   // Tumor Site (synced — single source)
   const tumorSite = v('tumor-site');
