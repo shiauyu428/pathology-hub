@@ -77,6 +77,9 @@ select.wide{min-width:220px}
         <option value="total abdominal colectomy">Total abdominal colectomy</option>
         <option value="Hartmann's operation">Hartmann's operation</option>
       </select>
+      <label class="ck-label" style="margin-left:10px">
+        <input type="checkbox" id="laparoscopic" onchange="autoGen()"> Laparoscopic
+      </label>
     </div>
     <div class="row">
       <label class="lbl">Neoadjuvant therapy</label>
@@ -444,11 +447,17 @@ select.wide{min-width:220px}
       </div>
       <div class="row">
         <label class="lbl">CRM (Micro)</label>
-        <div class="radio-group" id="crm-micro-group">
-          <label onclick="setRadio('crm','Uninvolved',this)"><input type="radio" name="crm" value="Uninvolved"> Uninvolved</label>
-          <label onclick="setRadio('crm','<1 mm',this)"><input type="radio" name="crm" value="<1 mm"> &lt;1 mm</label>
-          <label onclick="setRadio('crm','Involved',this)"><input type="radio" name="crm" value="Involved"> Involved</label>
-          <label onclick="setRadio('crm','Cannot be assessed',this)"><input type="radio" name="crm" value="Cannot be assessed"> Cannot be assessed</label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="radio-group" id="crm-micro-group">
+            <label onclick="setRadio('crm','Uninvolved',this)"><input type="radio" name="crm" value="Uninvolved"> Uninvolved</label>
+            <label onclick="setRadio('crm','<1 mm',this)"><input type="radio" name="crm" value="<1 mm"> &lt;1 mm</label>
+            <label onclick="setRadio('crm','Involved',this)"><input type="radio" name="crm" value="Involved"> Involved</label>
+            <label onclick="setRadio('crm','Cannot be assessed',this)"><input type="radio" name="crm" value="Cannot be assessed"> Cannot be assessed</label>
+          </div>
+          <div id="crm-dist-wrap" style="display:none;align-items:center;gap:4px">
+            <input type="number" id="m-crm" step="0.1" min="0" placeholder="cm" style="width:64px" oninput="autoGen()">
+            <span class="note-txt">cm</span>
+          </div>
         </div>
       </div>
     </div>
@@ -584,6 +593,14 @@ select.wide{min-width:220px}
           </div>
         </div>
       </div>
+      <div id="polyp-micro-section" style="display:none;margin-top:8px">
+        <div class="note-txt" style="margin-bottom:4px">Additional polyp(s) histology:</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label class="ck-label"><input type="checkbox" id="polyp-tubular" onchange="autoGen()"> Tubular adenoma</label>
+          <label class="ck-label"><input type="checkbox" id="polyp-tubvill" onchange="autoGen()"> Tubulovillous adenoma</label>
+          <label class="ck-label"><input type="checkbox" id="polyp-hyper" onchange="autoGen()"> Hyperplastic polyp</label>
+        </div>
+      </div>
       <div style="margin-top:8px">
         <div class="note-txt" style="margin-bottom:4px">Additional pathologic findings (leave blank for "Not identified"):</div>
         <textarea id="addl-findings" placeholder="e.g. Chronic colitis; Serosal fibrous adhesion..." oninput="autoGen()" style="min-height:50px"></textarea>
@@ -675,6 +692,10 @@ function setRadio(name,val,el){
   if(parent) parent.querySelectorAll('label').forEach(function(l){l.classList.remove('sel');});
   el.classList.add('sel');
   if(name==='neoadj') syncNeoadj();
+  if(name==='crm'){
+    var crmWrap=document.getElementById('crm-dist-wrap');
+    if(crmWrap) crmWrap.style.display=(val==='Uninvolved')?'flex':'none';
+  }
   autoGen();
 }
 
@@ -728,6 +749,8 @@ function setMarginStatus(margin,val,el){
         radioState['crm']=crmVal;
       }
     });
+    var crmWrap=document.getElementById('crm-dist-wrap');
+    if(crmWrap) crmWrap.style.display=(crmVal==='Uninvolved')?'flex':'none';
   }
   autoGen();
 }
@@ -927,7 +950,8 @@ function autoGen(){
   }
 
   var diagPrefix='';
-  var proc_str=proc||'___';
+  var isLap=cb('laparoscopic');
+  var proc_str=(isLap&&proc?'laparoscopic ':'')+( proc||'___');
   var proc_cap=proc_str.charAt(0).toUpperCase()+proc_str.slice(1);
 
   // Colon dim
@@ -1067,6 +1091,18 @@ function autoGen(){
   };
   var ptInvasionText=ptMap[ptStage]||'___';
 
+  // Show/hide polyp micro section
+  var polypSec=document.getElementById('polyp-micro-section');
+  if(polypSec) polypSec.style.display=(polypCount>0)?'block':'none';
+
+  // Polyp micro histology checkboxes
+  var polypMicroTypes=[];
+  if(polypCount>0){
+    if(cb('polyp-tubular')) polypMicroTypes.push('Tubular adenoma');
+    if(cb('polyp-tubvill')) polypMicroTypes.push('Tubulovillous adenoma');
+    if(cb('polyp-hyper')) polypMicroTypes.push('Hyperplastic polyp');
+  }
+
   var addlFindings=v('addl-findings');
   var addlLines=[];
   if(tiText!=='N/A') addlLines.push('Terminal ileum: '+tiText);
@@ -1110,12 +1146,12 @@ repBlock+
 'Perineural invasion status: '+pniText+'\n'+
 'Margin:\n'+
 microMarginLines+
-'- Circumferential margin: '+crm+'\n'+
+'- Circumferential margin: '+(crm==='Uninvolved'?'Free, '+(fv('m-crm')!==null?fv('m-crm'):'___')+' cm in distance':crm)+'\n'+
 lnMicroLine+
 eneLine+'\n'+
 'Tumor deposit: '+td+'\n'+
 'Site of distant metastasis: Not included\n'+
-'Additional pathologic findings: '+(addlFindings||'Not identified')+'\n'+
+'Additional pathologic findings: '+(function(){var parts=[];if(addlFindings)parts.push(addlFindings);if(polypMicroTypes.length>0)parts.push(polypMicroTypes.join(', '));return parts.length>0?parts.join('; '):'Not identified';}())+'\n'+
 (addlLines.length>0?addlLines.join('\n')+'\n':'')+
 ihcBlock+
 trgBlock+
@@ -1135,7 +1171,10 @@ function copyReport(){
     var orig=b.textContent;
     b.textContent='Copied!';
     setTimeout(function(){b.textContent=orig;},1500);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 // Init defaults

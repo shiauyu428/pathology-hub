@@ -1129,11 +1129,15 @@ function updateReport(){
 }
 
 function copyReport(){
-  navigator.clipboard.writeText(el('reportOutput').textContent).then(function(){
+  const txt=el('reportOutput').textContent;
+  navigator.clipboard.writeText(txt).then(function(){
     var btn=document.querySelector('.copy-btn');
     btn.textContent='Copied!'; btn.style.background='#2e7d32';
     setTimeout(function(){ btn.textContent='Copy'; btn.style.background=''; },1500);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 window.addEventListener('DOMContentLoaded',function(){

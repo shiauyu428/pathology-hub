@@ -865,11 +865,15 @@ pTNM: ${pt}, ${pnShort} (AJCC cancer staging system, 9th edition)`;
 }
 
 function copyRep(){
-  navigator.clipboard.writeText(document.getElementById('report_out').textContent).then(()=>{
+  const txt=document.getElementById('report_out').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
     const b=document.getElementById('copy_btn');
     b.textContent='Copied!';
     setTimeout(()=>b.textContent='Copy to Clipboard',2000);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 document.getElementById('pn_select').addEventListener('change',updateSummary);

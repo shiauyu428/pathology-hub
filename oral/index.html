@@ -1985,7 +1985,10 @@ function copyReport() {
     const el = document.getElementById('copySuccess');
     el.style.display = '';
     setTimeout(() => el.style.display = 'none', 2000);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 generateReport();

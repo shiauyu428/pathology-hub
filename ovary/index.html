@@ -991,7 +991,10 @@ function copyReport(){
     const ok=document.getElementById('copy-ok');
     ok.style.display='inline';
     setTimeout(()=>ok.style.display='none',2000);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 // ═══════════════════════════════════════════

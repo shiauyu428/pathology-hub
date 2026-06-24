@@ -1526,11 +1526,15 @@ function toggleParaCount() {
 // COPY
 // ═══════════════════════════════════════
 function copyReport() {
-  navigator.clipboard.writeText(document.getElementById('reportOutput').textContent).then(()=>{
+  const txt=document.getElementById('reportOutput').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
     const b=document.getElementById('copyBtn');
     b.textContent='Copied!'; b.classList.add('copied');
     setTimeout(()=>{ b.textContent='Copy'; b.classList.remove('copied'); },1800);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 // ═══════════════════════════════════════

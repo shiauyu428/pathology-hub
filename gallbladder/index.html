@@ -579,7 +579,10 @@ function copyReport() {
     btn.textContent = 'Copied!';
     btn.style.background = '#d1fae5';
     setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 // Tab key navigation for size fields

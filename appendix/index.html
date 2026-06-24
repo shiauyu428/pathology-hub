@@ -1146,7 +1146,10 @@ function copyReport(){
     btn.textContent='✓ Copied!';
     btn.classList.add('copied');
     setTimeout(()=>{ btn.textContent='Copy Report'; btn.classList.remove('copied'); },2000);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 // init LN row

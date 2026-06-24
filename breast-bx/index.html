@@ -466,7 +466,10 @@ function copyReport(){
     const btn=event.target;const orig=btn.textContent;
     btn.textContent='已複製 ✓';
     setTimeout(()=>btn.textContent=orig,1500);
-  });
+  })
+  .catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });;
 }
 
 function resetAll(){

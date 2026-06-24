@@ -674,6 +674,7 @@
           <label><input type="checkbox" id="gb-dx-stone"> with cholelithiasis</label>
           <label><input type="checkbox" id="gb-dx-cholest"> with cholesterosis</label>
           <label><input type="checkbox" id="gb-dx-adenomyoma"> with adenomyoma</label>
+          <label><input type="checkbox" id="gb-dx-ln"> Lymph node</label>
         </div>
       </div>
     </div>
@@ -1084,10 +1085,6 @@ function generate() {
   const ishak = r('ishak');
   if (ishak) lines.push(`Fibrosis (Ishak score): ${ishak} [demonstrated by Masson's trichrome]`);
 
-  const gbMicro = r('gb-micro');
-  // Gallbladder micro line — no trailing blank line after
-  if (gbMicro) lines.push(`Gallbladder: ${gbMicro}`);
-
   lines.push('');
 
   // pTNM
@@ -1100,6 +1097,21 @@ function generate() {
   if (isA) descParts.push('a (autopsy)');
   if (isM) descParts.push('m (multiple)');
   lines.push(`TNM Descriptors: ${descParts.length ? descParts.join('; ') : 'not applicable'}`);
+
+  // Gallbladder microscopic line (after TNM Descriptors)
+  if (ck('gb-present')) {
+    const gbDxMain = r('gb-dx');
+    if (gbDxMain) {
+      const gbMods = [];
+      if (ck('gb-dx-stone'))      gbMods.push('cholelithiasis');
+      if (ck('gb-dx-cholest'))    gbMods.push('cholesterosis');
+      if (ck('gb-dx-adenomyoma')) gbMods.push('adenomyoma');
+      let gbMicroStr = gbDxMain;
+      if (gbMods.length) gbMicroStr += ' with ' + gbMods.join(' and ');
+      if (ck('gb-dx-ln')) gbMicroStr += '; One lymph node is seen with preserved nodal architecture.';
+      lines.push(`Gallbladder: ${gbMicroStr}`);
+    }
+  }
 
   lines.push('');
   lines.push('(This case has been peer reviewed by two doctors.)');
