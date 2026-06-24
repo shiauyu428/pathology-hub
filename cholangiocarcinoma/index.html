@@ -439,23 +439,6 @@
             </div>
           </div>
           <div class="field">
-            <label>GB Diagnosis</label>
-            <div class="radio-group" style="margin-bottom:6px;">
-              <label><input type="radio" name="gb-dx" value="Autolysis"> Autolysis</label>
-              <label><input type="radio" name="gb-dx" value="Chronic cholecystitis"> Chronic cholecystitis</label>
-              <label><input type="radio" name="gb-dx" value="Acute cholecystitis"> Acute cholecystitis</label>
-              <label><input type="radio" name="gb-dx" value="Acute and chronic cholecystitis"> Acute and chronic cholecystitis</label>
-              <label><input type="radio" name="gb-dx" value="Necrotizing cholecystitis"> Necrotizing cholecystitis</label>
-              <label><input type="radio" name="gb-dx" value="Chronic follicular cholecystitis"> Chronic follicular cholecystitis</label>
-              <label><input type="radio" name="gb-dx" value="No specific pathology"> No specific pathology</label>
-            </div>
-            <div class="inline-row" style="margin-top:4px;">
-              <label><input type="checkbox" id="gb-dx-stone"> with cholelithiasis</label>
-              <label><input type="checkbox" id="gb-dx-cholest"> with cholesterosis</label>
-              <label><input type="checkbox" id="gb-dx-adenomyoma"> with adenomyoma</label>
-            </div>
-          </div>
-          <div class="field">
             <label>Gallstone</label>
             <div class="inline-row" style="margin-bottom:6px;">
               <label><input type="radio" name="gallstone" value="not_identified" id="gs-none"> Not identified</label>
@@ -676,12 +659,21 @@
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" id="gb-micro-section" style="display:none;">
         <label>Gallbladder (microscopic)</label>
+        <div class="radio-group" style="margin-bottom:6px;">
+          <label><input type="radio" name="gb-dx" value="Autolysis"> Autolysis</label>
+          <label><input type="radio" name="gb-dx" value="Chronic cholecystitis"> Chronic cholecystitis</label>
+          <label><input type="radio" name="gb-dx" value="Acute cholecystitis"> Acute cholecystitis</label>
+          <label><input type="radio" name="gb-dx" value="Acute and chronic cholecystitis"> Acute and chronic cholecystitis</label>
+          <label><input type="radio" name="gb-dx" value="Necrotizing cholecystitis"> Necrotizing cholecystitis</label>
+          <label><input type="radio" name="gb-dx" value="Chronic follicular cholecystitis"> Chronic follicular cholecystitis</label>
+          <label><input type="radio" name="gb-dx" value="No specific pathology"> No specific pathology</label>
+        </div>
         <div class="inline-row">
-          <label><input type="radio" name="gb-micro" value="No pathologic change"> No pathologic change</label>
-          <label><input type="radio" name="gb-micro" value="Chronic cholecystitis with cholelithiasis"> Chronic cholecystitis with cholelithiasis</label>
-          <label><input type="radio" name="gb-micro" value="Not submitted"> Not submitted</label>
+          <label><input type="checkbox" id="gb-dx-stone"> with cholelithiasis</label>
+          <label><input type="checkbox" id="gb-dx-cholest"> with cholesterosis</label>
+          <label><input type="checkbox" id="gb-dx-adenomyoma"> with adenomyoma</label>
         </div>
       </div>
     </div>
@@ -756,6 +748,7 @@ document.querySelectorAll('.size-dim').forEach((inp, idx, arr) => {
 // ── Gallbladder toggle ──────────────────────────────────────
 document.getElementById('gb-present').addEventListener('change', function() {
   document.getElementById('gb-fields').classList.toggle('hidden', !this.checked);
+  document.getElementById('gb-micro-section').style.display = this.checked ? 'block' : 'none';
 });
 
 // ── Gallstone detail toggle ─────────────────────────────────
@@ -771,6 +764,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => el.checked = false);
   document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
   document.getElementById('gb-fields').classList.add('hidden');
+  document.getElementById('gb-micro-section').style.display = 'none';
   document.getElementById('gs-detail').classList.add('hidden');
   document.getElementById('micro-size')._manuallySet = false;
   document.getElementById('report-out').innerHTML = '<span class="placeholder">Press ▶ Generate to build the report…</span>';
