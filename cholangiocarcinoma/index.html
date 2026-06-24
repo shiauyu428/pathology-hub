@@ -67,7 +67,7 @@
     letter-spacing: 0.05em;
     transition: all .15s;
   }
-  #btn-generate { background: var(--accent); color: #0f1117; }
+  #btn-generate { background: var(--accent); color: #ffffff; }
   #btn-generate:hover { background: #6aaffe; }
   #btn-copy { background: var(--surface2); color: var(--accent2); border: 1px solid var(--border); }
   #btn-copy:hover { background: var(--border); }
@@ -411,6 +411,7 @@
         <div class="inline-row">
           <label><input type="radio" name="nontumorous" value="Cirrhotic"> Cirrhotic</label>
           <label><input type="radio" name="nontumorous" value="Not cirrhotic"> Not cirrhotic</label>
+          <label><input type="radio" name="nontumorous" value="Fibrotic"> Fibrotic</label>
         </div>
       </div>
 
@@ -425,16 +426,33 @@
             <div class="field">
               <label>Size (cm)</label>
               <div class="size-row">
-                <input type="number" class="size-dim" id="gb-s1" min="0" step="0.1" placeholder="—" style="width:52px;">
+                <input type="number" class="gb-tab" id="gb-s1" min="0" step="0.1" placeholder="—" style="width:52px;">
                 <span class="size-sep">x</span>
-                <input type="number" class="size-dim" id="gb-s2" min="0" step="0.1" placeholder="—" style="width:52px;">
+                <input type="number" class="gb-tab" id="gb-s2" min="0" step="0.1" placeholder="—" style="width:52px;">
                 <span class="size-sep">x</span>
-                <input type="number" class="size-dim" id="gb-s3" min="0" step="0.1" placeholder="—" style="width:52px;">
+                <input type="number" class="gb-tab" id="gb-s3" min="0" step="0.1" placeholder="—" style="width:52px;">
               </div>
             </div>
             <div class="field">
               <label>Wall Thickness (cm)</label>
-              <input type="number" id="gb-wall" min="0" step="0.1" placeholder="—" style="width:80px;">
+              <input type="number" class="gb-tab" id="gb-wall" min="0" step="0.1" placeholder="—" style="width:80px;">
+            </div>
+          </div>
+          <div class="field">
+            <label>GB Diagnosis</label>
+            <div class="radio-group" style="margin-bottom:6px;">
+              <label><input type="radio" name="gb-dx" value="Autolysis"> Autolysis</label>
+              <label><input type="radio" name="gb-dx" value="Chronic cholecystitis"> Chronic cholecystitis</label>
+              <label><input type="radio" name="gb-dx" value="Acute cholecystitis"> Acute cholecystitis</label>
+              <label><input type="radio" name="gb-dx" value="Acute and chronic cholecystitis"> Acute and chronic cholecystitis</label>
+              <label><input type="radio" name="gb-dx" value="Necrotizing cholecystitis"> Necrotizing cholecystitis</label>
+              <label><input type="radio" name="gb-dx" value="Chronic follicular cholecystitis"> Chronic follicular cholecystitis</label>
+              <label><input type="radio" name="gb-dx" value="No specific pathology"> No specific pathology</label>
+            </div>
+            <div class="inline-row" style="margin-top:4px;">
+              <label><input type="checkbox" id="gb-dx-stone"> with cholelithiasis</label>
+              <label><input type="checkbox" id="gb-dx-cholest"> with cholesterosis</label>
+              <label><input type="checkbox" id="gb-dx-adenomyoma"> with adenomyoma</label>
             </div>
           </div>
           <div class="field">
@@ -695,8 +713,7 @@
         <div class="field">
           <label>pN</label>
           <select id="pN">
-            <option value="">— select —</option>
-            <option value="pN_na_none">pN not assigned (no nodes submitted or found)</option>
+            <option value="pN_na_none" selected>pN not assigned (no nodes submitted or found)</option>
             <option value="pN_na_unk">pN not assigned (cannot be determined)</option>
             <option value="pN0">pN0: No regional lymph node metastasis</option>
             <option value="pN1">pN1: Regional lymph node metastasis present</option>
@@ -928,13 +945,33 @@ function generate() {
     }
   }
 
+  // ── GB diagnosis string ──────────────────────────────────
+  let gbDxLine = '';
+  if (ck('gb-present')) {
+    const gbDxMain = r('gb-dx');
+    if (gbDxMain) {
+      const gbProc = ck('laparoscopic') ? 'laparoscopic cholecystectomy' : 'cholecystectomy';
+      const gbMods = [];
+      if (ck('gb-dx-stone'))     gbMods.push('cholelithiasis');
+      if (ck('gb-dx-cholest'))   gbMods.push('cholesterosis');
+      if (ck('gb-dx-adenomyoma')) gbMods.push('adenomyoma');
+      let gbDxStr = gbDxMain;
+      if (gbMods.length) gbDxStr += ' with ' + gbMods.join(' and ');
+      gbDxLine = `Gallbladder, ${gbProc} --- ${gbDxStr}`;
+    }
+  }
+
+  // ── proc lowercase after comma ────────────────────────────
+  const procLower = proc ? proc.charAt(0).toLowerCase() + proc.slice(1) : '___';
+
   // ── Build report ─────────────────────────────────────────
   const lines = [];
 
   // DIAGNOSIS
   lines.push('DIAGNOSIS:');
-  lines.push(`Liver${liverLocation}, ${proc || '___'} --- ${histotype || 'Intrahepatic cholangiocarcinoma'} (${pTdisp || 'pT_'})`);
+  lines.push(`Liver${liverLocation}, ${procLower} --- ${histotype || 'Intrahepatic cholangiocarcinoma'} (${pTdisp || 'pT_'})`);
   if (lnDiagLine) lines.push(lnDiagLine);
+  if (gbDxLine) lines.push(gbDxLine);
   lines.push('');
 
   // GROSS
@@ -1080,10 +1117,39 @@ function generate() {
 document.getElementById('btn-copy').addEventListener('click', () => {
   const text = document.getElementById('report-out').textContent;
   if (!text || text.includes('Press ▶')) return;
-  navigator.clipboard.writeText(text).then(() => {
+  const showToast = () => {
     const t = document.getElementById('copy-toast');
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showToast).catch(() => {
+      fallbackCopy(text); showToast();
+    });
+  } else {
+    fallbackCopy(text); showToast();
+  }
+});
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+}
+
+// ── GB size Tab navigation ────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const gbTabs = Array.from(document.querySelectorAll('.gb-tab'));
+  gbTabs.forEach((el, i) => {
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Tab' && !e.shiftKey && i < gbTabs.length - 1) {
+        e.preventDefault();
+        gbTabs[i + 1].focus();
+      }
+    });
   });
 });
 
