@@ -66,6 +66,8 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
       <label><input type="checkbox" value="Bilateral salpingo-oophorectomy"> BSO only</label>
       <label><input type="checkbox" value="Right salpingo-oophorectomy"> Right SO</label>
       <label><input type="checkbox" value="Left salpingo-oophorectomy"> Left SO</label>
+      <label><input type="checkbox" value="Right cystectomy"> Right cystectomy</label>
+      <label><input type="checkbox" value="Left cystectomy"> Left cystectomy</label>
       <label><input type="checkbox" value="Omentectomy"> Omentectomy</label>
       <label><input type="checkbox" value="Appendectomy"> Appendectomy</label>
       <label><input type="checkbox" value="Bilateral pelvic lymph node dissection"> Pelvic LND</label>
@@ -172,6 +174,19 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
         <input type="number" id="l-ft-2" placeholder="—" min="0" step="0.1" tabindex="12">
         <span>cm</span>
       </div>
+    </div>
+  </div>
+  <div class="fg" style="margin-top:6px;">
+    <div class="fl2">Bilateral tubes — combined (不分邊) length × diameter (cm)</div>
+    <div class="sz">
+      <input type="number" id="bi-ft-1a" placeholder="—" min="0" step="0.1">
+      <span>x</span>
+      <input type="number" id="bi-ft-1b" placeholder="—" min="0" step="0.1">
+      <span>cm &nbsp;and&nbsp;</span>
+      <input type="number" id="bi-ft-2a" placeholder="—" min="0" step="0.1">
+      <span>x</span>
+      <input type="number" id="bi-ft-2b" placeholder="—" min="0" step="0.1">
+      <span>cm</span>
     </div>
   </div>
 
@@ -819,6 +834,11 @@ function generateReport(){
   if(rFtSz) report+=`Right tube: ${rFtSz} cm (length x diameter)\n`;
   const lFtSz=gSz(['l-ft-1','l-ft-2']);
   if(lFtSz) report+=`Left tube: ${lFtSz} cm (length x diameter)\n`;
+  const bFt1a=gn('bi-ft-1a'),bFt1b=gn('bi-ft-1b'),bFt2a=gn('bi-ft-2a'),bFt2b=gn('bi-ft-2b');
+  if(bFt1a||bFt1b||bFt2a||bFt2b){
+    const s1=`${bFt1a||'_'} x ${bFt1b||'_'}`,s2=`${bFt2a||'_'} x ${bFt2b||'_'}`;
+    report+=`Bilateral fallopian tubes measure ${s1} cm and ${s2} cm (length x diameter), respectively.\n`;
+  }
 
   const utSz=gSz(['ut-1','ut-2','ut-3']),utW=gn('ut-w');
   if(utSz) report+=`Uterus: ${utSz} cm, weighing ${utW||'_'} g\n`;
