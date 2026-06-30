@@ -149,6 +149,10 @@ input[type="number"]{-moz-appearance:textfield;}
           <input type="checkbox" id="leftFT" onchange="update()">
           <label for="leftFT">Left Fallopian Tube</label>
         </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="bilateralFT" onchange="toggleBilateralFT()">
+          <label for="bilateralFT">Bilateral FT (不分邊)</label>
+        </div>
       </div>
       <hr class="divider">
       <div class="sub-label">Adnexal procedure:</div>
@@ -341,6 +345,21 @@ input[type="number"]{-moz-appearance:textfield;}
           <input type="number" id="lFTL" placeholder="length" step="0.1" style="width:60px;" oninput="update()">
           <span class="size-sep">x</span>
           <input type="number" id="lFTD" placeholder="diam" step="0.1" style="width:60px;" oninput="update()">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+
+      <!-- Bilateral Fallopian Tubes (不分邊) -->
+      <div id="row_biFT" class="adnexa-gross-row hidden">
+        <span class="field-label-wide">Bilateral Fallopian Tubes</span>
+        <div class="size-group">
+          <input type="number" id="biFT1L" placeholder="length" step="0.1" style="width:60px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="biFT1D" placeholder="diam" step="0.1" style="width:60px;" oninput="update()">
+          <span class="unit">cm &nbsp;and&nbsp;</span>
+          <input type="number" id="biFT2L" placeholder="length" step="0.1" style="width:60px;" oninput="update()">
+          <span class="size-sep">x</span>
+          <input type="number" id="biFT2D" placeholder="diam" step="0.1" style="width:60px;" oninput="update()">
           <span class="unit">cm</span>
         </div>
       </div>
@@ -613,12 +632,22 @@ function getDxEffective(key) {
 }
 
 // ── adnexa gross visibility ────────────────────────────────────────────────
+function toggleBilateralFT() {
+  const biMode = checked('bilateralFT');
+  // bilateral 勾選時，自動勾 R/L FT（供 procedure 邏輯用），並互斥單側勾選
+  document.getElementById('rightFT').checked = biMode;
+  document.getElementById('leftFT').checked = biMode;
+  update();
+}
+
 function updateAdnexaGrossVisibility() {
   const { rO, lO, rF, lF } = getAdnexaState();
-  const anyAdnexa = rO||lO||rF||lF;
+  const biMode = checked('bilateralFT');
+  const anyAdnexa = rO||lO||rF||lF||biMode;
   $('adnexaGrossEmpty').style.display = anyAdnexa ? 'none' : 'block';
-  $('row_rFT').classList.toggle('hidden', !rF);
-  $('row_lFT').classList.toggle('hidden', !lF);
+  $('row_rFT').classList.toggle('hidden', !rF || biMode);
+  $('row_lFT').classList.toggle('hidden', !lF || biMode);
+  $('row_biFT').classList.toggle('hidden', !biMode);
   $('row_rOv').classList.toggle('hidden', !rO);
   $('row_rOvCyst').classList.toggle('hidden', !rO);
   $('row_lOv').classList.toggle('hidden', !lO);
@@ -779,10 +808,16 @@ function generateReport() {
   const rOX=getNumStr('rOvX'), rOY=getNumStr('rOvY'), rOZ=getNumStr('rOvZ');
   const lOX=getNumStr('lOvX'), lOY=getNumStr('lOvY'), lOZ=getNumStr('lOvZ');
 
-  if (rF&&lF) {
+  const biMode = checked('bilateralFT');
+  if (biMode) {
+    const s1=[getNumStr('biFT1L'),getNumStr('biFT1D')].filter(Boolean);
+    const s2=[getNumStr('biFT2L'),getNumStr('biFT2D')].filter(Boolean);
+    if (s1.length||s2.length)
+      dx+=`Bilateral fallopian tubes measure ${s1.join(' x ')||'___ x ___'} cm and ${s2.join(' x ')||'___ x ___'} cm (length x diameter), respectively.\n`;
+  } else if (rF&&lF) {
     const rSz=[rFL,rFD].filter(Boolean), lSz=[lFL,lFD].filter(Boolean);
     if (rSz.length||lSz.length)
-      dx+=`Bilateral fallopian tubes measure ${rSz.join(' x ')||'___ x ___'} cm and ${lSz.join(' x ')||'___ x ___'} cm (length and diameter), respectively.\n`;
+      dx+=`Bilateral fallopian tubes measure ${rSz.join(' x ')||'___ x ___'} cm and ${lSz.join(' x ')||'___ x ___'} cm (length x diameter), respectively.\n`;
   } else {
     if (rF){ const s=[rFL,rFD].filter(Boolean); if(s.length) dx+=`The right fallopian tube measures ${s.join(' x ')} cm in length and diameter, respectively.\n`; }
     if (lF){ const s=[lFL,lFD].filter(Boolean); if(s.length) dx+=`The left fallopian tube measures ${s.join(' x ')} cm in length and diameter, respectively.\n`; }
