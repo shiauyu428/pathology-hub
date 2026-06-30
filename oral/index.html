@@ -1758,9 +1758,9 @@ function generateReport() {
     r += line + '.\n';
   }
 
-  // Bone structures (gated by includeStructures)
-  if ((hasMandGross || hasMaxGross) && chk('includeStructures')) {
-    r += `Including the following structures:\n`;
+  // Bone structures
+  if (hasMandGross || hasMaxGross) {
+    if (chk('includeStructures')) r += `Including the following structures:\n`;
     if (hasMandGross) {
       const st = document.querySelector('input[name="mandStatus"]:checked')?.value;
       const mandTeeth = document.getElementById('mandTeeth')?.value;
