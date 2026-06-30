@@ -66,6 +66,7 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
       <label><input type="checkbox" value="Bilateral salpingo-oophorectomy"> BSO only</label>
       <label><input type="checkbox" value="Right salpingo-oophorectomy"> Right SO</label>
       <label><input type="checkbox" value="Left salpingo-oophorectomy"> Left SO</label>
+      <label><input type="checkbox" value="Bilateral salpingectomy" id="proc-bi-salp"> Bilateral salpingectomy</label>
       <label><input type="checkbox" value="Right cystectomy"> Right cystectomy</label>
       <label><input type="checkbox" value="Left cystectomy"> Left cystectomy</label>
       <label><input type="checkbox" value="Omentectomy"> Omentectomy</label>
@@ -156,7 +157,12 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
   <div class="sec-group-label">Ovarian / tumor sizes <span class="tag">自動依 tumor site 切換 tumor / plain ovary</span></div>
   <div id="ovary-panels"><div style="color:#999;font-size:12px">← 請先選擇 Tumor site</div></div>
 
-  <div class="grid2">
+  <div style="margin-bottom:5px;display:flex;align-items:center;gap:6px;">
+    <label style="font-size:11px;font-weight:700;color:#1a4fcf;display:flex;align-items:center;gap:5px;cursor:pointer;">
+      <input type="checkbox" id="bi-ft-mode" onchange="toggleBiFtMode()"> Bilateral (不分邊)
+    </label>
+  </div>
+  <div id="rl-ft-rows" class="grid2">
     <div class="fg">
       <div class="fl2"><span class="sb R">R</span>Right tube — length × diameter (cm)</div>
       <div class="sz">
@@ -176,8 +182,8 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
       </div>
     </div>
   </div>
-  <div class="fg" style="margin-top:6px;">
-    <div class="fl2">Bilateral tubes — combined (不分邊) length × diameter (cm)</div>
+  <div id="bi-ft-row" class="fg" style="display:none;">
+    <div class="fl2">Bilateral tubes — length × diameter (cm)</div>
     <div class="sz">
       <input type="number" id="bi-ft-1a" placeholder="—" min="0" step="0.1">
       <span>x</span>
@@ -380,7 +386,7 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
 
   <div class="sep"></div>
   <div class="sec-group-label">Fallopian Tubes &amp; STIC</div>
-  <div class="grid3">
+  <div id="rl-ft-micro" class="grid3" style="display:contents;">
     <div class="fg">
       <div class="fl2"><span class="sb R">R</span>Right fallopian tube</div>
       <div class="rr">
@@ -395,6 +401,14 @@ textarea{width:100%;resize:vertical;min-height:48px;line-height:1.5}
         <label><input type="radio" name="l-ft-micro" value="Carcinoma, involved (in lumen and/or parenchyma)"> Carcinoma, involved</label>
       </div>
     </div>
+  </div>
+  <div id="bi-ft-micro" class="fg" style="display:none;">
+    <div class="fl2">Bilateral fallopian tubes</div>
+    <div class="rr">
+      <label><input type="radio" name="bi-ft-micro" value="Free of carcinoma"> Free of carcinoma</label>
+      <label><input type="radio" name="bi-ft-micro" value="Carcinoma, involved (in lumen and/or parenchyma)"> Carcinoma, involved</label>
+    </div>
+  </div>
     <div class="fg">
       <div class="fl2">STIC</div>
       <div class="rr">
@@ -602,6 +616,17 @@ const LN_ST=[
 // TOGGLE SECTION
 // ═══════════════════════════════════════════
 function tog(id){ document.getElementById(id).classList.toggle('collapsed'); }
+function toggleBiFtMode(){
+  const on=document.getElementById('bi-ft-mode').checked;
+  document.getElementById('rl-ft-rows').style.display=on?'none':'';
+  document.getElementById('bi-ft-row').style.display=on?'':'none';
+  document.getElementById('rl-ft-micro').style.display=on?'none':'contents';
+  document.getElementById('bi-ft-micro').style.display=on?'':'none';
+  // auto-check Bilateral salpingectomy in procedure
+  const procCb=document.getElementById('proc-bi-salp');
+  if(procCb) procCb.checked=on;
+  generate();
+}
 
 // ═══════════════════════════════════════════
 // OVARY PANELS — dynamic based on tumor site
@@ -780,8 +805,14 @@ function generateReport(){
   if(!rTumor&&!lTumor&&document.getElementById('tumor-site').value==='peritoneum')
     lines.push(`Peritoneum, primary --- ${histoType||'[histologic type]'} (${pt||'pT?'})`);
 
-  lines.push(`Fallopian tube, right, salpingo-oophorectomy --- ${rFtMicro||'[see microscopic]'}`);
-  lines.push(`Fallopian tube, left, salpingo-oophorectomy --- ${lFtMicro||'[see microscopic]'}`);
+  const biFtMode=document.getElementById('bi-ft-mode').checked;
+  if(biFtMode){
+    const biFtMicro=gr('bi-ft-micro');
+    lines.push(`Fallopian tubes, bilateral salpingectomy --- ${biFtMicro||'[see microscopic]'}`);
+  } else {
+    lines.push(`Fallopian tube, right, salpingo-oophorectomy --- ${rFtMicro||'[see microscopic]'}`);
+    lines.push(`Fallopian tube, left, salpingo-oophorectomy --- ${lFtMicro||'[see microscopic]'}`);
+  }
 
   if(hasHyst){
     lines.push('Uterus, corpus, abdominal total hysterectomy --- Leiomyoma');
