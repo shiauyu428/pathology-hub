@@ -1798,20 +1798,30 @@ function generateReport() {
   if (byLevelR) {
     const effR = getEffectiveGrossLevels('R');
     r += `\nRight neck dissection specimen, submitted in separate containers:\n`;
+    let totalPiecesR = 0;
     effR.forEach(lv => {
       const pieces = parseInt(document.getElementById(`neckR${lv}_pieces`)?.value||'1');
+      totalPiecesR += pieces;
       const x = getNum(`neckR${lv}_x`), y = getNum(`neckR${lv}_y`), z = getNum(`neckR${lv}_z`);
       r += `  - Level ${lv}: ${pieces} ${pieces===1?'piece':'pieces'}, ${sz(x,y,z)} cm\n`;
     });
+    const nrx = getNum('neckRX'), nry = getNum('neckRY'), nrz = getNum('neckRZ');
+    const suffix = totalPiecesR > 1 ? ' in total' : '';
+    r += `Right dissection tissue: ${sz(nrx,nry,nrz)} cm${suffix}.\n`;
   }
   if (byLevelL) {
     const effL = getEffectiveGrossLevels('L');
     r += `\nLeft neck dissection specimen, submitted in separate containers:\n`;
+    let totalPiecesL = 0;
     effL.forEach(lv => {
       const pieces = parseInt(document.getElementById(`neckL${lv}_pieces`)?.value||'1');
+      totalPiecesL += pieces;
       const x = getNum(`neckL${lv}_x`), y = getNum(`neckL${lv}_y`), z = getNum(`neckL${lv}_z`);
       r += `  - Level ${lv}: ${pieces} ${pieces===1?'piece':'pieces'}, ${sz(x,y,z)} cm\n`;
     });
+    const nlx = getNum('neckLX'), nly = getNum('neckLY'), nlz = getNum('neckLZ');
+    const suffixL = totalPiecesL > 1 ? ' in total' : '';
+    r += `Left dissection tissue: ${sz(nlx,nly,nlz)} cm${suffixL}.\n`;
   }
 
   // Wide excision orientation & tumor
