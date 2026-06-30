@@ -213,7 +213,7 @@ input[type="number"]{-moz-appearance:textfield;}
       </div>
       <div id="sqMetaRow" class="sub-option-row" style="display:none;">
         <input type="checkbox" id="sqMeta" onchange="update()">
-        <label for="sqMeta" style="font-size:12px;color:#c9d1d9;cursor:pointer;">with squamous metaplasia</label>
+        <label for="sqMeta" style="font-size:12px;cursor:pointer;">with squamous metaplasia</label>
       </div>
 
     </div>
@@ -223,7 +223,7 @@ input[type="number"]{-moz-appearance:textfield;}
   <div class="section">
     <div class="section-title">Diagnosis — Ovary / Fallopian Tube Findings</div>
     <div class="section-body" id="ovaryDxBody">
-      <span id="ovaryDxEmpty" style="font-size:11px;color:#6e7681;">No adnexal structures selected.</span>
+      <span id="ovaryDxEmpty" style="font-size:11px;color:#6b7280;">No adnexal structures selected.</span>
     </div>
   </div>
 
@@ -321,7 +321,7 @@ input[type="number"]{-moz-appearance:textfield;}
     <div class="section-title">Gross — Adnexa</div>
     <div class="section-body">
 
-      <div id="adnexaGrossEmpty" style="font-size:11px;color:#6e7681;">No adnexal structures selected.</div>
+      <div id="adnexaGrossEmpty" style="font-size:11px;color:#6b7280;">No adnexal structures selected.</div>
 
       <!-- Right Fallopian Tube -->
       <div id="row_rFT" class="adnexa-gross-row hidden">
@@ -363,7 +363,7 @@ input[type="number"]{-moz-appearance:textfield;}
           <label for="rOvCyst">Cyst</label>
         </div>
         <div id="rOvCystSizeWrap" style="display:none;align-items:center;gap:4px;">
-          <span style="font-size:11px;color:#8b949e;">Max dim</span>
+          <span style="font-size:11px;color:#6b7280;">Max dim</span>
           <input type="number" id="rOvCystSize" placeholder="cm" step="0.1" style="width:60px;" oninput="update()">
           <span class="unit">cm</span>
         </div>
@@ -387,7 +387,7 @@ input[type="number"]{-moz-appearance:textfield;}
           <label for="lOvCyst">Cyst</label>
         </div>
         <div id="lOvCystSizeWrap" style="display:none;align-items:center;gap:4px;">
-          <span style="font-size:11px;color:#8b949e;">Max dim</span>
+          <span style="font-size:11px;color:#6b7280;">Max dim</span>
           <input type="number" id="lOvCystSize" placeholder="cm" step="0.1" style="width:60px;" oninput="update()">
           <span class="unit">cm</span>
         </div>
@@ -505,10 +505,10 @@ function renderAdnexalProcedures() {
     const wrap = document.createElement('div');
     wrap.dataset.key = s.key;
     wrap.style.cssText='display:flex;align-items:center;gap:6px;';
-    wrap.innerHTML=`<span style="font-size:11px;color:#8b949e;min-width:70px;">${s.label}:</span>`;
+    wrap.innerHTML=`<span style="font-size:11px;color:#6b7280;min-width:70px;">${s.label}:</span>`;
     const sel = document.createElement('select');
     sel.id = 'proc_'+s.key;
-    sel.style.cssText='background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-family:inherit;font-size:12px;border-radius:4px;padding:4px 7px;';
+    sel.style.cssText='';
     sel.onchange = update;
     getProcOptions(s.hasFT, s.hasO).forEach(o => {
       const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op);
@@ -566,7 +566,7 @@ function renderOvaryDx() {
 
     const sel = document.createElement('select');
     sel.id = it.key;
-    sel.style.cssText='background:#0d1117;border:1px solid #30363d;color:#c9d1d9;font-family:inherit;font-size:12px;border-radius:4px;padding:4px 7px;';
+    sel.style.cssText='';
 
     it.opts.forEach(o => {
       const op=document.createElement('option');
