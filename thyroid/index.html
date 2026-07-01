@@ -873,11 +873,15 @@
           <div class="field-label">Surgical margin</div>
           <div class="field-input">
             <div class="radio-group">
-              <label class="check-item"><input type="radio" name="m_margin" value="free" onchange="sync()" checked> Free of tumor</label>
-              <label class="check-item"><input type="radio" name="m_margin" value="close" onchange="sync()"> &lt;1 mm</label>
-              <label class="check-item"><input type="radio" name="m_margin" value="involved" onchange="sync()"> Involved by tumor</label>
+              <label class="check-item"><input type="radio" name="m_margin" value="free" onchange="toggleMarginDist();sync()" checked> Free of tumor</label>
+              <label class="check-item"><input type="radio" name="m_margin" value="close" onchange="toggleMarginDist();sync()"> &lt;1 mm</label>
+              <label class="check-item"><input type="radio" name="m_margin" value="involved" onchange="toggleMarginDist();sync()"> Involved by tumor</label>
             </div>
           </div>
+        </div>
+        <div class="field-row" id="margin_dist_row" style="display:none">
+          <div class="field-label">Distance (cm)</div>
+          <div class="field-input"><input type="number" id="margin_dist" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:80px"></div>
         </div>
         <!-- Margin: bilateral (shown when Bilateral lobes selected) -->
         <div id="margin_bilateral_block" class="hidden">
@@ -885,21 +889,29 @@
             <div class="field-label">Left margin</div>
             <div class="field-input">
               <div class="radio-group">
-                <label class="check-item"><input type="radio" name="m_margin_left" value="free" onchange="sync()" checked> Free of tumor</label>
-                <label class="check-item"><input type="radio" name="m_margin_left" value="close" onchange="sync()"> &lt;1 mm</label>
-                <label class="check-item"><input type="radio" name="m_margin_left" value="involved" onchange="sync()"> Involved by tumor</label>
+                <label class="check-item"><input type="radio" name="m_margin_left" value="free" onchange="toggleMarginDistBilat();sync()" checked> Free of tumor</label>
+                <label class="check-item"><input type="radio" name="m_margin_left" value="close" onchange="toggleMarginDistBilat();sync()"> &lt;1 mm</label>
+                <label class="check-item"><input type="radio" name="m_margin_left" value="involved" onchange="toggleMarginDistBilat();sync()"> Involved by tumor</label>
               </div>
             </div>
+          </div>
+          <div class="field-row" id="margin_dist_left_row" style="display:none">
+            <div class="field-label">Left distance (cm)</div>
+            <div class="field-input"><input type="number" id="margin_dist_left" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:80px"></div>
           </div>
           <div class="field-row" style="margin-top:4px;">
             <div class="field-label">Right margin</div>
             <div class="field-input">
               <div class="radio-group">
-                <label class="check-item"><input type="radio" name="m_margin_right" value="free" onchange="sync()" checked> Free of tumor</label>
-                <label class="check-item"><input type="radio" name="m_margin_right" value="close" onchange="sync()"> &lt;1 mm</label>
-                <label class="check-item"><input type="radio" name="m_margin_right" value="involved" onchange="sync()"> Involved by tumor</label>
+                <label class="check-item"><input type="radio" name="m_margin_right" value="free" onchange="toggleMarginDistBilat();sync()" checked> Free of tumor</label>
+                <label class="check-item"><input type="radio" name="m_margin_right" value="close" onchange="toggleMarginDistBilat();sync()"> &lt;1 mm</label>
+                <label class="check-item"><input type="radio" name="m_margin_right" value="involved" onchange="toggleMarginDistBilat();sync()"> Involved by tumor</label>
               </div>
             </div>
+          </div>
+          <div class="field-row" id="margin_dist_right_row" style="display:none">
+            <div class="field-label">Right distance (cm)</div>
+            <div class="field-input"><input type="number" id="margin_dist_right" placeholder="—" min="0" step="0.1" oninput="sync()" style="width:80px"></div>
           </div>
         </div>
       </div>
