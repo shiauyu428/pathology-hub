@@ -969,12 +969,13 @@
         <div class="field-input">
           <select id="tnm_pN" onchange="sync()">
             <option value="">-- select --</option>
-            <option value="pNX">pNX — Cannot be assessed</option>
-            <option value="pN0">pN0 — No regional lymph node metastasis</option>
-            <option value="pN0a">pN0a — One or more histologically confirmed benign lymph nodes</option>
+            <option value="pN not assigned">pN not assigned — No nodes submitted or found</option>
+            <option value="pN not assigned (cannot be determined)">pN not assigned — Cannot be determined</option>
+            <option value="pN0a">pN0a — One or more cytologically/histologically confirmed benign lymph nodes</option>
+            <option value="pN0">pN0 — No locoregional LN metastasis (subcategory cannot be determined)</option>
             <option value="pN1a">pN1a — Metastasis to Level VI or VII (central compartment)</option>
             <option value="pN1b">pN1b — Metastasis to lateral neck (Levels I–V) or retropharyngeal</option>
-            <option value="pN1">pN1 — Regional node metastasis (subcategory undetermined)</option>
+            <option value="pN1">pN1 — Regional node metastasis (subcategory cannot be determined)</option>
           </select>
         </div>
       </div>
@@ -998,7 +999,10 @@
 <div class="report-panel">
   <div class="report-toolbar">
     <span>REPORT OUTPUT</span>
-    <button class="copy-btn" id="copyBtn" onclick="copyReport()">Copy</button>
+    <div style="display:flex;gap:8px">
+      <button class="copy-btn" style="background:var(--accent2)" onclick="sync()">Generate</button>
+      <button class="copy-btn" id="copyBtn" onclick="copyReport()">Copy</button>
+    </div>
   </div>
   <div class="report-output" id="reportOutput"></div>
 </div>
@@ -1435,8 +1439,15 @@ function buildReport() {
   if(tpT||tpN){
     const mSfx = isChecked('desc_m') ? '(m)' : '';
     const pTf = tpT ? `${prefix}${tpT}${mSfx}` : '';
-    const pNraw = tpN ? tpN.split(' ')[0] : '';
-    const pNf = pNraw ? pNraw.replace('pN','N') : '';
+    let pNf = '';
+    if (tpN) {
+      if (tpN.startsWith('pN not assigned')) {
+        pNf = ' ' + tpN;
+      } else {
+        const pNraw = tpN.split(' ')[0];
+        pNf = pNraw.replace('pN','N');
+      }
+    }
     L.push(`pTNM: ${pTf}${pNf} (AJCC cancer staging system, 8th edition)`);
     const descs=[];
     if(descY) descs.push('y (posttreatment)');
