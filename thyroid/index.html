@@ -384,7 +384,7 @@
         <div class="field-row">
           <div class="field-label narrow">Histologic type</div>
           <div class="field-input">
-            <select id="dx_hist" onchange="toggleOther('dx_hist','dx_hist_other_row'); sync()">
+            <select id="dx_hist" onchange="toggleOther('dx_hist','dx_hist_other_row'); syncHistToMicro(); sync()">
               <option value="Papillary carcinoma, classic subtype">Papillary carcinoma, classic subtype</option>
               <option value="Papillary carcinoma, encapsulated classic subtype">Papillary carcinoma, encapsulated classic subtype</option>
               <option value="Papillary carcinoma, infiltrative follicular subtype">Papillary carcinoma, infiltrative follicular subtype</option>
@@ -1025,6 +1025,19 @@
 // ═══════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════
+function syncHistToMicro() {
+  const v = document.getElementById('dx_hist').value;
+  const mSel = document.getElementById('m_hist');
+  if (!mSel) return;
+  // Only sync if the value exists in m_hist options
+  const opts = Array.from(mSel.options).map(o => o.value);
+  if (opts.includes(v)) {
+    mSel.value = v;
+    // trigger toggleOther for m_hist if needed
+    const otherRow = document.getElementById('m_hist_other_row');
+    if (otherRow) otherRow.classList.toggle('hidden', v !== 'other');
+  }
+}
 function getRadio(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
   return el ? el.value : '';
@@ -1271,9 +1284,14 @@ function buildReport() {
   const lat1=getRadio('dx_lat'), proc1=getVal('dx_proc');
   const hist1=dxH(1), pt1=getVal('dx_pT');
   const loc1=mkLoc(lat1,proc1);
-  const mSuffix = isChecked('desc_m') ? '(m)' : '';
-  const pt1disp = pt1 ? ` [${prefix}${pt1}${mSuffix}]` : '';
-  L.push(`Thyroid${loc1?', '+loc1:''} --- ${hist1}${pt1disp}`);
+  const hasM = isChecked('desc_m');
+  const mSuffix = hasM ? '(m)' : '';
+  function ptDisp(pt) {
+    if (!pt) return '';
+    const s = `${prefix}${pt}${mSuffix}`;
+    return hasM ? ` [${s}]` : ` (${s})`;
+  }
+  L.push(`Thyroid${loc1?', '+loc1:''} --- ${hist1}${ptDisp(pt1)}`);
 
   if (isChecked('spec2_dx_enable')) {
     const lat2=getRadio('dx2_lat'), proc2=getVal('dx2_proc');
@@ -1281,7 +1299,7 @@ function buildReport() {
     const dx2v = getVal('dx2_hist');
     const loc2=mkLoc(lat2,proc2);
     const isNonCarcinoma = dx2v === '__free__' || dx2v === '__nodular__';
-    const pt2disp = (!isNonCarcinoma && pt2) ? ` [${prefix}${pt2}${mSuffix}]` : '';
+    const pt2disp = (!isNonCarcinoma) ? ptDisp(pt2) : '';
     L.push(`Thyroid${loc2?', '+loc2:''} --- ${hist2}${pt2disp}`);
   }
 
@@ -1309,7 +1327,7 @@ function buildReport() {
 
   // Spec 1
   {
-    L.push('Specimen 1:');
+    if (isChecked('spec2_dx_enable') || isChecked('spec2_gross_enable') || isChecked('spec3_enable')) L.push('Specimen 1:');
     const cond1=getRadio('g1_cond')||'in fresh state';
     const pl1=proc1?capFirst(proc1):'';
     const ls1=lat1?latL(lat1)+' thyroid':'';
@@ -1557,7 +1575,10 @@ function copyReport() {
   })
   .catch(()=>{
     const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  });;
+    const b=document.getElementById('copyBtn');
+    b.textContent='Copied!'; b.classList.add('copied');
+    setTimeout(()=>{ b.textContent='Copy'; b.classList.remove('copied'); },1800);
+  });
 }
 
 // ═══════════════════════════════════════
