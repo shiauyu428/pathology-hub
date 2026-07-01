@@ -313,6 +313,11 @@
     color: var(--text);
     white-space: pre-wrap;
     word-break: break-word;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+    box-sizing: border-box;
   }
   .report-output::-webkit-scrollbar { width: 5px; }
   .report-output::-webkit-scrollbar-track { background: transparent; }
@@ -1016,7 +1021,7 @@
       <button class="copy-btn" id="copyBtn" onclick="copyReport()">Copy</button>
     </div>
   </div>
-  <div class="report-output" id="reportOutput"></div>
+  <textarea class="report-output" id="reportOutput" readonly tabindex="-1" spellcheck="false"></textarea>
 </div>
 
 </div><!-- end main -->
@@ -1225,7 +1230,7 @@ function sync() {
   // Auto-suggest pN based on LN data
   autoSuggestPN();
 
-  document.getElementById('reportOutput').textContent = buildReport();
+  document.getElementById('reportOutput').value = buildReport();
   updateDxLNSummary();
 }
 
@@ -1567,18 +1572,20 @@ function toggleParaCount() {
 // COPY
 // ═══════════════════════════════════════
 function copyReport() {
-  const txt=document.getElementById('reportOutput').textContent;
-  navigator.clipboard.writeText(txt).then(()=>{
-    const b=document.getElementById('copyBtn');
-    b.textContent='Copied!'; b.classList.add('copied');
-    setTimeout(()=>{ b.textContent='Copy'; b.classList.remove('copied'); },1800);
-  })
-  .catch(()=>{
-    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-    const b=document.getElementById('copyBtn');
-    b.textContent='Copied!'; b.classList.add('copied');
-    setTimeout(()=>{ b.textContent='Copy'; b.classList.remove('copied'); },1800);
-  });
+  const ta = document.getElementById('reportOutput');
+  const txt = ta.value;
+  const done = () => {
+    const b = document.getElementById('copyBtn');
+    b.textContent = 'Copied!'; b.classList.add('copied');
+    setTimeout(() => { b.textContent = 'Copy'; b.classList.remove('copied'); }, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => {
+      ta.select(); document.execCommand('copy'); done();
+    });
+  } else {
+    ta.select(); document.execCommand('copy'); done();
+  }
 }
 
 // ═══════════════════════════════════════
