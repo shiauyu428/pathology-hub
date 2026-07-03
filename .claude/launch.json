@@ -4,7 +4,7 @@
     {
       "name": "pathology-hub",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8899"],
+      "runtimeArgs": ["/tmp/serve.py"],
       "port": 8899
     }
   ]

@@ -114,6 +114,7 @@ input[type="number"]{-moz-appearance:textfield;}
 <div class="form-panel">
   <div class="sticky-header">
     <h2>UTERUS BENIGN — REPORT GENERATOR</h2>
+    <button class="btn btn-copy" style="background:var(--accent2);border-color:var(--accent2)" onclick="update()">Generate</button>
     <button class="btn btn-clear" onclick="clearAll()">Clear</button>
   </div>
 
@@ -432,7 +433,7 @@ input[type="number"]{-moz-appearance:textfield;}
     <h2>REPORT OUTPUT</h2>
     <button class="btn btn-copy" onclick="copyReport()">Copy</button>
   </div>
-  <div class="report-output" id="reportOutput">（請填寫表單以產生報告）</div>
+  <textarea class="report-output" id="reportOutput" readonly tabindex="-1" spellcheck="false">（請填寫表單以產生報告）</textarea>
 </div>
 
 </div>
@@ -506,38 +507,32 @@ function renderAdnexalProcedures() {
   const biMode = checked('bilateralFT');
   const area = $('adnexalProcedureArea');
   const sides = [];
-  // In biMode, FT procedure is implied (bilateral salpingectomy); only show ovary procedures
-  if (rF && rO) sides.push({ key:'right',      label:'Right',       hasFT:true,  hasO:true });
+  if (rF && rO) sides.push({ key:'right',       label:'Right',        hasFT:true,  hasO:true });
   else {
-    if (rF && !biMode) sides.push({ key:'rightFTonly', label:'Right FT',    hasFT:true,  hasO:false });
-    if (rO)            sides.push({ key:'rightOonly',  label:'Right Ovary', hasFT:false, hasO:true  });
+    if (rF && !biMode) sides.push({ key:'rightFTonly', label:'Right FT',     hasFT:true,  hasO:false });
+    if (rO)            sides.push({ key:'rightOonly',  label:'Right Ovary',  hasFT:false, hasO:true  });
   }
-  if (lF && lO) sides.push({ key:'left',       label:'Left',        hasFT:true,  hasO:true });
+  if (lF && lO) sides.push({ key:'left',        label:'Left',         hasFT:true,  hasO:true });
   else {
-    if (lF && !biMode) sides.push({ key:'leftFTonly',  label:'Left FT',     hasFT:true,  hasO:false });
-    if (lO)            sides.push({ key:'leftOonly',   label:'Left Ovary',  hasFT:false, hasO:true  });
+    if (lF && !biMode) sides.push({ key:'leftFTonly',  label:'Left FT',      hasFT:true,  hasO:false });
+    if (lO)            sides.push({ key:'leftOonly',   label:'Left Ovary',   hasFT:false, hasO:true  });
   }
-  // remove stale
-  Array.from(area.children).forEach(child => {
-    if (!sides.find(s => s.key===child.dataset.key)) child.remove();
-  });
+  // save existing values
+  const saved = {};
+  sides.forEach(s => { const el = document.getElementById('proc_'+s.key); if (el) saved[s.key] = el.value; });
+  // rebuild
+  area.innerHTML = '';
   sides.forEach(s => {
-    if (document.getElementById('proc_'+s.key)) return;
+    const opts = getProcOptions(s.hasFT, s.hasO);
+    const optHtml = ['<option value="">-- select --</option>',
+      ...opts.map(o=>`<option value="${o}">${o}</option>`)].join('');
     const wrap = document.createElement('div');
-    wrap.dataset.key = s.key;
-    wrap.style.cssText='display:flex;align-items:center;gap:6px;';
-    wrap.innerHTML=`<span style="font-size:11px;color:#6b7280;min-width:70px;">${s.label}:</span>`;
-    const sel = document.createElement('select');
-    sel.id = 'proc_'+s.key;
-    sel.onchange = update;
-    // blank first option
-    const blank = document.createElement('option');
-    blank.value=''; blank.textContent='-- select --'; sel.appendChild(blank);
-    getProcOptions(s.hasFT, s.hasO).forEach(o => {
-      const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op);
-    });
-    wrap.appendChild(sel);
+    wrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    wrap.innerHTML = `<span style="font-size:11px;color:#6b7280;min-width:70px;">${s.label}:</span><select id="proc_${s.key}">${optHtml}</select>`;
     area.appendChild(wrap);
+    const sel = document.getElementById('proc_'+s.key);
+    if (saved[s.key]) sel.value = saved[s.key];
+    sel.onchange = update;
   });
 }
 
@@ -560,72 +555,67 @@ function ovaryOptLabel(o) {
 function renderOvaryDx() {
   const { rO, lO, rF, lF } = getAdnexaState();
   const body = $('ovaryDxBody');
-
   const biMode = checked('bilateralFT');
-  const items=[];
-  if (rO) items.push({ key:'dxRO', label:'Right Ovary',              opts:ovaryDxOptions, isOvary:true });
-  if (lO) items.push({ key:'dxLO', label:'Left Ovary',               opts:ovaryDxOptions, isOvary:true });
+  const items = [];
+  if (rO) items.push({ key:'dxRO',   label:'Right Ovary',             opts:ovaryDxOptions, isOvary:true });
+  if (lO) items.push({ key:'dxLO',   label:'Left Ovary',              opts:ovaryDxOptions, isOvary:true });
   if (biMode) {
     items.push({ key:'dxBiFT', label:'Bilateral Fallopian Tubes', opts:ftDxOptions, isOvary:false });
   } else {
-    if (rF) items.push({ key:'dxRF', label:'Right Fallopian Tube', opts:ftDxOptions, isOvary:false });
-    if (lF) items.push({ key:'dxLF', label:'Left Fallopian Tube',  opts:ftDxOptions, isOvary:false });
+    if (rF) items.push({ key:'dxRF', label:'Right Fallopian Tube',  opts:ftDxOptions, isOvary:false });
+    if (lF) items.push({ key:'dxLF', label:'Left Fallopian Tube',   opts:ftDxOptions, isOvary:false });
   }
 
-  // remove stale rows
-  Array.from(body.children).forEach(child => {
-    if (child.id==='ovaryDxEmpty') return;
-    if (child.dataset.key && !items.find(i=>i.key===child.dataset.key)) child.remove();
+  const empty = $('ovaryDxEmpty');
+  if (!items.length) {
+    // clear any dynamic rows, show empty msg
+    Array.from(body.children).forEach(c => { if (c.id !== 'ovaryDxEmpty') c.remove(); });
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  // save existing values
+  const saved = {}, savedFree = {};
+  items.forEach(it => {
+    const el = document.getElementById(it.key); if (el) saved[it.key] = el.value;
+    const fe = document.getElementById(it.key+'_free'); if (fe) savedFree[it.key] = fe.value;
   });
 
-  const empty=$('ovaryDxEmpty');
-  if (!items.length) { if(empty) empty.style.display='block'; return; }
-  if (empty) empty.style.display='none';
+  // remove stale dynamic rows
+  Array.from(body.children).forEach(c => {
+    if (c.id === 'ovaryDxEmpty') return;
+    if (!items.find(i => i.key === c.dataset.key)) c.remove();
+  });
 
+  // add missing rows
   items.forEach(it => {
-    if (document.getElementById(it.key)) return; // already exists — preserve value
+    if (document.getElementById(it.key)) return; // already in DOM
+    const optHtml = it.opts.map(o => `<option value="${o}">${ovaryOptLabel(o)}</option>`).join('');
     const wrap = document.createElement('div');
     wrap.dataset.key = it.key;
-    wrap.style.cssText='display:flex;flex-direction:column;gap:4px;margin-bottom:4px;';
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:4px;';
+    wrap.innerHTML = `
+      <div class="field-row">
+        <span class="field-label-wide">${it.label}</span>
+        <select id="${it.key}">${optHtml}</select>
+      </div>
+      ${it.isOvary ? `<input type="text" id="${it.key}_free" placeholder="Type finding…" style="display:none;margin-left:150px;width:200px;">` : ''}`;
+    body.appendChild(wrap);
 
-    const row = document.createElement('div');
-    row.className='field-row';
-    row.innerHTML=`<span class="field-label-wide">${it.label}</span>`;
-
-    const sel = document.createElement('select');
-    sel.id = it.key;
-    sel.style.cssText='';
-
-    it.opts.forEach(o => {
-      const op=document.createElement('option');
-      op.value=o;
-      op.textContent=ovaryOptLabel(o);
-      sel.appendChild(op);
-    });
-
-    // free-type input (only for ovary items)
-    let freeInput = null;
-    if (it.isOvary) {
-      freeInput = document.createElement('input');
-      freeInput.type='text';
-      freeInput.id=it.key+'_free';
-      freeInput.placeholder='Type finding…';
-      freeInput.style.cssText='display:none;margin-left:150px;width:200px;';
-      freeInput.oninput = update;
-    }
+    const sel = document.getElementById(it.key);
+    if (saved[it.key]) sel.value = saved[it.key];
+    const freeEl = it.isOvary ? document.getElementById(it.key+'_free') : null;
+    if (freeEl && savedFree[it.key]) { freeEl.value = savedFree[it.key]; }
 
     sel.onchange = () => {
-      if (freeInput) {
-        freeInput.style.display = sel.value==='__free__' ? 'block' : 'none';
-        if (sel.value!=='__free__') freeInput.value='';
+      if (freeEl) {
+        freeEl.style.display = sel.value === '__free__' ? 'block' : 'none';
+        if (sel.value !== '__free__') freeEl.value = '';
       }
       update();
     };
-
-    row.appendChild(sel);
-    wrap.appendChild(row);
-    if (freeInput) wrap.appendChild(freeInput);
-    body.appendChild(wrap);
+    if (freeEl) freeEl.oninput = update;
   });
 }
 
@@ -875,33 +865,38 @@ function generateReport() {
   dx+='\nRepresentative sections are taken and labeled as follows:';
   if (repSec) dx+='\n'+repSec;
 
-  $('reportOutput').textContent=dx;
+  $('reportOutput').value=dx;
 }
 
 // ── update ─────────────────────────────────────────────────────────────────
 function update() {
-  const multi=val('utPieces')==='multi';
-  $('utPiecesCountWrap').style.display=multi?'flex':'none';
-  const myoN=getInt('myomaCount');
-  $('myomaSizeRow').style.display=myoN>=1?'flex':'none';
-  $('myomaTypeRow').style.display=myoN>=1?'block':'none';
-  renderAdnexalProcedures();
-  renderOvaryDx();
-  updateAdnexaGrossVisibility();
-  generateReport();
+  try {
+    const multi=val('utPieces')==='multi';
+    $('utPiecesCountWrap').style.display=multi?'flex':'none';
+    const myoN=getInt('myomaCount');
+    $('myomaSizeRow').style.display=myoN>=1?'flex':'none';
+    $('myomaTypeRow').style.display=myoN>=1?'block':'none';
+    renderAdnexalProcedures();
+    renderOvaryDx();
+    updateAdnexaGrossVisibility();
+    generateReport();
+  } catch(e) {
+    $('reportOutput').value = '[ERROR] ' + e.message + '\n' + e.stack;
+  }
 }
 
 function copyReport() {
-  const txt=$('reportOutput').textContent;
-  navigator.clipboard.writeText(txt).then(()=>{
-    const btn=document.querySelector('.btn-copy');
-    const orig=btn.textContent;
-    btn.textContent='Copied!';
-    setTimeout(()=>btn.textContent=orig,1500);
-  })
-  .catch(()=>{
-    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  });;
+  const ta = $('reportOutput');
+  const txt = ta.value;
+  const done = () => {
+    const btns = document.querySelectorAll('.btn-copy');
+    btns.forEach(b => { const o=b.textContent; b.textContent='Copied!'; setTimeout(()=>b.textContent=o,1500); });
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => { ta.select(); document.execCommand('copy'); done(); });
+  } else {
+    ta.select(); document.execCommand('copy'); done();
+  }
 }
 
 function clearAll() {
