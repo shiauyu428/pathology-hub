@@ -585,13 +585,14 @@ function copyReport() {
   });;
 }
 
-// Tab key navigation for size fields
+// Tab key navigation for size fields + wall thickness
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('input.sz').forEach((el, i, arr) => {
+  const szInputs = [...document.querySelectorAll('input.sz'), document.getElementById('wall')].filter(Boolean);
+  szInputs.forEach((el, i) => {
     el.addEventListener('keydown', e => {
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
-        const next = arr[i + 1];
+        const next = szInputs[i + 1];
         if (next) next.focus(); else el.blur();
       }
     });
