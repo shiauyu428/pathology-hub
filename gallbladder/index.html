@@ -587,12 +587,14 @@ function copyReport() {
 
 // Tab key navigation for size fields + wall thickness
 document.addEventListener('DOMContentLoaded', () => {
-  const szInputs = [...document.querySelectorAll('input.sz'), document.getElementById('wall')].filter(Boolean);
-  szInputs.forEach((el, i) => {
+  const allSzInputs = [...document.querySelectorAll('input.sz'), document.getElementById('wall')].filter(Boolean);
+  allSzInputs.forEach(el => {
     el.addEventListener('keydown', e => {
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
-        const next = szInputs[i + 1];
+        const visible = allSzInputs.filter(x => x.offsetParent !== null);
+        const i = visible.indexOf(el);
+        const next = visible[i + 1];
         if (next) next.focus(); else el.blur();
       }
     });
