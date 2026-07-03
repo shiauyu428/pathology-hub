@@ -1785,9 +1785,10 @@ function generateReport() {
   }
   if (procMand || procMargMand) {
     const st = document.querySelector('input[name="mandStatus"]:checked')?.value;
-    const mandSideStr = chk('procMandible') ? document.getElementById('mandibleSide').value : document.getElementById('margMandSide').value;
+    const mandSideVal = chk('procMandible') ? document.getElementById('mandibleSide').value : document.getElementById('margMandSide').value;
     const mandProcStr = procMand ? 'mandibulectomy' : 'marginal mandibulectomy';
-    r += `Mandible, ${mandSideStr}, ${mandProcStr}\n`;
+    const mandSideStr = mandSideVal === 'bilateral' ? '' : `${mandSideVal}, `;
+    r += `Mandible, ${mandSideStr}${mandProcStr}\n`;
     r += `-- ${st === 'free' ? 'Free of tumor' : 'Carcinoma, directly invaded'}\n`;
   }
   if (procMax || procPartMax) {
