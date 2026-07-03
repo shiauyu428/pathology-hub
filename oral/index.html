@@ -296,11 +296,11 @@
     <!-- Mandible -->
     <div class="row">
       <label><input type="checkbox" id="procMandible" onchange="toggleBone()"> Mandibulectomy</label>
-      <select id="mandibleSide"><option value="right">Right</option><option value="left">Left</option></select>
+      <select id="mandibleSide"><option value="right">Right</option><option value="left">Left</option><option value="bilateral">Bilateral</option></select>
     </div>
     <div class="row" style="margin-left:20px">
       <label><input type="checkbox" id="procMargMand" onchange="toggleBone()"> Marginal mandibulectomy</label>
-      <select id="margMandSide"><option value="right">Right</option><option value="left">Left</option></select>
+      <select id="margMandSide"><option value="right">Right</option><option value="left">Left</option><option value="bilateral">Bilateral</option></select>
     </div>
 
     <!-- Maxilla -->
@@ -639,6 +639,20 @@
       </div>
     </div>
 
+    <!-- Skin of face gross (optional, shown when mandible or maxilla present) -->
+    <div id="grossSkinFaceSection" style="display:none">
+      <div class="sub-label">Skin of face <span style="color:var(--muted);font-weight:400;font-size:10px">(選填)</span></div>
+      <div class="fn-row">
+        <span class="fn-label">Size:</span>
+        <div class="size-group">
+          <input type="number" id="skinFaceX" placeholder="0" step="0.1" oninput="updateSkinFaceMicroVisibility();generateReport()">
+          <span>x</span><input type="number" id="skinFaceY" placeholder="0" step="0.1" oninput="updateSkinFaceMicroVisibility();generateReport()">
+          <span>x</span><input type="number" id="skinFaceZ" placeholder="0" step="0.1" oninput="updateSkinFaceMicroVisibility();generateReport()">
+          <span>cm</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Mandible gross -->
     <div id="grossMandibleSection" style="display:none">
       <div class="sub-label">Mandible</div>
@@ -908,6 +922,14 @@
       </div>
     </div>
 
+    <div id="skinFaceMicroRow" style="display:none">
+      <div class="fn-row">
+        <span class="fn-label">Skin of face:</span>
+        <label><input type="radio" name="skinFaceMicro" value="Free" checked> Free</label>
+        <label><input type="radio" name="skinFaceMicro" value="Involved by carcinoma"> Involved by carcinoma</label>
+      </div>
+    </div>
+
     <div class="divider" id="lnDivider"></div>
     <div id="lnBlock">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
@@ -933,32 +955,38 @@
 
     <div class="ln-grid" id="lnInputGrid">
       <div class="ln-row" id="ln_Ir_row">Level I (R): <input type="number" id="l1r_pos" min="0" value="0" tabindex="50"> / <input type="number" id="l1r_tot" min="0" value="0" tabindex="51"></div>
-      <div class="ln-row" id="ln_Il_row">Level I (L): <input type="number" id="l1l_pos" min="0" value="0" tabindex="52"> / <input type="number" id="l1l_tot" min="0" value="0" tabindex="53"></div>
+      <div class="ln-row" id="ln_IIr_row">Level II (R): <input type="number" id="l2r_pos" min="0" value="0" tabindex="52"> / <input type="number" id="l2r_tot" min="0" value="0" tabindex="53"></div>
+      <div class="ln-row" id="ln_IIIr_row">Level III (R): <input type="number" id="l3r_pos" min="0" value="0" tabindex="54"> / <input type="number" id="l3r_tot" min="0" value="0" tabindex="55"></div>
+      <div class="ln-row" id="ln_IVr_row">Level IV (R): <input type="number" id="l4r_pos" min="0" value="0" tabindex="56"> / <input type="number" id="l4r_tot" min="0" value="0" tabindex="57"></div>
+      <div class="ln-row" id="ln_Vr_row">Level V (R): <input type="number" id="l5r_pos" min="0" value="0" tabindex="58"> / <input type="number" id="l5r_tot" min="0" value="0" tabindex="59"></div>
+      <div class="ln-row" id="ln_Il_row">Level I (L): <input type="number" id="l1l_pos" min="0" value="0" tabindex="60"> / <input type="number" id="l1l_tot" min="0" value="0" tabindex="61"></div>
+      <div class="ln-row" id="ln_IIl_row">Level II (L): <input type="number" id="l2l_pos" min="0" value="0" tabindex="62"> / <input type="number" id="l2l_tot" min="0" value="0" tabindex="63"></div>
+      <div class="ln-row" id="ln_IIIl_row">Level III (L): <input type="number" id="l3l_pos" min="0" value="0" tabindex="64"> / <input type="number" id="l3l_tot" min="0" value="0" tabindex="65"></div>
+      <div class="ln-row" id="ln_IVl_row">Level IV (L): <input type="number" id="l4l_pos" min="0" value="0" tabindex="66"> / <input type="number" id="l4l_tot" min="0" value="0" tabindex="67"></div>
+      <div class="ln-row" id="ln_Vl_row">Level V (L): <input type="number" id="l5l_pos" min="0" value="0" tabindex="68"> / <input type="number" id="l5l_tot" min="0" value="0" tabindex="69"></div>
       <div class="ln-row" id="ln_Iar_row" style="display:none">Level Ia (R): <input type="number" id="l1ar_pos" min="0" value="0"> / <input type="number" id="l1ar_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_Ial_row" style="display:none">Level Ia (L): <input type="number" id="l1al_pos" min="0" value="0"> / <input type="number" id="l1al_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_Ibr_row" style="display:none">Level Ib (R): <input type="number" id="l1br_pos" min="0" value="0"> / <input type="number" id="l1br_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_Ibl_row" style="display:none">Level Ib (L): <input type="number" id="l1bl_pos" min="0" value="0"> / <input type="number" id="l1bl_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_IIr_row">Level II (R): <input type="number" id="l2r_pos" min="0" value="0" tabindex="54"> / <input type="number" id="l2r_tot" min="0" value="0" tabindex="55"></div>
-      <div class="ln-row" id="ln_IIl_row">Level II (L): <input type="number" id="l2l_pos" min="0" value="0" tabindex="56"> / <input type="number" id="l2l_tot" min="0" value="0" tabindex="57"></div>
       <div class="ln-row" id="ln_IIar_row" style="display:none">Level IIa (R): <input type="number" id="l2ar_pos" min="0" value="0"> / <input type="number" id="l2ar_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_IIal_row" style="display:none">Level IIa (L): <input type="number" id="l2al_pos" min="0" value="0"> / <input type="number" id="l2al_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_IIbr_row" style="display:none">Level IIb (R): <input type="number" id="l2br_pos" min="0" value="0"> / <input type="number" id="l2br_tot" min="0" value="0"></div>
       <div class="ln-row" id="ln_IIbl_row" style="display:none">Level IIb (L): <input type="number" id="l2bl_pos" min="0" value="0"> / <input type="number" id="l2bl_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_IIIr_row">Level III (R): <input type="number" id="l3r_pos" min="0" value="0" tabindex="58"> / <input type="number" id="l3r_tot" min="0" value="0" tabindex="59"></div>
-      <div class="ln-row" id="ln_IIIl_row">Level III (L): <input type="number" id="l3l_pos" min="0" value="0" tabindex="60"> / <input type="number" id="l3l_tot" min="0" value="0" tabindex="61"></div>
-      <div class="ln-row" id="ln_IVr_row">Level IV (R): <input type="number" id="l4r_pos" min="0" value="0" tabindex="62"> / <input type="number" id="l4r_tot" min="0" value="0" tabindex="63"></div>
-      <div class="ln-row" id="ln_IVl_row">Level IV (L): <input type="number" id="l4l_pos" min="0" value="0" tabindex="64"> / <input type="number" id="l4l_tot" min="0" value="0" tabindex="65"></div>
-      <div class="ln-row" id="ln_Vr_row">Level V (R): <input type="number" id="l5r_pos" min="0" value="0" tabindex="66"> / <input type="number" id="l5r_tot" min="0" value="0" tabindex="67"></div>
-      <div class="ln-row" id="ln_Vl_row">Level V (L): <input type="number" id="l5l_pos" min="0" value="0" tabindex="68"> / <input type="number" id="l5l_tot" min="0" value="0" tabindex="69"></div>
     </div>
 
     <div class="divider"></div>
     <div class="fn-row">
       <span class="fn-label">Extranodal ext.:</span>
-      <label><input type="radio" name="ene" value="Present"> Present at level
-        <input type="text" id="eneLevel" placeholder="e.g. II" style="width:56px;margin-left:4px">
+      <label><input type="radio" name="ene" value="Present" onchange="toggleENELevel()"> Present at level
+        <span id="eneLevelUni" style="display:inline">
+          <input type="text" id="eneLevel" placeholder="e.g. II" style="width:56px;margin-left:4px">
+        </span>
+        <span id="eneLevelBi" style="display:none">
+          R: <input type="text" id="eneLevelR" placeholder="e.g. II" style="width:48px;margin-left:2px">
+          L: <input type="text" id="eneLevelL" placeholder="e.g. II" style="width:48px;margin-left:2px">
+        </span>
       </label>
-      <label><input type="radio" name="ene" value="Absent" checked> Absent</label>
+      <label><input type="radio" name="ene" value="Absent" checked onchange="toggleENELevel()"> Absent</label>
       <span id="eneNAHint" style="display:none;font-size:10px;color:var(--green)">→ auto: Not applicable</span>
     </div>
 
@@ -1432,6 +1460,7 @@ function toggleNeckR() {
   document.getElementById('oriNeckRLabel').style.display = on ? '' : 'none';
   updateSmgMicro();
   updateLnRows();
+  toggleENELevel();
 }
 
 function toggleNeckL() {
@@ -1442,6 +1471,7 @@ function toggleNeckL() {
   document.getElementById('oriNeckLLabel').style.display = on ? '' : 'none';
   updateSmgMicro();
   updateLnRows();
+  toggleENELevel();
 }
 
 function updateSmgMicro() {
@@ -1485,6 +1515,8 @@ function syncMandibleStatus() {
 function toggleBone() {
   const hasMand = document.getElementById('procMandible').checked || document.getElementById('procMargMand').checked;
   const hasMax  = document.getElementById('procMaxilla').checked  || document.getElementById('procPartMax').checked;
+  const hasBone = hasMand || hasMax;
+  document.getElementById('grossSkinFaceSection').style.display  = hasBone ? '' : 'none';
   document.getElementById('grossMandibleSection').style.display  = hasMand ? '' : 'none';
   document.getElementById('grossMaxillaSection').style.display   = hasMax  ? '' : 'none';
   document.getElementById('mandMicroRow').style.display          = hasMand ? '' : 'none';
@@ -1493,7 +1525,27 @@ function toggleBone() {
   document.getElementById('grossMaxMarginRow').style.display     = hasMax  ? '' : 'none';
   document.getElementById('microMandMarginRow').style.display    = hasMand ? '' : 'none';
   document.getElementById('microMaxMarginRow').style.display     = hasMax  ? '' : 'none';
+  updateSkinFaceMicroVisibility();
   syncMicroTumorFields();
+}
+
+function toggleENELevel() {
+  const present = document.querySelector('input[name="ene"]:checked')?.value === 'Present';
+  const hasR = document.getElementById('procNeckR')?.checked;
+  const hasL = document.getElementById('procNeckL')?.checked;
+  const bilateral = hasR && hasL;
+  document.getElementById('eneLevelUni').style.display = (present && !bilateral) ? 'inline' : 'none';
+  document.getElementById('eneLevelBi').style.display  = (present && bilateral)  ? 'inline' : 'none';
+}
+
+function updateSkinFaceMicroVisibility() {
+  const hasBone = document.getElementById('procMandible').checked || document.getElementById('procMargMand').checked ||
+                  document.getElementById('procMaxilla').checked  || document.getElementById('procPartMax').checked;
+  const sfX = document.getElementById('skinFaceX').value;
+  const sfY = document.getElementById('skinFaceY').value;
+  const sfZ = document.getElementById('skinFaceZ').value;
+  const hasSkin = hasBone && (sfX || sfY || sfZ);
+  document.getElementById('skinFaceMicroRow').style.display = hasSkin ? '' : 'none';
 }
 
 function togglePniSub() {
@@ -1629,9 +1681,23 @@ function generateReport() {
   const totalPos = rTotalPos + lTotalPos;
   const freeOfMet = totalPos === 0;
 
-  const eneVal   = rad('ene');
-  const eneLevel = document.getElementById('eneLevel').value || '_';
-  const eneText  = freeOfMet ? 'Not applicable' : (eneVal === 'Present' ? `Present at level ${eneLevel}` : 'Absent');
+  const eneVal = rad('ene');
+  let eneText;
+  if (freeOfMet) {
+    eneText = 'Not applicable';
+  } else if (eneVal === 'Present') {
+    const hasR = chk('procNeckR'), hasL = chk('procNeckL');
+    if (hasR && hasL) {
+      const lvR = document.getElementById('eneLevelR').value || '_';
+      const lvL = document.getElementById('eneLevelL').value || '_';
+      eneText = `Present at right level ${lvR}, left level ${lvL}`;
+    } else {
+      const eneLevel = document.getElementById('eneLevel').value || '_';
+      eneText = `Present at level ${eneLevel}`;
+    }
+  } else {
+    eneText = 'Absent';
+  }
 
   const depositNA = document.getElementById('depositNARadio').checked || freeOfMet;
   const deposit   = depositNA ? 'Not applicable' : (getNum('largestDeposit') + ' cm');
@@ -1772,6 +1838,10 @@ function generateReport() {
       const maxTeeth = document.getElementById('maxTeeth')?.value;
       const maxTeethStr = maxTeeth ? `, with ${maxTeeth} attached ${parseInt(maxTeeth)===1?'tooth':'teeth'}` : '';
       r += `- Maxilla: ${sz(getNum('maxX'),getNum('maxY'),getNum('maxZ'))} cm${maxTeethStr}, ${st === 'free' ? 'free of tumor grossly' : 'carcinoma, directly invaded'}.\n`;
+    }
+    const sfX = getNum('skinFaceX'), sfY = getNum('skinFaceY'), sfZ = getNum('skinFaceZ');
+    if (sfX || sfY || sfZ) {
+      r += `- Skin of face: ${sz(sfX,sfY,sfZ)} cm.\n`;
     }
   }
 
@@ -1923,6 +1993,10 @@ function generateReport() {
     if (procNeckL && smgLFilled) r += `Submandibular gland, left: ${smgText('smgMicroL')}\n`;
     if (procMand || procMargMand) r += `Mandible: ${rad('mandMicro') || 'Free of cancer'}\n`;
     if (procMax || procPartMax)   r += `Maxilla: ${rad('maxMicro') || 'Free of cancer'}\n`;
+    const sfXm = getNum('skinFaceX'), sfYm = getNum('skinFaceY'), sfZm = getNum('skinFaceZ');
+    if ((procMand || procMargMand || procMax || procPartMax) && (sfXm || sfYm || sfZm)) {
+      r += `Skin of face: ${rad('skinFaceMicro') || 'Free'}\n`;
+    }
   }
 
   if (procNeckR || procNeckL) {
@@ -1989,16 +2063,24 @@ function generateReport() {
 }
 
 function copyReport() {
-  const text = document.getElementById('reportOutput').textContent;
-  if (!text || text.startsWith('←')) return;
-  navigator.clipboard.writeText(text).then(() => {
+  const out = document.getElementById('reportOutput');
+  const text = out.tagName === 'TEXTAREA' ? out.value : out.textContent;
+  if (!text) return;
+  const done = () => {
     const el = document.getElementById('copySuccess');
-    el.style.display = '';
-    setTimeout(() => el.style.display = 'none', 2000);
-  })
-  .catch(()=>{
-    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  });;
+    if (el) { el.style.display = ''; setTimeout(() => el.style.display = 'none', 2000); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+  }
 }
 
 generateReport();
