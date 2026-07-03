@@ -754,52 +754,40 @@ function generateReport() {
   const adnexaDxLines=[];
   const biMode = checked('bilateralFT');
   if (biMode) {
-    // bilateral FT (不分邊) — single combined line
     if (!rO && !lO) {
-      adnexaDxLines.push(`Fallopian tubes, bilateral, salpingectomy`);
-      adnexaDxLines.push(`-- ${getDxEffective('dxBiFT')}`);
+      adnexaDxLines.push(`Fallopian tubes, bilateral, salpingectomy --- ${getDxEffective('dxBiFT')}`);
     } else {
-      // bilateral FT with ovaries — keep ovaries separate, FT combined
       if (rO) {
         const proc = getProcLabel('rightOonly');
-        adnexaDxLines.push(`Ovary, right, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxRO')}`);
+        adnexaDxLines.push(`Ovary, right, ${proc||'___'} --- ${getDxEffective('dxRO')}`);
       }
       if (lO) {
         const proc = getProcLabel('leftOonly');
-        adnexaDxLines.push(`Ovary, left, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxLO')}`);
+        adnexaDxLines.push(`Ovary, left, ${proc||'___'} --- ${getDxEffective('dxLO')}`);
       }
-      adnexaDxLines.push(`Fallopian tubes, bilateral, salpingectomy`);
-      adnexaDxLines.push(`-- ${getDxEffective('dxBiFT')}`);
+      adnexaDxLines.push(`Fallopian tubes, bilateral, salpingectomy --- ${getDxEffective('dxBiFT')}`);
     }
   } else {
     if (rO||rF) {
       const proc = rF&&rO ? getProcLabel('right') : rF ? getProcLabel('rightFTonly') : getProcLabel('rightOonly');
       if (rO&&rF) {
-        adnexaDxLines.push(`Ovary and fallopian tube, right, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxRO')}, right ovary`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxRF')}, right fallopian tube`);
+        adnexaDxLines.push(`Ovary, right, ${proc||'___'} --- ${getDxEffective('dxRO')}`);
+        adnexaDxLines.push(`Fallopian tube, right, ${proc||'___'} --- ${getDxEffective('dxRF')}`);
       } else if (rO) {
-        adnexaDxLines.push(`Ovary, right, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxRO')}`);
+        adnexaDxLines.push(`Ovary, right, ${proc||'___'} --- ${getDxEffective('dxRO')}`);
       } else {
-        adnexaDxLines.push(`Fallopian tube, right, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxRF')}`);
+        adnexaDxLines.push(`Fallopian tube, right, ${proc||'___'} --- ${getDxEffective('dxRF')}`);
       }
     }
     if (lO||lF) {
       const proc = lF&&lO ? getProcLabel('left') : lF ? getProcLabel('leftFTonly') : getProcLabel('leftOonly');
       if (lO&&lF) {
-        adnexaDxLines.push(`Ovary and fallopian tube, left, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxLO')}, left ovary`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxLF')}, left fallopian tube`);
+        adnexaDxLines.push(`Ovary, left, ${proc||'___'} --- ${getDxEffective('dxLO')}`);
+        adnexaDxLines.push(`Fallopian tube, left, ${proc||'___'} --- ${getDxEffective('dxLF')}`);
       } else if (lO) {
-        adnexaDxLines.push(`Ovary, left, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxLO')}`);
+        adnexaDxLines.push(`Ovary, left, ${proc||'___'} --- ${getDxEffective('dxLO')}`);
       } else {
-        adnexaDxLines.push(`Fallopian tube, left, ${proc||'___'}`);
-        adnexaDxLines.push(`-- ${getDxEffective('dxLF')}`);
+        adnexaDxLines.push(`Fallopian tube, left, ${proc||'___'} --- ${getDxEffective('dxLF')}`);
       }
     }
   }
