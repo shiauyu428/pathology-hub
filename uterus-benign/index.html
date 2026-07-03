@@ -157,7 +157,64 @@ input[type="number"]{-moz-appearance:textfield;}
       </div>
       <hr class="divider">
       <div class="sub-label">Adnexal procedure:</div>
-      <div id="adnexalProcedureArea" class="indent" style="display:flex;flex-direction:column;gap:4px;"></div>
+      <div class="indent" style="display:flex;flex-direction:column;gap:6px;">
+        <!-- Right FT + Right Ovary -->
+        <div id="proc_row_right" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#6b7280;min-width:80px;">Right:</span>
+          <select id="proc_right" onchange="update()">
+            <option value="">-- select --</option>
+            <option>salpingo-oophorectomy</option>
+            <option>oophorectomy</option>
+            <option>salpingectomy</option>
+            <option>salpingo-oophorocystectomy</option>
+          </select>
+        </div>
+        <!-- Right FT only -->
+        <div id="proc_row_rightFTonly" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#6b7280;min-width:80px;">Right FT:</span>
+          <select id="proc_rightFTonly" onchange="update()">
+            <option value="">-- select --</option>
+            <option>salpingectomy</option>
+          </select>
+        </div>
+        <!-- Right Ovary only -->
+        <div id="proc_row_rightOonly" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#6b7280;min-width:80px;">Right Ovary:</span>
+          <select id="proc_rightOonly" onchange="update()">
+            <option value="">-- select --</option>
+            <option>oophorectomy</option>
+            <option>oophorocystectomy</option>
+          </select>
+        </div>
+        <!-- Left FT + Left Ovary -->
+        <div id="proc_row_left" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#6b7280;min-width:80px;">Left:</span>
+          <select id="proc_left" onchange="update()">
+            <option value="">-- select --</option>
+            <option>salpingo-oophorectomy</option>
+            <option>oophorectomy</option>
+            <option>salpingectomy</option>
+            <option>salpingo-oophorocystectomy</option>
+          </select>
+        </div>
+        <!-- Left FT only -->
+        <div id="proc_row_leftFTonly" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#6b7280;min-width:80px;">Left FT:</span>
+          <select id="proc_leftFTonly" onchange="update()">
+            <option value="">-- select --</option>
+            <option>salpingectomy</option>
+          </select>
+        </div>
+        <!-- Left Ovary only -->
+        <div id="proc_row_leftOonly" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#6b7280;min-width:80px;">Left Ovary:</span>
+          <select id="proc_leftOonly" onchange="update()">
+            <option value="">-- select --</option>
+            <option>oophorectomy</option>
+            <option>oophorocystectomy</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -229,6 +286,64 @@ input[type="number"]{-moz-appearance:textfield;}
     <div class="section-title">Diagnosis — Ovary / Fallopian Tube Findings</div>
     <div class="section-body" id="ovaryDxBody">
       <span id="ovaryDxEmpty" style="font-size:11px;color:#6b7280;">No adnexal structures selected.</span>
+
+      <!-- Right Ovary -->
+      <div id="dxRow_dxRO" style="display:none;flex-direction:column;gap:4px;">
+        <div class="field-row">
+          <span class="field-label-wide">Right Ovary</span>
+          <select id="dxRO" onchange="onOvarySelChange('dxRO')">
+            <option value="Within normal limit">Within normal limit</option>
+            <option value="Endometrioma">Endometrioma</option>
+            <option value="Hemorrhagic corpus luteum cyst">Hemorrhagic corpus luteum cyst</option>
+            <option value="Cystic follicle">Cystic follicle</option>
+            <option value="__free__">(free typing…)</option>
+          </select>
+        </div>
+        <input type="text" id="dxRO_free" placeholder="Type finding…" style="display:none;margin-left:150px;width:200px;" oninput="update()">
+      </div>
+
+      <!-- Left Ovary -->
+      <div id="dxRow_dxLO" style="display:none;flex-direction:column;gap:4px;">
+        <div class="field-row">
+          <span class="field-label-wide">Left Ovary</span>
+          <select id="dxLO" onchange="onOvarySelChange('dxLO')">
+            <option value="Within normal limit">Within normal limit</option>
+            <option value="Endometrioma">Endometrioma</option>
+            <option value="Hemorrhagic corpus luteum cyst">Hemorrhagic corpus luteum cyst</option>
+            <option value="Cystic follicle">Cystic follicle</option>
+            <option value="__free__">(free typing…)</option>
+          </select>
+        </div>
+        <input type="text" id="dxLO_free" placeholder="Type finding…" style="display:none;margin-left:150px;width:200px;" oninput="update()">
+      </div>
+
+      <!-- Bilateral FT -->
+      <div id="dxRow_dxBiFT" style="display:none;align-items:center;gap:8px;">
+        <span class="field-label-wide">Bilateral Fallopian Tubes</span>
+        <select id="dxBiFT" onchange="update()">
+          <option value="Within normal limit">Within normal limit</option>
+          <option value="Paratubal cyst">Paratubal cyst</option>
+        </select>
+      </div>
+
+      <!-- Right FT -->
+      <div id="dxRow_dxRF" style="display:none;align-items:center;gap:8px;">
+        <span class="field-label-wide">Right Fallopian Tube</span>
+        <select id="dxRF" onchange="update()">
+          <option value="Within normal limit">Within normal limit</option>
+          <option value="Paratubal cyst">Paratubal cyst</option>
+        </select>
+      </div>
+
+      <!-- Left FT -->
+      <div id="dxRow_dxLF" style="display:none;align-items:center;gap:8px;">
+        <span class="field-label-wide">Left Fallopian Tube</span>
+        <select id="dxLF" onchange="update()">
+          <option value="Within normal limit">Within normal limit</option>
+          <option value="Paratubal cyst">Paratubal cyst</option>
+        </select>
+      </div>
+
     </div>
   </div>
 
@@ -505,118 +620,48 @@ function getProcOptions(hasFT, hasO) {
 function renderAdnexalProcedures() {
   const { rO, lO, rF, lF } = getAdnexaState();
   const biMode = checked('bilateralFT');
-  const area = $('adnexalProcedureArea');
-  const sides = [];
-  if (rF && rO) sides.push({ key:'right',       label:'Right',        hasFT:true,  hasO:true });
-  else {
-    if (rF && !biMode) sides.push({ key:'rightFTonly', label:'Right FT',     hasFT:true,  hasO:false });
-    if (rO)            sides.push({ key:'rightOonly',  label:'Right Ovary',  hasFT:false, hasO:true  });
-  }
-  if (lF && lO) sides.push({ key:'left',        label:'Left',         hasFT:true,  hasO:true });
-  else {
-    if (lF && !biMode) sides.push({ key:'leftFTonly',  label:'Left FT',      hasFT:true,  hasO:false });
-    if (lO)            sides.push({ key:'leftOonly',   label:'Left Ovary',   hasFT:false, hasO:true  });
-  }
-  // save existing values
-  const saved = {};
-  sides.forEach(s => { const el = document.getElementById('proc_'+s.key); if (el) saved[s.key] = el.value; });
-  // rebuild
-  area.innerHTML = '';
-  sides.forEach(s => {
-    const opts = getProcOptions(s.hasFT, s.hasO);
-    const optHtml = ['<option value="">-- select --</option>',
-      ...opts.map(o=>`<option value="${o}">${o}</option>`)].join('');
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    wrap.innerHTML = `<span style="font-size:11px;color:#6b7280;min-width:70px;">${s.label}:</span><select id="proc_${s.key}">${optHtml}</select>`;
-    area.appendChild(wrap);
-    const sel = document.getElementById('proc_'+s.key);
-    if (saved[s.key]) sel.value = saved[s.key];
-    sel.onchange = update;
-  });
+  // show right combined only when both rF+rO; right FT only when rF alone (!biMode); right ovary only when rO alone
+  const showRight      = !!(rF && rO);
+  const showRightFT    = !!(rF && !rO && !biMode);
+  const showRightOonly = !!(rO && !rF);
+  const showLeft       = !!(lF && lO);
+  const showLeftFT     = !!(lF && !lO && !biMode);
+  const showLeftOonly  = !!(lO && !lF);
+
+  function show(id, vis) { var el=$('proc_row_'+id); if(el) el.style.display = vis ? 'flex' : 'none'; }
+  show('right',      showRight);
+  show('rightFTonly',showRightFT);
+  show('rightOonly', showRightOonly);
+  show('left',       showLeft);
+  show('leftFTonly', showLeftFT);
+  show('leftOonly',  showLeftOonly);
 }
 
-// ── ovary dx options ───────────────────────────────────────────────────────
-// 'free' = free typing; value triggers a text input
-const ovaryDxOptions = [
-  'Within normal limit',
-  'Endometrioma',
-  'Hemorrhagic corpus luteum cyst',
-  'Cystic follicle',
-  '__free__'   // sentinel for free typing
-];
-const ftDxOptions = ['Within normal limit','Paratubal cyst'];
-
-// Build display label for select
-function ovaryOptLabel(o) {
-  return o==='__free__' ? '(free typing…)' : o;
+function onOvarySelChange(key) {
+  const sel = $(key);
+  const freeEl = $(key+'_free');
+  if (freeEl) {
+    freeEl.style.display = sel && sel.value === '__free__' ? 'block' : 'none';
+    if (sel && sel.value !== '__free__' && freeEl) freeEl.value = '';
+  }
+  update();
 }
 
 function renderOvaryDx() {
   const { rO, lO, rF, lF } = getAdnexaState();
-  const body = $('ovaryDxBody');
   const biMode = checked('bilateralFT');
-  const items = [];
-  if (rO) items.push({ key:'dxRO',   label:'Right Ovary',             opts:ovaryDxOptions, isOvary:true });
-  if (lO) items.push({ key:'dxLO',   label:'Left Ovary',              opts:ovaryDxOptions, isOvary:true });
-  if (biMode) {
-    items.push({ key:'dxBiFT', label:'Bilateral Fallopian Tubes', opts:ftDxOptions, isOvary:false });
-  } else {
-    if (rF) items.push({ key:'dxRF', label:'Right Fallopian Tube',  opts:ftDxOptions, isOvary:false });
-    if (lF) items.push({ key:'dxLF', label:'Left Fallopian Tube',   opts:ftDxOptions, isOvary:false });
+  const anyAdnexa = rO || lO || rF || lF;
+
+  function showRow(id, vis) {
+    var el = $('dxRow_'+id);
+    if (el) el.style.display = vis ? (id==='dxBiFT'||id==='dxRF'||id==='dxLF' ? 'flex' : 'flex') : 'none';
   }
-
-  const empty = $('ovaryDxEmpty');
-  if (!items.length) {
-    // clear any dynamic rows, show empty msg
-    Array.from(body.children).forEach(c => { if (c.id !== 'ovaryDxEmpty') c.remove(); });
-    if (empty) empty.style.display = 'block';
-    return;
-  }
-  if (empty) empty.style.display = 'none';
-
-  // save existing values
-  const saved = {}, savedFree = {};
-  items.forEach(it => {
-    const el = document.getElementById(it.key); if (el) saved[it.key] = el.value;
-    const fe = document.getElementById(it.key+'_free'); if (fe) savedFree[it.key] = fe.value;
-  });
-
-  // remove stale dynamic rows
-  Array.from(body.children).forEach(c => {
-    if (c.id === 'ovaryDxEmpty') return;
-    if (!items.find(i => i.key === c.dataset.key)) c.remove();
-  });
-
-  // add missing rows
-  items.forEach(it => {
-    if (document.getElementById(it.key)) return; // already in DOM
-    const optHtml = it.opts.map(o => `<option value="${o}">${ovaryOptLabel(o)}</option>`).join('');
-    const wrap = document.createElement('div');
-    wrap.dataset.key = it.key;
-    wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:4px;';
-    wrap.innerHTML = `
-      <div class="field-row">
-        <span class="field-label-wide">${it.label}</span>
-        <select id="${it.key}">${optHtml}</select>
-      </div>
-      ${it.isOvary ? `<input type="text" id="${it.key}_free" placeholder="Type finding…" style="display:none;margin-left:150px;width:200px;">` : ''}`;
-    body.appendChild(wrap);
-
-    const sel = document.getElementById(it.key);
-    if (saved[it.key]) sel.value = saved[it.key];
-    const freeEl = it.isOvary ? document.getElementById(it.key+'_free') : null;
-    if (freeEl && savedFree[it.key]) { freeEl.value = savedFree[it.key]; }
-
-    sel.onchange = () => {
-      if (freeEl) {
-        freeEl.style.display = sel.value === '__free__' ? 'block' : 'none';
-        if (sel.value !== '__free__') freeEl.value = '';
-      }
-      update();
-    };
-    if (freeEl) freeEl.oninput = update;
-  });
+  $('ovaryDxEmpty').style.display = anyAdnexa ? 'none' : 'block';
+  showRow('dxRO',   !!rO);
+  showRow('dxLO',   !!lO);
+  showRow('dxBiFT', !!biMode);
+  showRow('dxRF',   !!(rF && !biMode));
+  showRow('dxLF',   !!(lF && !biMode));
 }
 
 // Get effective dx value for an ovary/FT item
