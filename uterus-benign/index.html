@@ -456,7 +456,7 @@ function getInt(id) { const el=$(id); return el && el.value!=='' ? parseInt(el.v
 // ── cervix ─────────────────────────────────────────────────────────────────
 function cervixChange() {
   const v = val('cervixType');
-  const showSub = (v==='chronic' || v==='chronic_active');
+  const showSub = !!v; // show squamous metaplasia for any cervix type selected
   $('sqMetaRow').style.display = showSub ? 'flex' : 'none';
   if (!showSub) $('sqMeta').checked = false;
   update();
@@ -503,17 +503,19 @@ function getProcOptions(hasFT, hasO) {
 
 function renderAdnexalProcedures() {
   const { rO, lO, rF, lF } = getAdnexaState();
+  const biMode = checked('bilateralFT');
   const area = $('adnexalProcedureArea');
   const sides = [];
-  if (rF && rO) sides.push({ key:'right',       label:'Right',        hasFT:true,  hasO:true });
+  // In biMode, FT procedure is implied (bilateral salpingectomy); only show ovary procedures
+  if (rF && rO) sides.push({ key:'right',      label:'Right',       hasFT:true,  hasO:true });
   else {
-    if (rF) sides.push({ key:'rightFTonly', label:'Right FT',     hasFT:true,  hasO:false });
-    if (rO) sides.push({ key:'rightOonly',  label:'Right Ovary',  hasFT:false, hasO:true  });
+    if (rF && !biMode) sides.push({ key:'rightFTonly', label:'Right FT',    hasFT:true,  hasO:false });
+    if (rO)            sides.push({ key:'rightOonly',  label:'Right Ovary', hasFT:false, hasO:true  });
   }
-  if (lF && lO) sides.push({ key:'left',         label:'Left',         hasFT:true,  hasO:true });
+  if (lF && lO) sides.push({ key:'left',       label:'Left',        hasFT:true,  hasO:true });
   else {
-    if (lF) sides.push({ key:'leftFTonly',  label:'Left FT',      hasFT:true,  hasO:false });
-    if (lO) sides.push({ key:'leftOonly',   label:'Left Ovary',   hasFT:false, hasO:true  });
+    if (lF && !biMode) sides.push({ key:'leftFTonly',  label:'Left FT',     hasFT:true,  hasO:false });
+    if (lO)            sides.push({ key:'leftOonly',   label:'Left Ovary',  hasFT:false, hasO:true  });
   }
   // remove stale
   Array.from(area.children).forEach(child => {
@@ -527,8 +529,10 @@ function renderAdnexalProcedures() {
     wrap.innerHTML=`<span style="font-size:11px;color:#6b7280;min-width:70px;">${s.label}:</span>`;
     const sel = document.createElement('select');
     sel.id = 'proc_'+s.key;
-    sel.style.cssText='';
     sel.onchange = update;
+    // blank first option
+    const blank = document.createElement('option');
+    blank.value=''; blank.textContent='-- select --'; sel.appendChild(blank);
     getProcOptions(s.hasFT, s.hasO).forEach(o => {
       const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op);
     });
