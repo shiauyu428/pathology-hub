@@ -147,7 +147,9 @@
   .margin-dir { font-family: 'Source Code Pro', monospace; font-size: 12px; color: var(--accent2); text-align: right; }
   .margin-opts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-  .ln-grid { display: flex; flex-direction: column; gap: 6px; }
+  .ln-grid { display: flex; flex-direction: row; gap: 12px; align-items: flex-start; }
+  .ln-col { display: flex; flex-direction: column; gap: 6px; flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .ln-col-title { font-size: 11px; font-weight: 600; color: var(--accent2); margin-bottom: 2px; }
   .ln-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--label); }
   .ln-row input[type="number"] { width: 46px; }
 
@@ -954,24 +956,32 @@
     <div class="hl-auto" id="lnSummaryAuto">LN 總計將自動加總 ⟶</div>
 
     <div class="ln-grid" id="lnInputGrid">
-      <div class="ln-row" id="ln_Ir_row">Level I (R): <input type="number" id="l1r_pos" min="0" value="0" tabindex="50"> / <input type="number" id="l1r_tot" min="0" value="0" tabindex="51"></div>
-      <div class="ln-row" id="ln_IIr_row">Level II (R): <input type="number" id="l2r_pos" min="0" value="0" tabindex="52"> / <input type="number" id="l2r_tot" min="0" value="0" tabindex="53"></div>
-      <div class="ln-row" id="ln_IIIr_row">Level III (R): <input type="number" id="l3r_pos" min="0" value="0" tabindex="54"> / <input type="number" id="l3r_tot" min="0" value="0" tabindex="55"></div>
-      <div class="ln-row" id="ln_IVr_row">Level IV (R): <input type="number" id="l4r_pos" min="0" value="0" tabindex="56"> / <input type="number" id="l4r_tot" min="0" value="0" tabindex="57"></div>
-      <div class="ln-row" id="ln_Vr_row">Level V (R): <input type="number" id="l5r_pos" min="0" value="0" tabindex="58"> / <input type="number" id="l5r_tot" min="0" value="0" tabindex="59"></div>
-      <div class="ln-row" id="ln_Il_row">Level I (L): <input type="number" id="l1l_pos" min="0" value="0" tabindex="60"> / <input type="number" id="l1l_tot" min="0" value="0" tabindex="61"></div>
-      <div class="ln-row" id="ln_IIl_row">Level II (L): <input type="number" id="l2l_pos" min="0" value="0" tabindex="62"> / <input type="number" id="l2l_tot" min="0" value="0" tabindex="63"></div>
-      <div class="ln-row" id="ln_IIIl_row">Level III (L): <input type="number" id="l3l_pos" min="0" value="0" tabindex="64"> / <input type="number" id="l3l_tot" min="0" value="0" tabindex="65"></div>
-      <div class="ln-row" id="ln_IVl_row">Level IV (L): <input type="number" id="l4l_pos" min="0" value="0" tabindex="66"> / <input type="number" id="l4l_tot" min="0" value="0" tabindex="67"></div>
-      <div class="ln-row" id="ln_Vl_row">Level V (L): <input type="number" id="l5l_pos" min="0" value="0" tabindex="68"> / <input type="number" id="l5l_tot" min="0" value="0" tabindex="69"></div>
-      <div class="ln-row" id="ln_Iar_row" style="display:none">Level Ia (R): <input type="number" id="l1ar_pos" min="0" value="0"> / <input type="number" id="l1ar_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_Ial_row" style="display:none">Level Ia (L): <input type="number" id="l1al_pos" min="0" value="0"> / <input type="number" id="l1al_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_Ibr_row" style="display:none">Level Ib (R): <input type="number" id="l1br_pos" min="0" value="0"> / <input type="number" id="l1br_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_Ibl_row" style="display:none">Level Ib (L): <input type="number" id="l1bl_pos" min="0" value="0"> / <input type="number" id="l1bl_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_IIar_row" style="display:none">Level IIa (R): <input type="number" id="l2ar_pos" min="0" value="0"> / <input type="number" id="l2ar_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_IIal_row" style="display:none">Level IIa (L): <input type="number" id="l2al_pos" min="0" value="0"> / <input type="number" id="l2al_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_IIbr_row" style="display:none">Level IIb (R): <input type="number" id="l2br_pos" min="0" value="0"> / <input type="number" id="l2br_tot" min="0" value="0"></div>
-      <div class="ln-row" id="ln_IIbl_row" style="display:none">Level IIb (L): <input type="number" id="l2bl_pos" min="0" value="0"> / <input type="number" id="l2bl_tot" min="0" value="0"></div>
+      <!-- Right neck column -->
+      <div class="ln-col" id="lnColR">
+        <div class="ln-col-title">Right neck</div>
+        <div class="ln-row" id="ln_Ir_row">Level I: <input type="number" id="l1r_pos" min="0" value="0" tabindex="50"> / <input type="number" id="l1r_tot" min="0" value="0" tabindex="51"></div>
+        <div class="ln-row" id="ln_IIr_row">Level II: <input type="number" id="l2r_pos" min="0" value="0" tabindex="52"> / <input type="number" id="l2r_tot" min="0" value="0" tabindex="53"></div>
+        <div class="ln-row" id="ln_IIIr_row">Level III: <input type="number" id="l3r_pos" min="0" value="0" tabindex="54"> / <input type="number" id="l3r_tot" min="0" value="0" tabindex="55"></div>
+        <div class="ln-row" id="ln_IVr_row">Level IV: <input type="number" id="l4r_pos" min="0" value="0" tabindex="56"> / <input type="number" id="l4r_tot" min="0" value="0" tabindex="57"></div>
+        <div class="ln-row" id="ln_Vr_row">Level V: <input type="number" id="l5r_pos" min="0" value="0" tabindex="58"> / <input type="number" id="l5r_tot" min="0" value="0" tabindex="59"></div>
+        <div class="ln-row" id="ln_Iar_row" style="display:none">Level Ia: <input type="number" id="l1ar_pos" min="0" value="0" tabindex="54"> / <input type="number" id="l1ar_tot" min="0" value="0" tabindex="55"></div>
+        <div class="ln-row" id="ln_Ibr_row" style="display:none">Level Ib: <input type="number" id="l1br_pos" min="0" value="0" tabindex="56"> / <input type="number" id="l1br_tot" min="0" value="0" tabindex="57"></div>
+        <div class="ln-row" id="ln_IIar_row" style="display:none">Level IIa: <input type="number" id="l2ar_pos" min="0" value="0" tabindex="58"> / <input type="number" id="l2ar_tot" min="0" value="0" tabindex="59"></div>
+        <div class="ln-row" id="ln_IIbr_row" style="display:none">Level IIb: <input type="number" id="l2br_pos" min="0" value="0" tabindex="60"> / <input type="number" id="l2br_tot" min="0" value="0" tabindex="61"></div>
+      </div>
+      <!-- Left neck column -->
+      <div class="ln-col" id="lnColL">
+        <div class="ln-col-title">Left neck</div>
+        <div class="ln-row" id="ln_Il_row">Level I: <input type="number" id="l1l_pos" min="0" value="0" tabindex="70"> / <input type="number" id="l1l_tot" min="0" value="0" tabindex="71"></div>
+        <div class="ln-row" id="ln_IIl_row">Level II: <input type="number" id="l2l_pos" min="0" value="0" tabindex="72"> / <input type="number" id="l2l_tot" min="0" value="0" tabindex="73"></div>
+        <div class="ln-row" id="ln_IIIl_row">Level III: <input type="number" id="l3l_pos" min="0" value="0" tabindex="74"> / <input type="number" id="l3l_tot" min="0" value="0" tabindex="75"></div>
+        <div class="ln-row" id="ln_IVl_row">Level IV: <input type="number" id="l4l_pos" min="0" value="0" tabindex="76"> / <input type="number" id="l4l_tot" min="0" value="0" tabindex="77"></div>
+        <div class="ln-row" id="ln_Vl_row">Level V: <input type="number" id="l5l_pos" min="0" value="0" tabindex="78"> / <input type="number" id="l5l_tot" min="0" value="0" tabindex="79"></div>
+        <div class="ln-row" id="ln_Ial_row" style="display:none">Level Ia: <input type="number" id="l1al_pos" min="0" value="0" tabindex="74"> / <input type="number" id="l1al_tot" min="0" value="0" tabindex="75"></div>
+        <div class="ln-row" id="ln_Ibl_row" style="display:none">Level Ib: <input type="number" id="l1bl_pos" min="0" value="0" tabindex="76"> / <input type="number" id="l1bl_tot" min="0" value="0" tabindex="77"></div>
+        <div class="ln-row" id="ln_IIal_row" style="display:none">Level IIa: <input type="number" id="l2al_pos" min="0" value="0" tabindex="78"> / <input type="number" id="l2al_tot" min="0" value="0" tabindex="79"></div>
+        <div class="ln-row" id="ln_IIbl_row" style="display:none">Level IIb: <input type="number" id="l2bl_pos" min="0" value="0" tabindex="80"> / <input type="number" id="l2bl_tot" min="0" value="0" tabindex="81"></div>
+      </div>
     </div>
 
     <div class="divider"></div>
