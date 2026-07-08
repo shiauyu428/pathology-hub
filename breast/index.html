@@ -1916,8 +1916,8 @@ function generate(){
   if(sel==='mixed') return 'Invasive carcinoma with mixed features'+(document.getElementById('histo_mixed')?.value?': '+document.getElementById('histo_mixed').value:'');
   if(sel==='other') return document.getElementById('histo_other')?.value||'Other';
   return sel;
-})()+' ('+ptDisplay+').\n'+
-'Lymph nodes, axillary, '+(document.getElementById('ln_side_display')?.value||'right').toLowerCase()+', '+v('ln_method')+' --- '+lnDiagText+'.\n\n'+
+})()+' ('+ptDisplay+')\n'+
+'Lymph nodes, axillary, '+(document.getElementById('ln_side_display')?.value||'right').toLowerCase()+', '+v('ln_method')+' --- '+lnDiagText+'\n\n'+
 'GROSS DESCRIPTION:\n'+
 'Specimen: '+v('spec_type')+'\n'+
 'Lymph Node: '+v('ln_sampling')+'\n'+
