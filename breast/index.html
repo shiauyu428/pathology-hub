@@ -1662,18 +1662,17 @@ function renderPerTumorRows(){
 function toggleMainTumorLoc(){
   const hide=document.getElementById('per_tumor_loc_cb')?.checked;
   const el=document.getElementById('tumor_loc_single');
-  if(el) el.style.visibility=hide?'hidden':'visible';
+  if(el) el.style.display=hide?'none':'block';
 }
 
 function toggleMainTumorSize(){
   const hide=document.getElementById('per_tumor_size_cb')?.checked;
   ['ts_3d_block','ts_max_block','tumor_size_dcis'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.style.visibility=hide?'hidden':'visible';
+    if(el) el.style.display=hide?'none':(id==='ts_3d_block'?'flex':'');
   });
-  // Also hide the 3D/Max radio row
   const modeRow=document.querySelector('input[name="ts_mode"]')?.closest('.rg');
-  if(modeRow) modeRow.style.visibility=hide?'hidden':'visible';
+  if(modeRow) modeRow.style.display=hide?'none':'';
 }
 
 function togglePTSzMode(id){
