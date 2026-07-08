@@ -384,7 +384,7 @@ select{cursor:pointer;}
     <!-- Per-tumor location toggle (shown when focality > 1) -->
     <div id="per_tumor_loc_toggle" style="display:none;margin-top:6px">
       <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="per_tumor_loc_cb" style="width:auto;margin:0" onchange="renderPerTumorRows()"> Per tumor location
+        <input type="checkbox" id="per_tumor_loc_cb" style="width:auto;margin:0" onchange="renderPerTumorRows();toggleMainTumorLoc()"> Per tumor location
       </label>
       <div id="per_tumor_loc_rows" style="display:none;flex-direction:column;gap:5px;margin-top:6px"></div>
     </div>
@@ -1659,6 +1659,12 @@ function renderPerTumorRows(){
   }
 }
 
+function toggleMainTumorLoc(){
+  const hide=document.getElementById('per_tumor_loc_cb')?.checked;
+  const el=document.getElementById('tumor_loc_single');
+  if(el) el.style.visibility=hide?'hidden':'visible';
+}
+
 function toggleMainTumorSize(){
   const hide=document.getElementById('per_tumor_size_cb')?.checked;
   ['ts_3d_block','ts_max_block','tumor_size_dcis'].forEach(id=>{
@@ -1711,10 +1717,10 @@ function buildPerTumorSizeText(){
 }
 
 function generate(){
-  // ④ Validate tumor size
+  // ④ Validate tumor size (skip if per-tumor size is used)
   const tsModeChk=document.querySelector('input[name="ts_mode"]:checked')?.value||'3d';
   const tsVal=tsModeChk==='max'?document.getElementById('ts_max')?.value:document.getElementById('ts1')?.value;
-  if(!tsVal||tsVal.trim()===''){
+  if(!document.getElementById('per_tumor_size_cb')?.checked && (!tsVal||tsVal.trim()===''))  {
     const w=document.getElementById('tumor_size_warn');
     if(w){ w.style.display='inline'; }
     const t=document.getElementById('ts1');
