@@ -1744,8 +1744,13 @@ axLine+
 'Treatment Effect: '+getTreatmentEffectText()+'\n'+
 'Immunohistochemical study:\n'+
 ihcText+'\n'+
-(document.getElementById('p63_include')?.checked?'- P63 immunostaining demonstrates the absence of myoepithelial cells at the periphery of invasive focus.\n':'')+
-(document.getElementById('smmhc_include')?.checked?'- SMMHC immunostaining demonstrates the absence of myoepithelial cells at the periphery of invasive focus.\n':'')+
+(()=>{
+  const p63=document.getElementById('p63_include')?.checked;
+  const smmhc=document.getElementById('smmhc_include')?.checked;
+  if(!p63&&!smmhc) return '';
+  const markers=[p63?'P63':null,smmhc?'SMMHC':null].filter(Boolean).join(', ');
+  return '- '+markers+': Absence of myoepithelial cells at the periphery of invasive focus\n';
+})()+
 (()=>{
   if(!document.getElementById('ecad_include')?.checked) return '';
   const val = ihcPillState['ecad_inv'];
