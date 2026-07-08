@@ -205,64 +205,6 @@ select{cursor:pointer;}
     <option value="Dissection including frozen section">Dissection including frozen section</option>
   </select>
 </div>
-<div class="fg" style="grid-column:1/-1">
-  <label>Tumor Focality <span class="auto-tag">選填</span></label>
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
-    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="" checked> Single focus</label>
-    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="multiple"> Multiple foci of invasive carcinoma</label>
-    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer">
-      <input type="radio" name="focality" value="specify">
-      <input type="number" id="focality_n" placeholder="n" min="2" step="1" style="width:52px"> foci of invasive carcinoma
-    </label>
-  </div>
-</div>
-<div class="fg" style="grid-column:1/-1"><label>Tumor size (cm) <span style="color:#c0392b;font-size:0.72rem;font-weight:700">★ 必填</span></label>
-    <div class="rg" style="margin-bottom:6px">
-      <label class="rg-m"><input type="radio" name="ts_mode" value="3d" checked onchange="toggleTSMode()"> 3D size</label>
-      <label class="rg-m"><input type="radio" name="ts_mode" value="max" onchange="toggleTSMode()"> Maximum dimension only</label>
-    </div>
-    <div id="ts_3d_block" class="sr">
-      <input type="number" id="ts1" placeholder="—" min="0" step="any" oninput="clearTumorWarning();syncInvSize()">
-      <span>x</span>
-      <input type="number" id="ts2" placeholder="—" min="0" step="any">
-      <span>x</span>
-      <input type="number" id="ts3" placeholder="—" min="0" step="any">
-      <span>cm</span>
-    </div>
-    <div id="ts_max_block" style="display:none;display:flex;align-items:center;gap:5px">
-      <input type="number" id="ts_max" placeholder="—" min="0" step="any" style="width:80px" oninput="clearTumorWarning();syncInvSize()">
-      <span style="font-size:0.82rem;color:var(--muted)">cm in maximum dimension</span>
-    </div>
-    
-  <span id="tumor_size_warn" style="font-size:0.71rem;color:#c0392b;display:none">⚠ 請填入腫瘤大小</span>
-    <label style="font-size:0.79rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;margin-top:4px;cursor:pointer">
-      <input type="checkbox" id="tumor_size_dcis" style="width:14px;height:14px;accent-color:var(--accent)">
-      This measurement includes areas of DCIS. Please refer to the microscopic findings for the invasive tumor size.
-    </label>
-  </div>
-  <div class="fg" style="margin-top:8px"><label>Texture of tumor <span class="auto-tag">↑ Mucinous → 自動 Gelatinous</span></label>
-    <input type="text" id="tumor_texture" value="Gray to white and firm">
-  </div>
-  <!-- ⑦ Tumor location with custom o'clock -->
-  <div class="fg" style="margin-top:8px"><label>Tumor location</label>
-    <select id="tumor_loc" onchange="toggleTumorLocCustom()">
-      <option value="Upper outer quadrant">Upper outer quadrant</option>
-      <option value="Lower outer quadrant">Lower outer quadrant</option>
-      <option value="Upper inner quadrant">Upper inner quadrant</option>
-      <option value="Lower inner quadrant">Lower inner quadrant</option>
-      <option value="Subareolar">Subareolar</option>
-      <option value="custom">自行填入 o'clock / cm to nipple</option>
-    </select>
-    <div id="tumor_loc_custom" style="display:none;margin-top:4px">
-      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <input type="number" id="tloc_clock" placeholder="o'clock" min="1" max="12" step="1" style="width:68px;flex:none">
-        <span style="font-size:12px;color:var(--muted);flex:none">o'clock,</span>
-        <input type="number" id="tloc_cm" placeholder="cm" min="0" step="any" style="width:60px;flex:none">
-        <span style="font-size:12px;color:var(--muted);flex:none">cm to nipple</span>
-      </div>
-    </div>
-  </div>
-
 <div class="grid">
   <div class="fg" style="display:none"><label>Specimen type（自動同步術式）</label>
     <select id="spec_type" onchange="syncSpecToSurgery()">
@@ -373,6 +315,64 @@ select{cursor:pointer;}
     </div>
   </div>
 </div>
+<div class="fg" style="grid-column:1/-1">
+  <label>Tumor Focality <span class="auto-tag">選填</span></label>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="" checked> Single focus</label>
+    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="multiple"> Multiple foci of invasive carcinoma</label>
+    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer">
+      <input type="radio" name="focality" value="specify">
+      <input type="number" id="focality_n" placeholder="n" min="2" step="1" style="width:52px"> foci of invasive carcinoma
+    </label>
+  </div>
+</div>
+<div class="fg" style="grid-column:1/-1"><label>Tumor size (cm) <span style="color:#c0392b;font-size:0.72rem;font-weight:700">★ 必填</span></label>
+    <div class="rg" style="margin-bottom:6px">
+      <label class="rg-m"><input type="radio" name="ts_mode" value="3d" checked onchange="toggleTSMode()"> 3D size</label>
+      <label class="rg-m"><input type="radio" name="ts_mode" value="max" onchange="toggleTSMode()"> Maximum dimension only</label>
+    </div>
+    <div id="ts_3d_block" class="sr">
+      <input type="number" id="ts1" placeholder="—" min="0" step="any" oninput="clearTumorWarning();syncInvSize()">
+      <span>x</span>
+      <input type="number" id="ts2" placeholder="—" min="0" step="any">
+      <span>x</span>
+      <input type="number" id="ts3" placeholder="—" min="0" step="any">
+      <span>cm</span>
+    </div>
+    <div id="ts_max_block" style="display:none;display:flex;align-items:center;gap:5px">
+      <input type="number" id="ts_max" placeholder="—" min="0" step="any" style="width:80px" oninput="clearTumorWarning();syncInvSize()">
+      <span style="font-size:0.82rem;color:var(--muted)">cm in maximum dimension</span>
+    </div>
+    
+  <span id="tumor_size_warn" style="font-size:0.71rem;color:#c0392b;display:none">⚠ 請填入腫瘤大小</span>
+    <label style="font-size:0.79rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;margin-top:4px;cursor:pointer">
+      <input type="checkbox" id="tumor_size_dcis" style="width:14px;height:14px;accent-color:var(--accent)">
+      This measurement includes areas of DCIS. Please refer to the microscopic findings for the invasive tumor size.
+    </label>
+  </div>
+  <div class="fg" style="margin-top:8px"><label>Texture of tumor <span class="auto-tag">↑ Mucinous → 自動 Gelatinous</span></label>
+    <input type="text" id="tumor_texture" value="Gray to white and firm">
+  </div>
+  <!-- ⑦ Tumor location with custom o'clock -->
+  <div class="fg" style="margin-top:8px"><label>Tumor location</label>
+    <select id="tumor_loc" onchange="toggleTumorLocCustom()">
+      <option value="Upper outer quadrant">Upper outer quadrant</option>
+      <option value="Lower outer quadrant">Lower outer quadrant</option>
+      <option value="Upper inner quadrant">Upper inner quadrant</option>
+      <option value="Lower inner quadrant">Lower inner quadrant</option>
+      <option value="Subareolar">Subareolar</option>
+      <option value="custom">自行填入 o'clock / cm to nipple</option>
+    </select>
+    <div id="tumor_loc_custom" style="display:none;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        <input type="number" id="tloc_clock" placeholder="o'clock" min="1" max="12" step="1" style="width:68px;flex:none">
+        <span style="font-size:12px;color:var(--muted);flex:none">o'clock,</span>
+        <input type="number" id="tloc_cm" placeholder="cm" min="0" step="any" style="width:60px;flex:none">
+        <span style="font-size:12px;color:var(--muted);flex:none">cm to nipple</span>
+      </div>
+    </div>
+  </div>
+
 <div id="op_cavity_row" style="display:none;grid-column:1/-1;margin-bottom:6px" class="fg">
   <label>Operative Cavity (cm) <span class="auto-tag">選填</span></label>
   <div class="sr">
