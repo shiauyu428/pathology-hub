@@ -1623,25 +1623,48 @@ function renderPerTumorRows(){
   if(sizeRows && sizeCb){
     if(sizeCb.checked && n>1){
       sizeRows.style.display='flex';
-      // Rebuild rows
       sizeRows.innerHTML='';
       for(let i=1;i<=n;i++){
         const id='ptsz_'+i;
         const div=document.createElement('div');
-        div.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap';
-        div.innerHTML=`<span style="font-size:0.82rem;color:var(--muted);flex:none;min-width:64px">Tumor ${i}:</span>
-          <input type="number" id="${id}_1" placeholder="—" min="0" step="any" style="width:60px">
-          <span style="font-size:12px;color:var(--muted)">x</span>
-          <input type="number" id="${id}_2" placeholder="—" min="0" step="any" style="width:60px">
-          <span style="font-size:12px;color:var(--muted)">x</span>
-          <input type="number" id="${id}_3" placeholder="—" min="0" step="any" style="width:60px">
-          <span style="font-size:12px;color:var(--muted)">cm</span>`;
+        div.style.cssText='display:flex;flex-direction:column;gap:4px';
+        div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:0.82rem;color:var(--muted);flex:none;min-width:64px">Tumor ${i}:</span>
+          <label style="font-size:0.79rem;font-weight:normal;display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="radio" name="${id}_mode" value="3d" checked onchange="togglePTSzMode('${id}')"> 3D
+          </label>
+          <label style="font-size:0.79rem;font-weight:normal;display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="radio" name="${id}_mode" value="max" onchange="togglePTSzMode('${id}')"> Max
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-left:72px">
+          <div id="${id}_3d" style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="${id}_1" placeholder="—" min="0" step="any" style="width:60px">
+            <span style="font-size:12px;color:var(--muted)">x</span>
+            <input type="number" id="${id}_2" placeholder="—" min="0" step="any" style="width:60px">
+            <span style="font-size:12px;color:var(--muted)">x</span>
+            <input type="number" id="${id}_3" placeholder="—" min="0" step="any" style="width:60px">
+            <span style="font-size:12px;color:var(--muted)">cm</span>
+          </div>
+          <div id="${id}_max" style="display:none;align-items:center;gap:6px">
+            <input type="number" id="${id}_m" placeholder="—" min="0" step="any" style="width:80px">
+            <span style="font-size:12px;color:var(--muted)">cm in maximum dimension</span>
+          </div>
+        </div>`;
         sizeRows.appendChild(div);
       }
     } else {
       sizeRows.style.display='none';
     }
   }
+}
+
+function togglePTSzMode(id){
+  const mode=document.querySelector(`input[name="${id}_mode"]:checked`)?.value||'3d';
+  const d3=document.getElementById(id+'_3d');
+  const mx=document.getElementById(id+'_max');
+  if(d3) d3.style.display=mode==='3d'?'flex':'none';
+  if(mx) mx.style.display=mode==='max'?'flex':'none';
 }
 
 function buildPerTumorLocText(){
@@ -1659,11 +1682,19 @@ function buildPerTumorSizeText(){
   const lines=[];
   for(let i=1;i<=n;i++){
     const id='ptsz_'+i;
-    const x=document.getElementById(id+'_1')?.value;
-    const y=document.getElementById(id+'_2')?.value;
-    const z=document.getElementById(id+'_3')?.value;
-    const sz=[x,y,z].filter(Boolean).join(' x ');
-    lines.push('- Tumor '+i+': '+(sz?sz+' cm':'___'));
+    const mode=document.querySelector(`input[name="${id}_mode"]:checked`)?.value||'3d';
+    let sz='';
+    if(mode==='max'){
+      const m=document.getElementById(id+'_m')?.value;
+      if(m) sz=m+' cm in maximum dimension';
+    } else {
+      const x=document.getElementById(id+'_1')?.value;
+      const y=document.getElementById(id+'_2')?.value;
+      const z=document.getElementById(id+'_3')?.value;
+      const parts=[x,y,z].filter(Boolean);
+      if(parts.length) sz=parts.join(' x ')+' cm';
+    }
+    lines.push('- Tumor '+i+': '+(sz||'___'));
   }
   return 'Size of tumor:\n'+lines.join('\n')+'\nmeasured on the histologic slide\n';
 }
