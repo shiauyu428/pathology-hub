@@ -286,7 +286,7 @@ select{cursor:pointer;}
       <input type="number" id="sk2" placeholder="—" min="0" step="any">
     </div>
     <label style="font-size:0.79rem;font-weight:normal;color:var(--text);display:flex;align-items:center;gap:5px;cursor:pointer;margin-top:4px">
-      <input type="checkbox" id="skin_with_nipple" checked style="width:auto;margin:0"> With nipple
+      <input type="checkbox" id="skin_with_nipple" checked style="width:auto;margin:0" onchange="onSkinNippleToggle()"> With nipple
     </label>
   </div>
   <!-- ⑧ Axillary: pieces + 3D aggregate -->
@@ -466,6 +466,10 @@ select{cursor:pointer;}
 </div>
 <p class="sub-label" style="margin-top:12px">Additional Findings <span class="auto-tag">optional — 自由填寫</span></p>
 <textarea id="gross_addl" rows="3" style="width:100%;font-size:13px;padding:6px 8px;border:0.5px solid rgba(0,0,0,0.2);border-radius:6px;resize:vertical" placeholder="e.g. Biopsy site changes, fibrocystic changes"></textarea>
+
+<p class="sub-label" style="margin-top:12px">Other Specimens <span class="auto-tag">optional</span></p>
+<div id="otherSpecContainer" style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px"></div>
+<button type="button" onclick="addOtherSpec()" style="background:none;border:1px dashed rgba(0,0,0,0.25);color:var(--accent);padding:3px 12px;border-radius:4px;font-size:12px;cursor:pointer;margin-top:2px">+ Add specimen</button>
 </div>
     </div>
     <div class="section-group">
@@ -1125,6 +1129,7 @@ select{cursor:pointer;}
   <label><input type="checkbox" class="addl_find" value="Lobular carcinoma in situ"> Lobular carcinoma in situ</label>
   <label><input type="checkbox" class="addl_find" value="Usual ductal hyperplasia"> Usual ductal hyperplasia</label>
   <label><input type="checkbox" class="addl_find" value="Atypical ductal hyperplasia"> Atypical ductal hyperplasia</label>
+  <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="addl_free_cb" onchange="toggleAddlFree()"> Other: <input type="text" id="addl_free_text" placeholder="free typing…" style="display:none;font-size:12px;padding:2px 6px;border:0.5px solid rgba(0,0,0,0.2);border-radius:4px;width:200px"></label>
 </div>
 </div>
     </div>
@@ -1146,6 +1151,59 @@ select{cursor:pointer;}
 </div><!-- end main -->
 
 <script>
+function toggleAddlFree(){
+  const cb = document.getElementById('addl_free_cb');
+  const inp = document.getElementById('addl_free_text');
+  inp.style.display = cb.checked ? 'inline-block' : 'none';
+  if(!cb.checked) inp.value = '';
+}
+
+let otherSpecCount = 0;
+function addOtherSpec(){
+  otherSpecCount++;
+  const id = 'ospec_' + otherSpecCount;
+  const div = document.createElement('div');
+  div.id = id;
+  div.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap';
+  div.innerHTML =
+    '<input type="text" placeholder="Label (e.g. Basal margin)" style="font-size:12px;padding:3px 6px;border:0.5px solid rgba(0,0,0,0.2);border-radius:4px;width:160px">' +
+    '<input type="number" min="1" step="1" placeholder="pcs" style="font-size:12px;padding:3px 6px;border:0.5px solid rgba(0,0,0,0.2);border-radius:4px;width:52px"> piece(s),' +
+    '<input type="number" min="0" step="0.1" placeholder="—" style="font-size:12px;padding:3px 6px;border:0.5px solid rgba(0,0,0,0.2);border-radius:4px;width:52px">' +
+    '<span style="font-size:12px">x</span>' +
+    '<input type="number" min="0" step="0.1" placeholder="—" style="font-size:12px;padding:3px 6px;border:0.5px solid rgba(0,0,0,0.2);border-radius:4px;width:52px">' +
+    '<span style="font-size:12px">x</span>' +
+    '<input type="number" min="0" step="0.1" placeholder="—" style="font-size:12px;padding:3px 6px;border:0.5px solid rgba(0,0,0,0.2);border-radius:4px;width:52px">' +
+    '<span style="font-size:12px">cm</span>' +
+    '<button type="button" onclick="document.getElementById(\'' + id + '\').remove()" style="background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;padding:0 4px">✕</button>';
+  document.getElementById('otherSpecContainer').appendChild(div);
+}
+
+function buildOtherSpecText(){
+  const rows = document.querySelectorAll('#otherSpecContainer > div');
+  if(!rows.length) return '';
+  const lines = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const label = inputs[0].value.trim();
+    const pcs   = parseInt(inputs[1].value) || 1;
+    const x = inputs[2].value, y = inputs[3].value, z = inputs[4].value;
+    if(!label) return;
+    const pcsStr = pcs === 1 ? '1 piece' : pcs + ' pieces';
+    const sizeStr = (x||y||z) ? ', ' + (pcs > 1 ? 'up to ' : '') + [x||'?',y||'?',z||'?'].join(' x ') + ' cm' : '';
+    lines.push('- ' + label + ': ' + pcsStr + sizeStr);
+  });
+  if(!lines.length) return '';
+  return 'Other specimens:\n' + lines.join('\n') + '\n';
+}
+
+function onSkinNippleToggle(){
+  const withNip = document.getElementById('skin_with_nipple').checked;
+  if(!withNip){
+    const sel = document.getElementById('nipple');
+    if(sel) sel.value = 'Not assessed';
+  }
+}
+
 function switchTab(tab){
   // tabs replaced by scrollable sections — scroll to section instead
   const map={diag:'panel-diag',gross:'panel-gross',micro:'panel-micro',ihc:'panel-ihc'};
@@ -1609,6 +1667,7 @@ stitchLines+
   const repText2=document.getElementById('rep_clean')?document.getElementById('rep_clean').value.trim():'';
   return (document.getElementById('gross_addl')&&document.getElementById('gross_addl').value.trim()?
 'Additional findings: '+document.getElementById('gross_addl').value.trim()+'\n':'')+
+buildOtherSpecText()+
 'Representative sections are taken and labeled as follows:\n'+(repText2?repText2+'\n':'')+'\n';
 })()+
 'MICROSCOPIC DESCRIPTION:\n'+
@@ -1652,6 +1711,9 @@ ihcText+'\n'+
 'TNM descriptors: '+desc+
 (()=>{
   const items=Array.from(document.querySelectorAll('.addl_find:checked')).map(e=>e.value);
+  const freeCb=document.getElementById('addl_free_cb');
+  const freeVal=document.getElementById('addl_free_text')?.value.trim();
+  if(freeCb?.checked && freeVal) items.push(freeVal);
   if(!items.length) return '';
   return '\nAdditional findings:\n'+items.map(i=>'- '+i).join('\n');
 })()+
