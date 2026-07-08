@@ -104,6 +104,9 @@ select{cursor:pointer;}
 .auto-tag{font-size:10px;color:var(--accent3);font-family:var(--mono);padding:1px 6px;
   background:#e6f5f0;border:1px solid #a8d9cb;border-radius:3px;font-weight:500;margin-left:5px;vertical-align:middle;}
 .hint{font-size:11px;color:var(--text4);font-family:var(--mono);margin-top:3px;}
+.ihc-pill{font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text3);cursor:pointer;transition:all .12s;}
+.ihc-pill:hover{border-color:var(--accent);color:var(--accent);}
+.ihc-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .divider{height:1px;background:var(--border);margin:2px 0;}
 
 /* ── Tab panels: all visible (no tab switching) ── */
@@ -1097,9 +1100,28 @@ select{cursor:pointer;}
   </div>
 </div>
 <div class="fg" style="margin-top:8px">
-  <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
-    <input type="checkbox" id="p63_include" style="width:auto;margin:0"> Include P63 immunostaining sentence
-  </label>
+  <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
+    <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="p63_include" style="width:auto;margin:0"> P63 — absence of myoepithelial cells at invasive periphery
+    </label>
+    <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="smmhc_include" style="width:auto;margin:0"> SMMHC — absence of myoepithelial cells at invasive periphery
+    </label>
+    <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="ecad_include" style="width:auto;margin:0" onchange="toggleIhcPills('ecad_include','ecad_pills_inv')"> E-cadherin:
+      <span id="ecad_pills_inv" style="display:none;gap:4px;display:inline-flex">
+        <button type="button" class="ihc-pill" onclick="setIhcPill('ecad_inv','pos',this)">Positive (membranous)</button>
+        <button type="button" class="ihc-pill" onclick="setIhcPill('ecad_inv','loss',this)">Loss</button>
+      </span>
+    </label>
+    <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="p120_include" style="width:auto;margin:0" onchange="toggleIhcPills('p120_include','p120_pills_inv')"> P120:
+      <span id="p120_pills_inv" style="display:none;gap:4px;display:inline-flex">
+        <button type="button" class="ihc-pill" onclick="setIhcPill('p120_inv','pos',this)">Positive (membranous)</button>
+        <button type="button" class="ihc-pill" onclick="setIhcPill('p120_inv','loss',this)">Loss</button>
+      </span>
+    </label>
+  </div>
 </div>
 </div>
 <div class="fg" style="margin-top:8px">
@@ -1199,6 +1221,19 @@ function buildOtherSpecText(){
   });
   if(!lines.length) return '';
   return 'Other specimens:\n' + lines.join('\n') + '\n';
+}
+
+const ihcPillState = {};
+function setIhcPill(key, val, btn) {
+  ihcPillState[key] = val;
+  const container = btn.closest('span');
+  container.querySelectorAll('.ihc-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toggleIhcPills(cbId, pillSpanId) {
+  const on = document.getElementById(cbId)?.checked;
+  const span = document.getElementById(pillSpanId);
+  if (span) span.style.display = on ? 'inline-flex' : 'none';
 }
 
 function onSkinNippleToggle(){
@@ -1665,16 +1700,14 @@ stitchLines+
 
 'Tumor configuration: Well-delineated with focal infiltrative margin\n'+
 'Texture of the tumor: '+(v('tumor_texture')||'Gray to white and firm')+'\n'+
-(fmtSize(['op1','op2','op3'])?'Operative cavity: '+fmtSize(['op1','op2','op3'])+' cm\n':'')+grossBlock+'\n\n'+
+(fmtSize(['op1','op2','op3'])?'Operative cavity: '+fmtSize(['op1','op2','op3'])+' cm\n':'')+grossBlock+'\n'+
 (()=>{
-  const res=document.getElementById('rep_result');
-  const txt=document.getElementById('rep_clean')?document.getElementById('rep_clean').value.trim():'';
   const repText2=document.getElementById('rep_clean')?document.getElementById('rep_clean').value.trim():'';
   return (document.getElementById('gross_addl')&&document.getElementById('gross_addl').value.trim()?
 'Additional findings: '+document.getElementById('gross_addl').value.trim()+'\n':'')+
 buildOtherSpecText()+
-'Representative sections are taken and labeled as follows:\n'+(repText2?repText2+'\n':'')+'\n';
-})()+
+'\nRepresentative sections are taken and labeled as follows:\n'+(repText2?repText2+'\n':'');
+})()+'\n'+
 'MICROSCOPIC DESCRIPTION:\n'+
 (()=>{
   const sel=document.querySelector('input[name="histo_type"]:checked')?.value||'Invasive carcinoma of no special type (ductal)';
@@ -1711,7 +1744,20 @@ axLine+
 'Treatment Effect: '+getTreatmentEffectText()+'\n'+
 'Immunohistochemical study:\n'+
 ihcText+'\n'+
-(document.getElementById('p63_include')?.checked?'P63 immunostaining demonstrates the absence of myoepithelial cells at the periphery of invasive focus.\n':'')+
+(document.getElementById('p63_include')?.checked?'- P63 immunostaining demonstrates the absence of myoepithelial cells at the periphery of invasive focus.\n':'')+
+(document.getElementById('smmhc_include')?.checked?'- SMMHC immunostaining demonstrates the absence of myoepithelial cells at the periphery of invasive focus.\n':'')+
+(()=>{
+  if(!document.getElementById('ecad_include')?.checked) return '';
+  const val = ihcPillState['ecad_inv'];
+  const txt = val==='pos'?'Positive in membranous staining.':val==='loss'?'Loss':'___';
+  return '- E-cadherin: '+txt+'\n';
+})()+
+(()=>{
+  if(!document.getElementById('p120_include')?.checked) return '';
+  const val = ihcPillState['p120_inv'];
+  const txt = val==='pos'?'Positive in membranous staining.':val==='loss'?'Loss':'___';
+  return '- P120: '+txt+'\n';
+})()+
 'pTNM: '+ptnmFinal+' (AJCC cancer staging system, 8th edition)\n'+
 'TNM descriptors: '+desc+
 (()=>{
