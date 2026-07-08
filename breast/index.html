@@ -351,7 +351,7 @@ select{cursor:pointer;}
     <!-- Per-tumor size toggle (shown when focality > 1) -->
     <div id="per_tumor_size_toggle" style="display:none;margin-top:6px">
       <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="per_tumor_size_cb" style="width:auto;margin:0" onchange="renderPerTumorRows()"> Per tumor size
+        <input type="checkbox" id="per_tumor_size_cb" style="width:auto;margin:0" onchange="renderPerTumorRows();toggleMainTumorSize()"> Per tumor size
       </label>
       <div id="per_tumor_size_rows" style="display:none;flex-direction:column;gap:5px;margin-top:6px"></div>
     </div>
@@ -1659,6 +1659,17 @@ function renderPerTumorRows(){
   }
 }
 
+function toggleMainTumorSize(){
+  const hide=document.getElementById('per_tumor_size_cb')?.checked;
+  ['ts_3d_block','ts_max_block','tumor_size_dcis'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.visibility=hide?'hidden':'visible';
+  });
+  // Also hide the 3D/Max radio row
+  const modeRow=document.querySelector('input[name="ts_mode"]')?.closest('.rg');
+  if(modeRow) modeRow.style.visibility=hide?'hidden':'visible';
+}
+
 function togglePTSzMode(id){
   const mode=document.querySelector(`input[name="${id}_mode"]:checked`)?.value||'3d';
   const d3=document.getElementById(id+'_3d');
@@ -1696,7 +1707,7 @@ function buildPerTumorSizeText(){
     }
     lines.push('- Tumor '+i+': '+(sz||'___'));
   }
-  return 'Size of tumor:\n'+lines.join('\n')+'\nmeasured on the histologic slide\n';
+  return 'Size of tumor:\n'+lines.join('\n')+'\n';
 }
 
 function generate(){
