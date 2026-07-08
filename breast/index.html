@@ -318,11 +318,11 @@ select{cursor:pointer;}
 <div class="fg" style="grid-column:1/-1">
   <label>Tumor Focality <span class="auto-tag">選填</span></label>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
-    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="" checked> Single focus</label>
-    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="multiple"> Multiple foci of invasive carcinoma</label>
+    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="" checked onchange="onFocalityChange()"> Single focus</label>
+    <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="focality" value="multiple" onchange="onFocalityChange()"> Multiple foci of invasive carcinoma</label>
     <label style="font-size:0.81rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer">
-      <input type="radio" name="focality" value="specify">
-      <input type="number" id="focality_n" placeholder="n" min="2" step="1" style="width:52px"> foci of invasive carcinoma
+      <input type="radio" name="focality" value="specify" onchange="onFocalityChange()">
+      <input type="number" id="focality_n" placeholder="n" min="2" step="1" style="width:52px" oninput="onFocalityChange()"> foci of invasive carcinoma
     </label>
   </div>
 </div>
@@ -343,33 +343,50 @@ select{cursor:pointer;}
       <input type="number" id="ts_max" placeholder="—" min="0" step="any" style="width:80px" oninput="clearTumorWarning();syncInvSize()">
       <span style="font-size:0.82rem;color:var(--muted)">cm in maximum dimension</span>
     </div>
-    
   <span id="tumor_size_warn" style="font-size:0.71rem;color:#c0392b;display:none">⚠ 請填入腫瘤大小</span>
     <label style="font-size:0.79rem;color:var(--text);font-weight:400;display:flex;align-items:center;gap:5px;margin-top:4px;cursor:pointer">
       <input type="checkbox" id="tumor_size_dcis" style="width:14px;height:14px;accent-color:var(--accent)">
       This measurement includes areas of DCIS. Please refer to the microscopic findings for the invasive tumor size.
     </label>
+    <!-- Per-tumor size toggle (shown when focality > 1) -->
+    <div id="per_tumor_size_toggle" style="display:none;margin-top:6px">
+      <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="per_tumor_size_cb" style="width:auto;margin:0" onchange="renderPerTumorRows()"> Per tumor size
+      </label>
+      <div id="per_tumor_size_rows" style="display:none;flex-direction:column;gap:5px;margin-top:6px"></div>
+    </div>
   </div>
   <div class="fg" style="margin-top:8px"><label>Texture of tumor <span class="auto-tag">↑ Mucinous → 自動 Gelatinous</span></label>
     <input type="text" id="tumor_texture" value="Gray to white and firm">
   </div>
   <!-- ⑦ Tumor location with custom o'clock -->
-  <div class="fg" style="margin-top:8px"><label>Tumor location</label>
-    <select id="tumor_loc" onchange="toggleTumorLocCustom()">
-      <option value="Upper outer quadrant">Upper outer quadrant</option>
-      <option value="Lower outer quadrant">Lower outer quadrant</option>
-      <option value="Upper inner quadrant">Upper inner quadrant</option>
-      <option value="Lower inner quadrant">Lower inner quadrant</option>
-      <option value="Subareolar">Subareolar</option>
-      <option value="custom">自行填入 o'clock / cm to nipple</option>
-    </select>
-    <div id="tumor_loc_custom" style="display:none;margin-top:4px">
-      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <input type="number" id="tloc_clock" placeholder="o'clock" min="1" max="12" step="1" style="width:68px;flex:none">
-        <span style="font-size:12px;color:var(--muted);flex:none">o'clock,</span>
-        <input type="number" id="tloc_cm" placeholder="cm" min="0" step="any" style="width:60px;flex:none">
-        <span style="font-size:12px;color:var(--muted);flex:none">cm to nipple</span>
+  <div class="fg" style="margin-top:8px">
+    <label>Tumor location</label>
+    <!-- Single location -->
+    <div id="tumor_loc_single">
+      <select id="tumor_loc" onchange="toggleTumorLocCustom()">
+        <option value="Upper outer quadrant">Upper outer quadrant</option>
+        <option value="Lower outer quadrant">Lower outer quadrant</option>
+        <option value="Upper inner quadrant">Upper inner quadrant</option>
+        <option value="Lower inner quadrant">Lower inner quadrant</option>
+        <option value="Subareolar">Subareolar</option>
+        <option value="custom">自行填入 o'clock / cm to nipple</option>
+      </select>
+      <div id="tumor_loc_custom" style="display:none;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <input type="number" id="tloc_clock" placeholder="o'clock" min="1" max="12" step="1" style="width:68px;flex:none">
+          <span style="font-size:12px;color:var(--muted);flex:none">o'clock,</span>
+          <input type="number" id="tloc_cm" placeholder="cm" min="0" step="any" style="width:60px;flex:none">
+          <span style="font-size:12px;color:var(--muted);flex:none">cm to nipple</span>
+        </div>
       </div>
+    </div>
+    <!-- Per-tumor location toggle (shown when focality > 1) -->
+    <div id="per_tumor_loc_toggle" style="display:none;margin-top:6px">
+      <label style="font-size:0.79rem;color:var(--text);font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="per_tumor_loc_cb" style="width:auto;margin:0" onchange="renderPerTumorRows()"> Per tumor location
+      </label>
+      <div id="per_tumor_loc_rows" style="display:none;flex-direction:column;gap:5px;margin-top:6px"></div>
     </div>
   </div>
 
@@ -1489,6 +1506,168 @@ function toggleTumorLocCustom(){
   if(box) box.style.display=isC?'block':'none';
 }
 
+// ── Per-tumor location / size helpers ──
+const LOC_OPTIONS=[
+  'Upper outer quadrant','Lower outer quadrant','Upper inner quadrant','Lower inner quadrant','Subareolar'
+];
+
+function _locSelectHtml(id){
+  return `<select id="${id}" style="flex:1;min-width:160px">${LOC_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}<option value="custom">自行填入</option></select>
+  <div id="${id}_custom" style="display:none;margin-top:4px;display:none">
+    <input type="number" id="${id}_clk" placeholder="o'clock" min="1" max="12" step="1" style="width:68px">
+    <span style="font-size:12px;color:var(--muted)">o'clock,</span>
+    <input type="number" id="${id}_cm" placeholder="cm" min="0" step="any" style="width:60px">
+    <span style="font-size:12px;color:var(--muted)">cm to nipple</span>
+  </div>`;
+}
+
+function _locText(baseId){
+  const sel=document.getElementById(baseId);
+  if(!sel) return '';
+  if(sel.value==='custom'){
+    const clk=document.getElementById(baseId+'_clk')?.value;
+    const cm=document.getElementById(baseId+'_cm')?.value;
+    return (clk?clk+" o'clock":"")+((clk&&cm)?", ":"")+(cm?cm+" cm to the nipple":"");
+  }
+  return sel.value;
+}
+
+function _toggleLocCustom(selectEl){
+  const isC=selectEl.value==='custom';
+  const box=document.getElementById(selectEl.id+'_custom');
+  if(box) box.style.display=isC?'block':'none';
+}
+
+function getFocalityN(){
+  const foc=document.querySelector('input[name="focality"]:checked')?.value||'';
+  if(foc==='multiple') return 2;
+  if(foc==='specify'){
+    const n=parseInt(document.getElementById('focality_n')?.value)||0;
+    return n>=2?n:0;
+  }
+  return 1;
+}
+
+function onFocalityChange(){
+  const n=getFocalityN();
+  const isMulti=n>1;
+
+  // Auto-check (m) descriptor
+  const descM=document.getElementById('desc_m');
+  if(descM){
+    if(isMulti && !descM.checked){
+      descM.checked=true;
+      autoUncheckNA(descM);
+      updatePTNM();
+    } else if(!isMulti && descM.checked){
+      descM.checked=false;
+      updatePTNM();
+    }
+  }
+
+  // Show/hide per-tumor toggles
+  const locToggle=document.getElementById('per_tumor_loc_toggle');
+  const sizeToggle=document.getElementById('per_tumor_size_toggle');
+  if(locToggle) locToggle.style.display=isMulti?'block':'none';
+  if(sizeToggle) sizeToggle.style.display=isMulti?'block':'none';
+
+  // If not multi, uncheck the per-tumor checkboxes
+  if(!isMulti){
+    const lcb=document.getElementById('per_tumor_loc_cb');
+    const scb=document.getElementById('per_tumor_size_cb');
+    if(lcb) lcb.checked=false;
+    if(scb) scb.checked=false;
+  }
+
+  renderPerTumorRows();
+}
+
+function renderPerTumorRows(){
+  const n=getFocalityN();
+  const locCb=document.getElementById('per_tumor_loc_cb');
+  const sizeCb=document.getElementById('per_tumor_size_cb');
+  const locRows=document.getElementById('per_tumor_loc_rows');
+  const sizeRows=document.getElementById('per_tumor_size_rows');
+
+  // Location rows
+  if(locRows && locCb){
+    if(locCb.checked && n>1){
+      locRows.style.display='flex';
+      // Rebuild rows for current n
+      locRows.innerHTML='';
+      for(let i=1;i<=n;i++){
+        const id='ptloc_'+i;
+        const div=document.createElement('div');
+        div.style.cssText='display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap';
+        div.innerHTML=`<span style="font-size:0.82rem;color:var(--muted);flex:none;padding-top:6px;min-width:64px">Tumor ${i}:</span>
+          <div style="flex:1">
+            <select id="${id}" onchange="_toggleLocCustom(this)" style="width:100%">
+              ${LOC_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+              <option value="custom">自行填入</option>
+            </select>
+            <div id="${id}_custom" style="display:none;margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+              <input type="number" id="${id}_clk" placeholder="o'clock" min="1" max="12" step="1" style="width:68px">
+              <span style="font-size:12px;color:var(--muted)">o'clock,</span>
+              <input type="number" id="${id}_cm" placeholder="cm" min="0" step="any" style="width:60px">
+              <span style="font-size:12px;color:var(--muted)">cm to nipple</span>
+            </div>
+          </div>`;
+        locRows.appendChild(div);
+      }
+    } else {
+      locRows.style.display='none';
+    }
+  }
+
+  // Size rows
+  if(sizeRows && sizeCb){
+    if(sizeCb.checked && n>1){
+      sizeRows.style.display='flex';
+      // Rebuild rows
+      sizeRows.innerHTML='';
+      for(let i=1;i<=n;i++){
+        const id='ptsz_'+i;
+        const div=document.createElement('div');
+        div.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+        div.innerHTML=`<span style="font-size:0.82rem;color:var(--muted);flex:none;min-width:64px">Tumor ${i}:</span>
+          <input type="number" id="${id}_1" placeholder="—" min="0" step="any" style="width:60px">
+          <span style="font-size:12px;color:var(--muted)">x</span>
+          <input type="number" id="${id}_2" placeholder="—" min="0" step="any" style="width:60px">
+          <span style="font-size:12px;color:var(--muted)">x</span>
+          <input type="number" id="${id}_3" placeholder="—" min="0" step="any" style="width:60px">
+          <span style="font-size:12px;color:var(--muted)">cm</span>`;
+        sizeRows.appendChild(div);
+      }
+    } else {
+      sizeRows.style.display='none';
+    }
+  }
+}
+
+function buildPerTumorLocText(){
+  const n=getFocalityN();
+  const lines=[];
+  for(let i=1;i<=n;i++){
+    const id='ptloc_'+i;
+    lines.push('- Tumor '+i+': '+(_locText(id)||'___'));
+  }
+  return 'Tumor location:\n'+lines.join('\n')+'\n(according to clinical information)\n';
+}
+
+function buildPerTumorSizeText(){
+  const n=getFocalityN();
+  const lines=[];
+  for(let i=1;i<=n;i++){
+    const id='ptsz_'+i;
+    const x=document.getElementById(id+'_1')?.value;
+    const y=document.getElementById(id+'_2')?.value;
+    const z=document.getElementById(id+'_3')?.value;
+    const sz=[x,y,z].filter(Boolean).join(' x ');
+    lines.push('- Tumor '+i+': '+(sz?sz+' cm':'___'));
+  }
+  return 'Size of tumor:\n'+lines.join('\n')+'\nmeasured on the histologic slide\n';
+}
+
 function generate(){
   // ④ Validate tumor size
   const tsModeChk=document.querySelector('input[name="ts_mode"]:checked')?.value||'3d';
@@ -1702,7 +1881,7 @@ stitchLines+
   return 'Size of the covering skin ('+(withNip?'including':'without')+' nipple): '+skinSize2+' cm\n';
 })()+
 (axSizeText?'Size of the axillary soft tissue: '+axSizeText+'\n':'')+
-'Tumor location: '+tumorLocText+' (according to clinical information)\n'+
+(document.getElementById('per_tumor_loc_cb')?.checked ? buildPerTumorLocText() : 'Tumor location: '+tumorLocText+' (according to clinical information)\n')+
 'Tissue defect: Not present\n'+
 (!!!(document.querySelector('input[name="sp_excision"]:checked')?.value)?(()=>{
     const foc=document.querySelector('input[name="focality"]:checked')?.value||'';
@@ -1712,10 +1891,15 @@ stitchLines+
     let lines='';
     if(foc==='multiple') lines='Tumor focality: Multiple foci of invasive carcinoma\n';
     else if(foc==='specify'&&focN) lines='Tumor focality: '+focN+' foci of invasive carcinoma\n';
-    lines+='Size of tumor: '+(tumorSize?(hasFoc?'up to ':'')+tumorSize+sizeUnit:'');
+    if(document.getElementById('per_tumor_size_cb')?.checked){
+      lines+=buildPerTumorSizeText();
+    } else {
+      lines+='Size of tumor: '+(tumorSize?(hasFoc?'up to ':'')+tumorSize+sizeUnit:'');
+    }
     return lines;
   })()+
-  (document.getElementById('tumor_size_dcis')?.checked?' (This measurement includes areas of DCIS. Please refer to the microscopic findings for the invasive tumor size.)':'')+'\n':'')+
+  (document.getElementById('per_tumor_size_cb')?.checked?'':document.getElementById('tumor_size_dcis')?.checked?' (This measurement includes areas of DCIS. Please refer to the microscopic findings for the invasive tumor size.)':'')+
+  (document.getElementById('per_tumor_size_cb')?.checked?'':'\n'):'')+
 
 'Tumor configuration: Well-delineated with focal infiltrative margin\n'+
 'Texture of the tumor: '+(v('tumor_texture')||'Gray to white and firm')+'\n'+
