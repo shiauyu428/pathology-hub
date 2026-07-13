@@ -34,10 +34,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
 /* ── Layout ── */
 .layout{display:flex;height:calc(100vh - 49px);}
-.form-panel{width:56%;background:var(--bg);border-right:1px solid var(--border);overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
-.form-panel::-webkit-scrollbar{width:5px;}
-.form-panel::-webkit-scrollbar-track{background:var(--bg);}
-.form-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.form-panel{width:58%;background:var(--bg);border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;}
+.form-scroll{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
+.form-scroll::-webkit-scrollbar{width:5px;}
+.form-scroll::-webkit-scrollbar-track{background:var(--bg);}
+.form-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 .output-panel{flex:1;background:var(--bg2);display:flex;flex-direction:column;overflow:hidden;box-shadow:-2px 0 6px rgba(0,0,0,.04);}
 .output-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .output-header-title{font-family:var(--mono);font-size:11px;color:var(--accent3);font-weight:600;letter-spacing:.08em;}
@@ -107,6 +108,7 @@ textarea{width:100%;height:60px;resize:vertical;font-size:12px;}
 
 <div class="layout">
 <div class="form-panel">
+<div class="form-scroll">
 
 <!-- SURGICAL PROCEDURE -->
 <div class="section">
@@ -981,6 +983,7 @@ textarea{width:100%;height:60px;resize:vertical;font-size:12px;}
 
 
 
+</div><!-- form-scroll -->
 </div><!-- form-panel -->
 
 <!-- OUTPUT -->
@@ -1672,27 +1675,20 @@ function generateReport() {
   r += `PATHOLOGIC DIAGNOSIS:\n`;
   if (procWide) {
     r += `${tumorSite}, wide excision\n`;
-    r += `-- Squamous cell carcinoma (${pTdx})\n`;
+    r += `-- Squamous cell carcinoma\n`;
   }
   if (procGloss) {
     r += `${tumorSite}, glossectomy\n`;
-    r += `-- Squamous cell carcinoma (${pTdx})\n`;
+    r += `-- Squamous cell carcinoma\n`;
   }
-  // pN goes on the last neck line that has an actual node count
-  const rHasCount = procNeckR && !noLNR;
-  const lHasCount = procNeckL && !noLNL;
-  const pnOnR = rHasCount && !lHasCount;
-  const pnOnL = lHasCount;
-
   if (procNeckR) {
     r += `Lymph nodes, right neck, ${neckTypeR}\n`;
     if (noLNR) {
       r += `-- No lymphoid tissue\n`;
     } else {
-      const pnSuffix = pnOnR ? `, ${pNdx}` : '';
       r += rTotalPos > 0
-        ? `-- Carcinoma, metastatic (${rTotalPos}/${rTotalTot}${pnSuffix})\n`
-        : `-- Free of metastasis (${rTotalPos}/${rTotalTot}${pnSuffix})\n`;
+        ? `-- Carcinoma, metastatic (${rTotalPos}/${rTotalTot})\n`
+        : `-- No metastasis (${rTotalPos}/${rTotalTot})\n`;
     }
   }
   if (procNeckL) {
@@ -1700,10 +1696,9 @@ function generateReport() {
     if (noLNL) {
       r += `-- No lymphoid tissue\n`;
     } else {
-      const pnSuffix = pnOnL ? `, ${pNdx}` : '';
       r += lTotalPos > 0
-        ? `-- Carcinoma, metastatic (${lTotalPos}/${lTotalTot}${pnSuffix})\n`
-        : `-- Free of metastasis (${lTotalPos}/${lTotalTot}${pnSuffix})\n`;
+        ? `-- Carcinoma, metastatic (${lTotalPos}/${lTotalTot})\n`
+        : `-- No metastasis (${lTotalPos}/${lTotalTot})\n`;
     }
   }
   if (procMand || procMargMand) {
@@ -1720,6 +1715,18 @@ function generateReport() {
     const maxProcStr = procMax ? 'maxillectomy' : 'partial maxillectomy';
     r += `Maxilla, ${maxSideStr}, ${maxProcStr}\n`;
     r += `-- ${st === 'free' ? 'Free of tumor' : 'Carcinoma, directly invaded'}\n`;
+  }
+
+  // pTNM summary after diagnosis
+  const hasWide0 = procWide || procGloss || procMand || procMargMand || procMax || procPartMax;
+  const hasNeck0 = procNeckR || procNeckL;
+  if (hasWide0 || hasNeck0) {
+    const pTsummary0 = pT.replace('pT', `p${yPfx}T`);
+    const pNsummary0 = pN.replace('pN', 'N');
+    let ptnmStr = '';
+    if (hasWide0) ptnmStr += pTsummary0;
+    if (hasNeck0) ptnmStr += pNsummary0;
+    r += `\npTNM: ${ptnmStr}\n`;
   }
 
   // GROSS
@@ -1951,18 +1958,8 @@ function generateReport() {
     }
   }
 
-  const pTsummary = pT.replace('pT', `p${yPfx}T`);
-  const pNsummary = pN.replace('pN', 'N');
-  const hasWide = procWide || procGloss || procMand || procMargMand || procMax || procPartMax;
-  const hasNeck = procNeckR || procNeckL;
-  if (hasWide || hasNeck) {
-    r += `pTNM: `;
-    if (hasWide) r += pTsummary;
-    if (hasNeck) r += pNsummary;
-    r += ` (AJCC cancer staging system, 8th edition)\n`;
-    r += `TNM descriptors: ${descText}\n`;
-    r += `Treatment effect: ${treatEffect}\n`;
-  }
+  r += `TNM descriptors: ${descText}\n`;
+  r += `Treatment effect: ${treatEffect}\n`;
 
   // Other specimens additional findings
   const otherSpecMicroRows = document.getElementById('otherSpecimensContainer')?.querySelectorAll('[id^="otherSpecRow_"]') || [];
